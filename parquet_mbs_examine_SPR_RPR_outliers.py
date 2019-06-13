@@ -65,7 +65,8 @@ if __name__ == "__main__":
     files = [path + f for f in os.listdir(path) if f.lower().endswith('.parquet')]
     p = Pool(processes=min([len(files), 2]))
     data = p.map(get_unique_per_patient, files)
-    p.close()  
+    p.close()
+    p.join()
     # cur = get_unique_per_patient(files[0])
 
 
