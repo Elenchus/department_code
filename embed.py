@@ -1,5 +1,6 @@
 import os
 import csv
+import gc
 import pandas as pd
 from datetime import datetime
 from gensim.models import Word2Vec
@@ -18,9 +19,9 @@ from multiprocessing import Pool
 #             for row in reader:
 #                 yield row
       
-def get_items_per_day(pin, patient):
+def get_items_per_day(patient):
     same_day_claim = []
-    days_of_service = patient.groupby('DOS')
+    days_of_service = patient[1].groupby('DOS')
     for day in days_of_service:
         claims = list(map(str, day[1]['ITEM'].values))
         same_day_claim.append(claims)
@@ -33,7 +34,7 @@ def log(line):
 
 if __name__ == "__main__":
     log("Starting...")
-    path = 'C:/Data/MBS_Patient_10/'
+    path = 'D:/Data/MBS_Patient_10/'
 
     files = [path + f for f in os.listdir(path) if f.lower().endswith('.parquet')]
     filename = files[0]
@@ -41,11 +42,14 @@ if __name__ == "__main__":
     log("Loading parquet file...")
     data = pd.read_parquet(filename)
     patients = data.groupby('PIN')
+    patient_ids = data['PIN'].unique()
+    
+    del data
+    gc.collect()
 
     log("Combining patient information...")
-    patient_ids = data['PIN'].unique()
-    p = Pool(processes=5)
-    data = p.starmap(get_items_per_day, patients)
+    p = Pool(processes=6)
+    data = p.imap(get_items_per_day, patients)
     p.close()
     p.join()
 
