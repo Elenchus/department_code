@@ -1,35 +1,71 @@
 import os
+import csv
+import pandas as pd
 from datetime import datetime
 from gensim.models import Word2Vec
 from gensim.utils import simple_preprocess
-from pyarrow import parquet as pq
+from multiprocessing import Pool
 
 # map datetime to 0-based days?
 
-def read_parquet_file_to_pandas(file):
-    data = pq.read_pandas(filename).to_pandas()
-    
-    return data
+# class IterableFormat(object):
+#     def __init__(self, file):
+#         self.file = file
 
+#     def __iter__(self):
+#         with open(self.file, newline='') as f:
+#             reader = csv.reader(f)
+#             for row in reader:
+#                 yield row
+      
+def get_items_per_day(pin, patient):
+    same_day_claim = []
+    days_of_service = patient.groupby('DOS')
+    for day in days_of_service:
+        claims = list(map(str, day[1]['ITEM'].values))
+        same_day_claim.append(claims)
+
+    return same_day_claim
+
+
+def log(line):
+    print(f"{datetime.now()} {str(line)}")
 
 if __name__ == "__main__":
-    print(f"{datetime.now()} Starting...")
-    path = 'H:/Data/MBS_Patient_10/'
+    log("Starting...")
+    path = 'C:/Data/MBS_Patient_10/'
 
     files = [path + f for f in os.listdir(path) if f.lower().endswith('.parquet')]
     filename = files[0]
-    data = read_parquet_file_to_pandas(filename)
-    lines = data.values.tolist()
+    
+    log("Loading parquet file...")
+    data = pd.read_parquet(filename)
+    patients = data.groupby('PIN')
 
-    print(f"{datetime.now()} Embedding vectors...")
+    log("Combining patient information...")
+    patient_ids = data['PIN'].unique()
+    p = Pool(processes=5)
+    data = p.starmap(get_items_per_day, patients)
+    p.close()
+    p.join()
+
+    log("Flattening output...")
+    same_day_claims = []    
+    for i in data:
+        for j in i:
+            same_day_claims.append(j) 
+
+    del data
+
+    log("Embedding vectors...")
 
     model = Word2Vec(
-            lines,
-            size=30,
+            same_day_claims,
+            size=60,
             min_count=1,
-            workers=1,
+            workers=3,
             iter=1)
 
-    print(f"Finished at {datetime.now()}")
+    log("Finished!")
 
     # cur = get_unique_per_patient(files[0])
