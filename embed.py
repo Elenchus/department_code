@@ -66,9 +66,10 @@ if __name__ == "__main__":
             same_day_claims.append(j) 
 
     del data
+    gc.collect()
 
     log("Embedding vectors...")
-    n_clusters = int(sqrt(sqrt(unique_items)))
+    n_clusters = int(sqrt(sqrt(len(unique_items))))
 
     model = Word2Vec(
             same_day_claims,
@@ -90,7 +91,10 @@ if __name__ == "__main__":
     # silhouette_score = metrics.silhouette_score(X, labels, metric='euclidean')
 
     log("Plotting...")
-    plt.scatter(X[:, 0], X[:, 1], c=labels)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    scatter = ax.scatter(X[:, 0], X[:, 1], c=labels)
+    legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="MBS Item Code")
 
     log("Finished!")
 
