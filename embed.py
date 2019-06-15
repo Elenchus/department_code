@@ -6,6 +6,7 @@ import pandas as pd
 from datetime import datetime
 from gensim.models import Word2Vec
 from gensim.utils import simple_preprocess
+from math import sqrt
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
 from sklearn import cluster
@@ -47,6 +48,7 @@ if __name__ == "__main__":
     data = pd.read_parquet(filename, columns=['PIN', 'DOS', 'ITEM'])
     patients = data.groupby('PIN')
     patient_ids = data['PIN'].unique()
+    unique_items = data['ITEM'].unique()
         
     del data
     gc.collect()
@@ -66,7 +68,7 @@ if __name__ == "__main__":
     del data
 
     log("Embedding vectors...")
-    n_clusters = 60
+    n_clusters = int(sqrt(sqrt(unique_items)))
 
     model = Word2Vec(
             same_day_claims,
