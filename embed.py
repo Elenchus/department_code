@@ -1,11 +1,15 @@
 import os
 import csv
 import gc
+
 import pandas as pd
 from datetime import datetime
 from gensim.models import Word2Vec
 from gensim.utils import simple_preprocess
+from matplotlib import pyplot as plt
 from multiprocessing import Pool
+from sklearn import cluster
+from sklearn import metrics
 
 # map datetime to 0-based days?
 
@@ -40,10 +44,10 @@ if __name__ == "__main__":
     filename = files[0]
     
     log("Loading parquet file...")
-    data = pd.read_parquet(filename)
+    data = pd.read_parquet(filename, columns=['PIN', 'DOS', 'ITEM'])
     patients = data.groupby('PIN')
     patient_ids = data['PIN'].unique()
-    
+        
     del data
     gc.collect()
 
@@ -62,13 +66,29 @@ if __name__ == "__main__":
     del data
 
     log("Embedding vectors...")
+    n_clusters = 60
 
     model = Word2Vec(
             same_day_claims,
-            size=60,
+            size=n_clusters,
             min_count=1,
             workers=3,
             iter=1)
+
+    X = model[model.wv.vocab]
+
+    log("Clustering...")
+    
+    kmeans = cluster.KMeans(n_clusters=n_clusters)
+    kmeans.fit(X)
+
+    labels = kmeans.labels_
+    # centroids = kmeans.cluster_centers_
+
+    # silhouette_score = metrics.silhouette_score(X, labels, metric='euclidean')
+
+    log("Plotting...")
+    plt.scatter(X[:, 0], X[:, 1], c=labels)
 
     log("Finished!")
 
