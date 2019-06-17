@@ -1,16 +1,17 @@
 import os
-import csv
 import gc
-
 import pandas as pd
+
+from copy import deepcopy
 from datetime import datetime
 from gensim.models import Word2Vec
 from gensim.utils import simple_preprocess
-from math import sqrt
+from math import ceil, sqrt
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
 from sklearn import cluster
 from sklearn import metrics
+from sklearn.manifold import TSNE
 
 # map datetime to 0-based days?
 
@@ -33,13 +34,45 @@ def get_items_per_day(patient):
 
     return same_day_claim
 
+def tsne_plot(model):
+    "Creates and TSNE model and plots it"
+    labels = []
+    tokens = []
+
+    for word in model.wv.vocab:
+        tokens.append(model[word])
+        labels.append(word)
+    
+    tsne_model = TSNE(perplexity=40, n_components=2, init='pca', n_iter=2500, random_state=23)
+    new_values = tsne_model.fit_transform(tokens)
+
+    x = []
+    y = []
+    for value in new_values:
+        x.append(value[0])
+        y.append(value[1])
+        
+    fig = plt.figure(figsize=(16, 16))
+    ax = fig.add_subplot(111)
+    for i in range(len(x)):
+        ax.scatter(x[i],y[i])
+    for i in range(len(x)):
+        ax.annotate(labels[i],
+                     xy=(x[i], y[i]),
+                     xytext=(5, 2),
+                     textcoords='offset points',
+                     ha='right',
+                     va='bottom')
+    
+    return fig
+
 
 def log(line):
     print(f"{datetime.now()} {str(line)}")
 
 if __name__ == "__main__":
     log("Starting...")
-    path = 'D:/Data/MBS_Patient_10/'
+    path = 'C:/Data/MBS_Patient_10/'
 
     files = [path + f for f in os.listdir(path) if f.lower().endswith('.parquet')]
     filename = files[0]
@@ -55,25 +88,26 @@ if __name__ == "__main__":
 
     log("Combining patient information...")
     p = Pool(processes=6)
-    data = p.imap(get_items_per_day, patients)
+    data_map = p.imap(get_items_per_day, patients)
     p.close()
     p.join()
 
     log("Flattening output...")
     same_day_claims = []    
-    for i in data:
+    for i in data_map:
         for j in i:
             same_day_claims.append(j) 
 
-    del data
+    del data_map
     gc.collect()
 
     log("Embedding vectors...")
-    n_clusters = int(sqrt(sqrt(len(unique_items))))
+    size = ceil(sqrt(sqrt(len(unique_items))))
 
     model = Word2Vec(
             same_day_claims,
-            size=n_clusters,
+            size=size,
+            window=max(len(l) for l in same_day_claims),
             min_count=1,
             workers=3,
             iter=1)
@@ -81,20 +115,82 @@ if __name__ == "__main__":
     X = model[model.wv.vocab]
 
     log("Clustering...")
-    
-    kmeans = cluster.KMeans(n_clusters=n_clusters)
-    kmeans.fit(X)
+    cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
+    avg_sil = []
+    for n in cluster_no:
+        kmeans = cluster.KMeans(n_clusters=n)
+        kmeans.fit(X)
+        labels = kmeans.labels_
+        silhouette_score = metrics.silhouette_score(X, labels, metric='euclidean')
+        avg_sil.append(silhouette_score)
 
+    k = cluster_no[avg_sil.index(max(avg_sil))]
+    print(f"Max silhouette score with {k} clusters")
+
+    kmeans = cluster.KMeans(n_clusters=k)
+    kmeans.fit(X)
     labels = kmeans.labels_
     # centroids = kmeans.cluster_centers_
-
-    # silhouette_score = metrics.silhouette_score(X, labels, metric='euclidean')
 
     log("Plotting...")
     fig = plt.figure()
     ax = fig.add_subplot(111)
     scatter = ax.scatter(X[:, 0], X[:, 1], c=labels)
-    legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="MBS Item Code")
+    legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
+
+    fig.savefig("k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
+
+    log("Visualising with t-SNE")
+    tsne_fig = tsne_plot(model)
+    tsne_fig.savefig("t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
+
+    log("Re-try - culling one-item-per-day items")
+    culled_same_day_claims = [x for x in same_day_claims if len(x) > 1]
+    unique_culled_claims = []    
+    for i in culled_same_day_claims:
+        for j in i:
+            unique_culled_claims.append(j)
+
+    unique_culled_claims = list(set(unique_culled_claims))
+
+    culled_size = ceil(sqrt(sqrt(len(unique_culled_claims))))
+
+    log("Embedding vectors...")
+    culled_model = Word2Vec(
+            culled_same_day_claims,
+            size=culled_size,
+            window=max(len(l) for l in culled_same_day_claims),
+            min_count=1,
+            workers=3,
+            iter=1)
+
+    Y = culled_model[culled_model.wv.vocab]
+
+    log("Clustering...")
+    cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
+    culled_avg_sil = []
+    for n in cluster_no:
+        culled_kmeans = cluster.KMeans(n_clusters=n)
+        culled_kmeans.fit(Y)
+        culled_labels = culled_kmeans.labels_
+        culled_silhouette_score = metrics.silhouette_score(Y, culled_labels, metric='euclidean')
+        culled_avg_sil.append(culled_silhouette_score)
+
+    culled_k = cluster_no[culled_avg_sil.index(max(culled_avg_sil))]
+    print(f"Max silhouette score with {culled_k} clusters")
+
+    culled_kmeans = cluster.KMeans(n_clusters=culled_k)
+    culled_kmeans.fit(Y)
+    culled_labels = culled_kmeans.labels_
+    # centroids = kmeans.cluster_centers_
+
+    log("Plotting...")
+    culled_fig = plt.figure()
+    culled_ax = culled_fig.add_subplot(111)
+    culled_scatter = culled_ax.scatter(Y[:, 0], Y[:, 1], c=culled_labels)
+    culled_legend = culled_ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
+
+    culled_fig.savefig("culled_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
     log("Finished!")
 
