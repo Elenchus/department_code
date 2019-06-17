@@ -1,5 +1,6 @@
 import os
 import gc
+import FileUtils
 import pandas as pd
 
 from copy import deepcopy
@@ -13,9 +14,6 @@ from sklearn import cluster
 from sklearn import metrics
 from sklearn.manifold import TSNE
 
-def log(line, line_end = '...'):
-    print(f"{datetime.now()} {str(line)}{line_end}")
-
 def get_items_per_day(patient):
     same_day_claim = []
     days_of_service = patient[1].groupby('SPPLY_DT')
@@ -25,15 +23,15 @@ def get_items_per_day(patient):
 
     return same_day_claim
 
-
 if __name__ == "__main__":
-    log("Starting")
+    logger = FileUtils.logger(__name__, "embed.log")
+    logger.log("Starting")
     path = 'C:/Data/PBS_Patient_10/'
 
     files = [path + f for f in os.listdir(path) if f.lower().endswith('.parquet')]
     filename = files[0]
     
-    log("Loading parquet file")
+    logger.log("Loading parquet file")
     data = pd.read_parquet(filename, columns=['PTNT_ID', 'SPPLY_DT', 'ITM_CD'])
     patients = data.groupby('PTNT_ID')
     patient_ids = data['PTNT_ID'].unique()
@@ -42,13 +40,13 @@ if __name__ == "__main__":
     del data
     gc.collect()
 
-    log("Combining patient information")
+    logger.log("Combining patient information")
     p = Pool(processes=6)
     data_map = p.imap(get_items_per_day, patients)
     p.close()
     p.join()
 
-    log("Flattening output")
+    logger.log("Flattening output")
     same_day_claims = []    
     for i in data_map:
         for j in i:
@@ -57,7 +55,7 @@ if __name__ == "__main__":
     del data_map
     gc.collect()
 
-    log("Embedding vectors")
+    logger.log("Embedding vectors")
     size = ceil(sqrt(sqrt(len(unique_items))))
 
     model = Word2Vec(
@@ -70,7 +68,7 @@ if __name__ == "__main__":
 
     X = model[model.wv.vocab]
 
-    log("Clustering")
+    logger.log("Clustering")
     cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
     avg_sil = []
     for n in cluster_no:
@@ -88,12 +86,12 @@ if __name__ == "__main__":
     labels = kmeans.labels_
     # centroids = kmeans.cluster_centers_
 
-    log("Plotting")
+    logger.log("Plotting")
     fig = plt.figure()
     ax = fig.add_subplot(111)
     scatter = ax.scatter(X[:, 0], X[:, 1], c=labels)
     legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
 
-    fig.savefig("pbs_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    fig.savefig(logger.output_path + "pbs_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
-    log("Finished", '!')
+    logger.log("Finished", '!')

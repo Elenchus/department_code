@@ -1,10 +1,12 @@
 import os
+import FileUtils
 import gc
 import numpy as np
 import pandas as pd
 
 from copy import deepcopy
 from datetime import datetime
+from functools import partial
 from gensim.models import Word2Vec
 from gensim.utils import simple_preprocess
 from math import ceil, sqrt
@@ -25,15 +27,14 @@ from sklearn.manifold import TSNE
 #             reader = csv.reader(f)
 #             for row in reader:
 #                 yield row
-      
 
 def get_average_sil_score(tuple_of_n_index):
-    (n, index) = tuple_of_n_index
+    (X, n, index) = tuple_of_n_index
     patient_kmeans = cluster.KMeans(n_clusters=n)
-    patient_kmeans.fit(patient_vectors)
+    patient_kmeans.fit(X)
     patient_labels = patient_kmeans.labels_
     
-    return (metrics.silhouette_score(patient_vectors, patient_labels, metric='euclidean'), index)
+    return (metrics.silhouette_score(X, patient_labels, metric='euclidean'), index)
 
 def get_items_per_day(patient):
     same_day_claim = []
@@ -43,6 +44,22 @@ def get_items_per_day(patient):
         same_day_claim.append(claims)
 
     return same_day_claim
+
+def sum_patient_vectors(model, patient):
+    codes = list(map(str, patient[1]['ITEM'].values))
+    patient_vector = []
+    for code in codes:
+        code_vector = model[code]
+        if len(patient_vector) == 0:
+            patient_vector = list(x for x in code_vector)
+        else:
+            if len(patient_vector) != len(code_vector):
+                raise("This isn't right")
+
+            for i in range(len(patient_vector)):
+                patient_vector[i] = patient_vector[i] + code_vector[i]
+
+    return patient_vector
 
 def tsne_plot(model):
     "Creates and TSNE model and plots it"
@@ -76,18 +93,15 @@ def tsne_plot(model):
     
     return fig
 
-
-def log(line, line_end = ''):
-    print(f"{datetime.now()} {str(line)}{line_end}")
-
 if __name__ == "__main__":
-    log("Starting")
+    logger = FileUtils.logger(__name__, "embed.log")
+    logger.log("Starting")
     path = 'C:/Data/MBS_Patient_10/'
 
     files = [path + f for f in os.listdir(path) if f.lower().endswith('.parquet')]
     filename = files[0]
     
-    log("Loading parquet file")
+    logger.log("Loading parquet file")
     data = pd.read_parquet(filename, columns=['PIN', 'DOS', 'ITEM'])
     patients = data.groupby('PIN')
     patient_ids = data['PIN'].unique()
@@ -96,13 +110,13 @@ if __name__ == "__main__":
     del data
     gc.collect()
 
-    log("Combining patient information")
+    logger.log("Combining patient information")
     p = Pool(processes=6)
     data_map = p.imap(get_items_per_day, patients)
     p.close()
     p.join()
 
-    log("Flattening output")
+    logger.log("Flattening output")
     same_day_claims = []    
     for i in data_map:
         for j in i:
@@ -111,24 +125,28 @@ if __name__ == "__main__":
     del data_map
     gc.collect()
 
-    log("Embedding vectors")
+    logger.log("Embedding vectors")
     size = ceil(sqrt(sqrt(len(unique_items))))
 
     model = Word2Vec(
             same_day_claims,
             size=size,
             window=max(len(l) for l in same_day_claims),
-            min_count=1,
+            min_count=20,
             workers=3,
-            iter=1)
+            iter=5)
 
     X = model[model.wv.vocab]
 
-    log("Clustering")
+    logger.log("Clustering")
     cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
     avg_sil = []
     for n in cluster_no:
-        avg_sil.append(get_average_sil_score((n, None))[0])
+        kmeans = cluster.KMeans(n_clusters=n)
+        kmeans.fit(X)
+        labels = kmeans.labels_
+        silhouette_score = metrics.silhouette_score(X, labels, metric='euclidean')
+        avg_sil.append(silhouette_score)
 
     k = cluster_no[avg_sil.index(max(avg_sil))]
     print(f"Max silhouette score with {k} clusters")
@@ -138,7 +156,7 @@ if __name__ == "__main__":
     labels = kmeans.labels_
     # centroids = kmeans.cluster_centers_
 
-    log("Plotting")
+    logger.log("Plotting")
     fig = plt.figure()
     ax = fig.add_subplot(111)
     scatter = ax.scatter(X[:, 0], X[:, 1], c=labels)
@@ -146,11 +164,11 @@ if __name__ == "__main__":
 
     fig.savefig("k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
-    log("Visualising with t-SNE")
+    logger.log("Visualising with t-SNE")
     tsne_fig = tsne_plot(model)
     tsne_fig.savefig("t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
-    log("Re-try - culling one-item-per-day items")
+    logger.log("Re-try - culling one-item-per-day items")
     culled_same_day_claims = [x for x in same_day_claims if len(x) > 1]
     unique_culled_claims = []    
     for i in culled_same_day_claims:
@@ -161,7 +179,7 @@ if __name__ == "__main__":
 
     culled_size = ceil(sqrt(sqrt(len(unique_culled_claims))))
 
-    log("Embedding vectors")
+    logger.log("Embedding vectors")
     culled_model = Word2Vec(
             culled_same_day_claims,
             size=culled_size,
@@ -172,7 +190,7 @@ if __name__ == "__main__":
 
     Y = culled_model[culled_model.wv.vocab]
 
-    log("Clustering")
+    logger.log("Clustering")
     cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
     culled_avg_sil = []
     for n in cluster_no:
@@ -190,7 +208,7 @@ if __name__ == "__main__":
     culled_labels = culled_kmeans.labels_
     # centroids = kmeans.cluster_centers_
 
-    log("Plotting")
+    logger.log("Plotting")
     culled_fig = plt.figure()
     culled_ax = culled_fig.add_subplot(111)
     culled_scatter = culled_ax.scatter(Y[:, 0], Y[:, 1], c=culled_labels)
@@ -198,33 +216,27 @@ if __name__ == "__main__":
 
     culled_fig.savefig("culled_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
-    log("Summing patient days")
-    patient_vectors = []
-    for patient in patients:
-        codes = list(map(str, patient[1]['ITEM'].values))
-        patient_vector = []
-        for code in codes:
-            code_vector = model[code]
-            if len(patient_vector) == 0:
-                patient_vector = list(x for x in code_vector)
-            else:
-                if len(patient_vector) != len(code_vector):
-                    raise("This isn't right")
-
-                for i in range(len(patient_vector)):
-                    patient_vector[i] = patient_vector[i] + code_vector[i]
-
-        patient_vectors.append(patient_vector)
+    logger.log("Summing patient days")
+    func = partial(sum_patient_vectors, model)
+    p = Pool(processes=6)
+    patient_vectors = p.imap(func, patients)
+    p.close()
+    p.join()
 
     patient_vectors = np.array(patient_vectors)
 
-    log("Clustering patient vectors")
+    logger.log("Clustering patient vectors")
     cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
+    list_to_send = []
+    for i in range(len(cluster_no)):
+        list_to_send.append((patient_vectors, cluster_no[i], i))
+
     p = Pool(processes=6)
-    patient_sil_score_map = p.imap(get_average_sil_score, cluster_no)
-    patient_sil_scores, patient_sil_indices = map(list, zip(*patient_sil_score_map))
+    patient_sil_score_map = p.imap(get_average_sil_score, list_to_send)
     p.close()
     p.join()
+
+    patient_sil_scores, patient_sil_indices = map(list, zip(*patient_sil_score_map))
 
     patient_k = cluster_no[patient_sil_indices[patient_sil_scores.index(max(patient_sil_scores))]]
     print(f"Max silhouette score with {patient_k} clusters")
@@ -233,7 +245,7 @@ if __name__ == "__main__":
     patient_kmeans.fit(patient_vectors)
     patient_labels = patient_kmeans.labels_
 
-    log("Plotting")
+    logger.log("Plotting")
     patient_fig = plt.figure()
     patient_ax = patient_fig.add_subplot(111)
     patient_scatter = patient_ax.scatter(patient_vectors[:, 0], patient_vectors[:, 1], c=patient_labels)
@@ -241,6 +253,6 @@ if __name__ == "__main__":
 
     patient_fig.savefig("patient_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
-    log("Finished", '!')
+    logger.log("Finished", '!')
 
     # cur = get_unique_per_patient(files[0])
