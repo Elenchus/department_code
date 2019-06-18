@@ -12,7 +12,7 @@ class logger:
         # self.logger.addHandler(handler)
         sys.excepthook = self.handle_exception
         self.file_name = self.output_path + log_file_name
-        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(message)s', filename = self.file_name, filemode = 'w+')
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', filename = self.file_name, filemode = 'w+')
         # with open(self.file_name, 'w+'):
         #     pass
 

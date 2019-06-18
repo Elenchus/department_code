@@ -8,7 +8,6 @@ from copy import deepcopy
 from datetime import datetime
 from functools import partial
 from gensim.models import Word2Vec
-from gensim.utils import simple_preprocess
 from math import ceil, sqrt
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
@@ -146,6 +145,9 @@ if __name__ == "__main__":
     p.join()
 
     patient_vectors = np.array(patient_vectors)
+
+    del model
+    gc.collect()
 
     logger.log("Clustering patient vectors")
     cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
