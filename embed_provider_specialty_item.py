@@ -13,11 +13,13 @@ from sklearn import cluster
 from sklearn import metrics
 from sklearn.manifold import TSNE
 
-def sum_patient_vectors(model, vocab, patient):
+def sum_patient_vectors(model, patient):
     similarities = []
-    for claim in patient:
-        if claim[1] not in vocab:
-            continue
+    pin = patient[0]
+    for claims in patient:
+        for claim in claims:
+            if claim == pin or claim[1] not in model.wv.vocab:
+                continue
 
         similarities.append(model.similarity(claim[1], claim[2]))
         
@@ -80,7 +82,7 @@ if __name__ == "__main__":
             string_list,
             size=size,
             window= 2,
-            min_count=20, # if this is not 1 then sum_patient_vectors needs to change, or will throw error -> after changing from 20 the silhouette score changed...
+            min_count=20, 
             workers=3,
             iter=5)
 
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     X = model[model.wv.vocab]
 
     logger.log("Clustering")
-    # cluster_no = [32, 64, 96, 128, len(no_unique_rsp), 160, 192, 224, 256]
+    # cluster_no = [32, 64, 96, 128, no_unique_rsp, 160, 192, 224, 256]
     # avg_sil = []
     # for n in cluster_no:
     #     kmeans = cluster.KMeans(n_clusters=n)
@@ -112,23 +114,10 @@ if __name__ == "__main__":
     logger.log("Re-loading parquet file")
     data = pd.read_parquet(filename, columns=['PIN', 'ITEM', 'SPR_RSP']).astype(str)
 
-    all_claims = itertools.groupby(sorted(data.values.tolist()), lambda x: x[0])
+    patients = itertools.groupby(sorted(data.values.tolist()), lambda x: x[0])
 
     del data
     gc.collect()
-
-    logger.log("Summing patient vectors")
-    func = partial(sum_patient_vectors, [model, model.vocab])
-    p = Pool(processes=6)
-    data_map = p.imap(partial, all_claims)
-    p.close()
-    p.join()
-
-    del all_claims
-    gc.collect()
-
-    logger.log("Creating lists")
-    avg_sims, min_sims = zip(*data_map)
 
     logger.log("Plotting")
     tsne_fig = tsne_plot(model, 143)
@@ -141,6 +130,23 @@ if __name__ == "__main__":
 
     fig.savefig(logger.output_path + "items_and_specialties_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
+    logger.log("Summing patient vectors")
+    # func = partial(sum_patient_vectors, model)
+    # p = Pool(processes=6)
+    # data_map = p.imap(func, patients)
+    # p.close()
+    # p.join()
+    data_map = []
+    for patient in patients:
+        data_map.append(sum_patient_vectors(model, patient))
+        
+    del patients
+    gc.collect()
+
+    logger.log("Creating lists")
+    avg_sims, min_sims = zip(*data_map)
+
+    logger.log("Plotting")
     b_plot_avg = plt.figure()
     b_ax_avg = b_plot_avg.add_subplot(111)
     b_ax_avg.boxplot(avg_sims)
@@ -150,7 +156,7 @@ if __name__ == "__main__":
     b_plot_min = plt.figure()
     b_ax_min = b_plot_min.add_subplot(111)
     b_ax_min.boxplot(avg_sims)
-    b_ax_min.title("Unique referrers per patient per year")
+    b_ax_min.title("Minimum patient item/specialty similarity score")
     b_plot_min.savefig(logger.output_path + "patient_minimum_similarity_boxplot" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
     logger.log("Finished", '!')
