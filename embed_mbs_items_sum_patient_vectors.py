@@ -136,85 +136,7 @@ if __name__ == "__main__":
             workers=3,
             iter=5)
 
-    X = model[model.wv.vocab]
-
-    logger.log("Clustering")
-    cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
-    avg_sil = []
-    for n in cluster_no:
-        kmeans = cluster.KMeans(n_clusters=n)
-        kmeans.fit(X)
-        labels = kmeans.labels_
-        silhouette_score = metrics.silhouette_score(X, labels, metric='euclidean')
-        avg_sil.append(silhouette_score)
-
-    k = cluster_no[avg_sil.index(max(avg_sil))]
-    print(f"Max silhouette score with {k} clusters")
-
-    kmeans = cluster.KMeans(n_clusters=k)
-    kmeans.fit(X)
-    labels = kmeans.labels_
-    # centroids = kmeans.cluster_centers_
-
-    logger.log("Plotting")
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    scatter = ax.scatter(X[:, 0], X[:, 1], c=labels)
-    legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
-
-    fig.savefig("k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
-
-    logger.log("Visualising with t-SNE")
-    tsne_fig = tsne_plot(model)
-    tsne_fig.savefig("t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
-
-    logger.log("Re-try - culling one-item-per-day items")
-    culled_same_day_claims = [x for x in same_day_claims if len(x) > 1]
-    unique_culled_claims = []    
-    for i in culled_same_day_claims:
-        for j in i:
-            unique_culled_claims.append(j)
-
-    unique_culled_claims = list(set(unique_culled_claims))
-
-    culled_size = ceil(sqrt(sqrt(len(unique_culled_claims))))
-
-    logger.log("Embedding vectors")
-    culled_model = Word2Vec(
-            culled_same_day_claims,
-            size=culled_size,
-            window=max(len(l) for l in culled_same_day_claims),
-            min_count=1,
-            workers=3,
-            iter=1)
-
-    Y = culled_model[culled_model.wv.vocab]
-
-    logger.log("Clustering")
-    cluster_no = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 32, 64, 128, 256]
-    culled_avg_sil = []
-    for n in cluster_no:
-        culled_kmeans = cluster.KMeans(n_clusters=n)
-        culled_kmeans.fit(Y)
-        culled_labels = culled_kmeans.labels_
-        culled_silhouette_score = metrics.silhouette_score(Y, culled_labels, metric='euclidean')
-        culled_avg_sil.append(culled_silhouette_score)
-
-    culled_k = cluster_no[culled_avg_sil.index(max(culled_avg_sil))]
-    print(f"Max silhouette score with {culled_k} clusters")
-
-    culled_kmeans = cluster.KMeans(n_clusters=culled_k)
-    culled_kmeans.fit(Y)
-    culled_labels = culled_kmeans.labels_
-    # centroids = kmeans.cluster_centers_
-
-    logger.log("Plotting")
-    culled_fig = plt.figure()
-    culled_ax = culled_fig.add_subplot(111)
-    culled_scatter = culled_ax.scatter(Y[:, 0], Y[:, 1], c=culled_labels)
-    culled_legend = culled_ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
-
-    culled_fig.savefig("culled_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    # X = model[model.wv.vocab]
 
     logger.log("Summing patient days")
     func = partial(sum_patient_vectors, model)
@@ -249,7 +171,7 @@ if __name__ == "__main__":
     patient_fig = plt.figure()
     patient_ax = patient_fig.add_subplot(111)
     patient_scatter = patient_ax.scatter(patient_vectors[:, 0], patient_vectors[:, 1], c=patient_labels)
-    patient_legend = patient_ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
+    patient_legend = patient_ax.legend(*patient_scatter.legend_elements(), loc="upper left", title="Cluster no.")
 
     patient_fig.savefig("patient_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
