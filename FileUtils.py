@@ -5,19 +5,19 @@ import logging
 from datetime import datetime
 
 class logger:
-    def __init__(self, name, log_file_name):
-        self.output_path = self.create_output_folder() + '\\'
+    def __init__(self, name, test_name):
+        self.output_path = self.create_output_folder(test_name) + '\\'
         self.logger = logging.getLogger(name)
         # handler = logging.StreamHandler(stream=sys.stdout)
         # self.logger.addHandler(handler)
         sys.excepthook = self.handle_exception
-        self.file_name = self.output_path + log_file_name
+        self.file_name = self.output_path + test_name + '.log'
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', filename = self.file_name, filemode = 'w+')
         # with open(self.file_name, 'w+'):
         #     pass
 
-    def create_output_folder(self):
-        path = os.getcwd() + '\\Output\\' + datetime.now().strftime("%Y%m%dT%H%M%S")
+    def create_output_folder(self, test_name):
+        path = os.getcwd() + '\\Output\\' + test_name + '_' + datetime.now().strftime("%Y%m%dT%H%M%S")
         os.makedirs(path)
 
         return path
