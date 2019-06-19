@@ -110,14 +110,18 @@ if __name__ == "__main__":
         frequency_of_specialties.append(claims.count(int(spec)))
 
     FileUtils.create_boxplot(logger, frequency_of_specialties, "Number of claims by specialty", "frequency_of_specialty")
+    
     logger.log("Finding most frequent specialties by > q75 + 1.5 * iqr")
+    spr_rsp = FileUtils.spr_rsp_converter()
     q75, q25 = np.percentile(frequency_of_specialties, [75 ,25])
     iqr = q75 - q25
-    list_of_main_specs = []
+    list_of_top_specialties = []
     for i in range(len(frequency_of_specialties)):
         if frequency_of_specialties[i] > q75 + 1.5 * iqr:
-            list_of_main_specs.append(unique_rsp[i])
+            list_of_top_specialties.append((frequency_of_specialties[i], unique_rsp[i]))
 
-    logger.log(f"Main specialties: {list_of_main_specs}")
+    list_of_top_specialties.sort()
+    for spec in list_of_top_specialties:
+        logger.log(f"{spr_rsp.convert(spec[1])} - {spec[0]}")
 
     logger.log("Finished", '!')

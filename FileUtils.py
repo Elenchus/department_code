@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+import pandas as pd
 
 from datetime import datetime
 from matplotlib import pyplot as plt
@@ -79,6 +80,22 @@ def tsne_plot(logger, model, perplex):
     path = logger.output_path + "t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S")
     logger.info(f"Saving TSNE figure to {path}")
     fig.savefig(path)
+
+class spr_rsp_converter:
+    def __init__(self):
+        filename = 'SPR_RSP.csv'
+        if not os.path.isfile(filename):
+            raise OSError("Cannot find SPR_RSP.csv - please put it in the same folder as FileUtils")
+
+        self.table = pd.read_csv(filename)
+        self.valid_values = self.table['SPR_RSP'].unique()
+
+    def convert(self, rsp):
+        if int(rsp) not in self.valid_values:
+            raise ValueError(f"{rsp} is not a valid SPR_RSP")
+
+        return self.table.loc[self.table['SPR_RSP'] == int(rsp)]['Label'].values.tolist()[0]
+    
 
 class logger:
     def __init__(self, name, test_name):
