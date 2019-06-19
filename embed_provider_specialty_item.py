@@ -17,13 +17,15 @@ def sum_patient_vectors(model, patient):
     similarities = []
     pin = patient[0]
     for claims in patient:
+        if claims == pin:
+            continue
         for claim in claims:
-            if claim == pin or claim[1] not in model.wv.vocab:
+            if claim[1] not in model.wv.vocab or claim[2] not in model.wv.vocab:
                 continue
 
-        similarities.append(model.similarity(claim[1], claim[2]))
-        
-    return (sum(similarities) / len(similarities), min(similarities))
+            similarities.append(model.similarity(claim[1], claim[2]))
+    if len(similarities) != 0:
+        return (sum(similarities) / len(similarities), min(similarities))
     
 
 def tsne_plot(model, perplex):
@@ -70,7 +72,8 @@ if __name__ == "__main__":
     data = pd.read_parquet(filename, columns=['ITEM', 'SPR_RSP']).astype(str)
     string_list = data.values.tolist()
     no_unique_items = len(data['ITEM'].unique())
-    no_unique_rsp = len(data['SPR_RSP'].unique())
+    unique_rsp = data['SPR_RSP'].unique()
+    no_unique_rsp = len(unique_rsp)
 
     del data
     gc.collect()
@@ -91,7 +94,11 @@ if __name__ == "__main__":
 
     X = model[model.wv.vocab]
 
-    logger.log("Clustering")
+    for rsp in unique_rsp:
+        if rsp not in model.wv.vocab:
+            no_unique_rsp = no_unique_rsp - 1
+
+    logger.log(f"Clustering with {no_unique_rsp} clusters")
     # cluster_no = [32, 64, 96, 128, no_unique_rsp, 160, 192, 224, 256]
     # avg_sil = []
     # for n in cluster_no:
@@ -104,23 +111,14 @@ if __name__ == "__main__":
 
     # k = cluster_no[avg_sil.index(max(avg_sil))]
     # logger.log(f"Max silhouette score with {k} clusters")
-    k = 143
 
-    kmeans = cluster.KMeans(n_clusters=k)
+    kmeans = cluster.KMeans(n_clusters=no_unique_rsp)
     kmeans.fit(X)
     labels = kmeans.labels_
     # centroids = kmeans.cluster_centers_
 
-    logger.log("Re-loading parquet file")
-    data = pd.read_parquet(filename, columns=['PIN', 'ITEM', 'SPR_RSP']).astype(str)
-
-    patients = itertools.groupby(sorted(data.values.tolist()), lambda x: x[0])
-
-    del data
-    gc.collect()
-
-    logger.log("Plotting")
-    tsne_fig = tsne_plot(model, 143)
+    logger.log("Plotting t-SNE and k-means")
+    tsne_fig = tsne_plot(model, no_unique_rsp)
     tsne_fig.savefig(logger.output_path + "t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
     fig = plt.figure()
@@ -129,6 +127,14 @@ if __name__ == "__main__":
     legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
 
     fig.savefig(logger.output_path + "items_and_specialties_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
+
+    logger.log("Re-loading parquet file")
+    data = pd.read_parquet(filename, columns=['PIN', 'ITEM', 'SPR_RSP']).astype(str)
+
+    patients = itertools.groupby(sorted(data.values.tolist()), lambda x: x[0])
+
+    del data
+    gc.collect()
 
     logger.log("Summing patient vectors")
     # func = partial(sum_patient_vectors, model)
@@ -139,14 +145,11 @@ if __name__ == "__main__":
     data_map = []
     for patient in patients:
         data_map.append(sum_patient_vectors(model, patient))
-        
-    del patients
-    gc.collect()
-
+    
     logger.log("Creating lists")
     avg_sims, min_sims = zip(*data_map)
 
-    logger.log("Plotting")
+    logger.log("Plotting patient boxplots")
     b_plot_avg = plt.figure()
     b_ax_avg = b_plot_avg.add_subplot(111)
     b_ax_avg.boxplot(avg_sims)
