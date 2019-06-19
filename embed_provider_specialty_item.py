@@ -4,14 +4,13 @@ import gc
 import itertools
 import pandas as pd
 from datetime import datetime
+from FileUtils import tsne_plot
 from functools import partial
 from gensim.models import Word2Vec
 from math import ceil, sqrt
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
 from sklearn import cluster
-from sklearn import metrics
-from sklearn.manifold import TSNE
 
 def sum_patient_vectors(model, patient):
     similarities = []
@@ -26,47 +25,11 @@ def sum_patient_vectors(model, patient):
             similarities.append(model.similarity(claim[1], claim[2]))
     if len(similarities) != 0:
         return (sum(similarities) / len(similarities), min(similarities))
-    
-
-def tsne_plot(model, perplex):
-    "Creates and TSNE model and plots it"
-    labels = []
-    tokens = []
-
-    for word in model.wv.vocab:
-        tokens.append(model[word])
-        labels.append(word)
-    
-    tsne_model = TSNE(perplexity=perplex, n_components=2, init='pca', n_iter=2500, random_state=23)
-    new_values = tsne_model.fit_transform(tokens)
-
-    x = []
-    y = []
-    for value in new_values:
-        x.append(value[0])
-        y.append(value[1])
-        
-    fig = plt.figure(figsize=(16, 16))
-    ax = fig.add_subplot(111)
-    for i in range(len(x)):
-        ax.scatter(x[i],y[i])
-    for i in range(len(x)):
-        ax.annotate(labels[i],
-                     xy=(x[i], y[i]),
-                     xytext=(5, 2),
-                     textcoords='offset points',
-                     ha='right',
-                     va='bottom')
-    
-    return fig
 
 if __name__ == "__main__":
     logger = FileUtils.logger(__name__, "embed_specialty_item")
-    logger.log("Starting")
-    path = 'C:/Data/MBS_Patient_10/'
 
-    files = [path + f for f in os.listdir(path) if f.lower().endswith('.parquet')]
-    filename = files[0]
+    filename = FileUtils.get_mbs_files()[0]
     
     logger.log("Loading parquet file")
     data = pd.read_parquet(filename, columns=['ITEM', 'SPR_RSP']).astype(str)
@@ -81,36 +44,21 @@ if __name__ == "__main__":
     logger.log("Embedding vectors")
     size = ceil(sqrt(sqrt(no_unique_items + no_unique_rsp)))
 
-    model = Word2Vec(
-            string_list,
-            size=size,
-            window= 2,
-            min_count=20, 
-            workers=3,
-            iter=5)
+    model = Word2Vec(string_list, size=size, window= 2, min_count=20, workers=3,iter=5)
 
     del string_list
     gc.collect()
 
     X = model[model.wv.vocab]
 
+    rsps_not_in_model = []
     for rsp in unique_rsp:
         if rsp not in model.wv.vocab:
             no_unique_rsp = no_unique_rsp - 1
 
     logger.log(f"Clustering with {no_unique_rsp} clusters")
     # cluster_no = [32, 64, 96, 128, no_unique_rsp, 160, 192, 224, 256]
-    # avg_sil = []
-    # for n in cluster_no:
-    #     kmeans = cluster.KMeans(n_clusters=n)
-    #     kmeans.fit(X)
-    #     labels = kmeans.labels_
-    #     silhouette_score = metrics.silhouette_score(X, labels, metric='euclidean')
-    #     avg_sil.append(silhouette_score)
-    #     logger.log(f"n = {n}, silhouette score = {silhouette_score}")
-
-    # k = cluster_no[avg_sil.index(max(avg_sil))]
-    # logger.log(f"Max silhouette score with {k} clusters")
+    # best_cluster = FileUtils.get_best_cluster_size(logger, cluster_no)
 
     kmeans = cluster.KMeans(n_clusters=no_unique_rsp)
     kmeans.fit(X)
@@ -118,8 +66,7 @@ if __name__ == "__main__":
     # centroids = kmeans.cluster_centers_
 
     logger.log("Plotting t-SNE and k-means")
-    tsne_fig = tsne_plot(model, no_unique_rsp)
-    tsne_fig.savefig(logger.output_path + "t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    tsne_plot(logger, model, no_unique_rsp)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -142,24 +89,21 @@ if __name__ == "__main__":
     # data_map = p.imap(func, patients)
     # p.close()
     # p.join()
+
+    # data_map = [i for i in data_map if i]
+    
+    
     data_map = []
     for patient in patients:
-        data_map.append(sum_patient_vectors(model, patient))
+        x = sum_patient_vectors(model, patient)
+        if x is not None:
+            data_map.append(x)
     
     logger.log("Creating lists")
     avg_sims, min_sims = zip(*data_map)
 
     logger.log("Plotting patient boxplots")
-    b_plot_avg = plt.figure()
-    b_ax_avg = b_plot_avg.add_subplot(111)
-    b_ax_avg.boxplot(avg_sims)
-    b_ax_avg.title("Average patient item/specialty similarity score")
-    b_plot_avg.savefig(logger.output_path + "patient_average_similarity_boxplot" + datetime.now().strftime("%Y%m%dT%H%M%S"))
-
-    b_plot_min = plt.figure()
-    b_ax_min = b_plot_min.add_subplot(111)
-    b_ax_min.boxplot(avg_sims)
-    b_ax_min.title("Minimum patient item/specialty similarity score")
-    b_plot_min.savefig(logger.output_path + "patient_minimum_similarity_boxplot" + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    FileUtils.create_boxplot(logger, avg_sims, "Average patient item/specialty similarity score", "patient_average_similarity_boxplot")
+    FileUtils.create_boxplot(logger, min_sims, "Minimum patient item/specialty similarity score", "patient_minimum_similarity_boxplot")
 
     logger.log("Finished", '!')
