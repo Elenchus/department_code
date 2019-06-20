@@ -9,13 +9,24 @@ from sklearn import cluster, metrics
 from sklearn.manifold import TSNE
 
 path = 'C:/Data/'
+mbs_header = ['PIN', 'SEX', 'YOB', 'PINSTATE', 'SPR', 'SPRPRAC', 'SPR_RSP', 'SPRSTATE', 'RPR', 'RPRPRAC', 'RPRSTATE', 'DOS', 'ITEM', 'NUMSERV', 'MDV_NUMSERV', 'BENPAID', 'FEECHARGED', 'SCHEDFEE', 'BILLTYPECD', 'INHOSPITAL', 'SAMPLE', 'WEIGHT']
+pbs_header = []
 
 def create_boxplot(logger, data, title, filename):
     logger.log(f"Plotting boxplot: {title}")
     b_plot_avg = plt.figure()
     b_ax_avg = b_plot_avg.add_subplot(111)
     b_ax_avg.boxplot(data)
-    plt.title(title)
+    b_ax_avg.suptitle(title)
+    b_plot_avg.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
+
+def create_boxplot_group(logger, data, labels, title, filename):
+    logger.log(f"Plotting boxplot group: {title}")
+    b_plot_avg = plt.figure()
+    b_ax_avg = b_plot_avg.add_subplot(111)
+    b_ax_avg.boxplot(data)
+    b_plot_avg.suptitle(title)
+    b_ax_avg.set_xticklabels(labels)
     b_plot_avg.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
 
 def get_best_cluster_size(logger, X, clusters):
