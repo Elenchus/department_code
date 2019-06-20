@@ -9,25 +9,39 @@ from sklearn import cluster, metrics
 from sklearn.manifold import TSNE
 
 path = 'C:/Data/'
-mbs_header = ['PIN', 'SEX', 'YOB', 'PINSTATE', 'SPR', 'SPRPRAC', 'SPR_RSP', 'SPRSTATE', 'RPR', 'RPRPRAC', 'RPRSTATE', 'DOS', 'ITEM', 'NUMSERV', 'MDV_NUMSERV', 'BENPAID', 'FEECHARGED', 'SCHEDFEE', 'BILLTYPECD', 'INHOSPITAL', 'SAMPLE', 'WEIGHT']
-pbs_header = []
+mbs_header = ['PIN', 'DOS', 'PINSTATE', 'SPR', 'SPR_RSP', 'SPRPRAC', 'SPRSTATE', 'RPR', 'RPRPRAC', 'RPRSTATE', 'ITEM', 'NUMSERV', 'MDV_NUMSERV', 'BENPAID', 'FEECHARGED', 'SCHEDFEE', 'BILLTYPECD', 'INHOSPITAL', 'SAMPLEWEIGHT']
+pbs_header = ['PTNT_ID', 'SPPLY_DT', 'ITM_CD', 'PBS_RGLTN24_ADJST_QTY', 'BNFT_AMT', 'PTNT_CNTRBTN_AMT', 'SRT_RPT_IND', 'RGLTN24_IND', 'DRG_TYP_CD', 'MJR_SPCLTY_GRP_CD', 'UNDR_CPRSCRPTN_TYP_CD', 'PRSCRPTN_CNT', 'PTNT_CTGRY_DRVD_CD', 'PTNT_STATE']
+
+def categorical_plot_group(logger, x, y, legend_labels, title, filename):
+    logger.log(f"Plotting bar chart: {title}")
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    for i in range(len(y)):
+        ax.plot(y[i], x[i], label=legend_labels[i])
+    
+    ax.legend()
+    fig.suptitle(title)
+    fig.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    plt.close(fig)
 
 def create_boxplot(logger, data, title, filename):
     logger.log(f"Plotting boxplot: {title}")
-    b_plot_avg = plt.figure()
-    b_ax_avg = b_plot_avg.add_subplot(111)
-    b_ax_avg.boxplot(data)
-    b_ax_avg.suptitle(title)
-    b_plot_avg.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.boxplot(data)
+    ax.suptitle(title)
+    fig.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    plt.close(fig)
 
 def create_boxplot_group(logger, data, labels, title, filename):
     logger.log(f"Plotting boxplot group: {title}")
-    b_plot_avg = plt.figure()
-    b_ax_avg = b_plot_avg.add_subplot(111)
-    b_ax_avg.boxplot(data)
-    b_plot_avg.suptitle(title)
-    b_ax_avg.set_xticklabels(labels)
-    b_plot_avg.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.boxplot(data)
+    fig.suptitle(title)
+    ax.set_xticklabels(labels)
+    fig.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
+    plt.close(fig)
 
 def get_best_cluster_size(logger, X, clusters):
     logger.log("Getting best k-means cluster sizer with average silhouette score")
