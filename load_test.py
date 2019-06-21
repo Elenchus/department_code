@@ -4,5 +4,6 @@ import timeit as tm
 
 filename = FileUtils.get_mbs_files()[0]
 col = 'PIN'
-x = tm.timeit(lambda: pandas.read_parquet(filename, columns=[col]))
+timer = tm.Timer("pandas.read_parquet(filename, columns=[col])", globals=globals())
+x = timer.timeit(1)
 print(x)
