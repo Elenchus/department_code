@@ -17,7 +17,7 @@ def categorical_plot_group(logger, x, y, legend_labels, title, filename):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     for i in range(len(y)):
-        ax.plot(y[i], x[i], label=legend_labels[i])
+        ax.plot(x[i], y[i], label=legend_labels[i])
     
     ax.legend()
     fig.suptitle(title)
