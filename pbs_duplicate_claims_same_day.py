@@ -1,8 +1,8 @@
 import ray
 
 import FileUtils
-import itertools
-import pandas as pd
+# import itertools
+import modin.pandas as pd
 import re
 from FileUtils import pbs_header
 from matplotlib import pyplot as plt
@@ -49,24 +49,31 @@ if __name__ == "__main__":
         year = re.search("_(\d\d\d\d)\.", filename)[1]
         years.append(year)
         logger.log(f"Loading {year}")
-        data = pd.read_parquet(filename, columns=['PTNT_ID', 'ITM_CD', 'SPPLY_DT']).values.tolist()
-        patients = itertools.groupby(sorted(data), lambda x: x[0])
+        data = pd.read_parquet(filename, columns=['PTNT_ID', 'ITM_CD', 'SPPLY_DT', 'DRG_TYP_CD']).values.tolist()
+        # patients = itertools.groupby(sorted(data), lambda x: x[0])
+
         patient_duplicate_claims = []
-        patients = []
+        patient_ids = []
         res_ids = []
+        prescriptions = []
         for patient, claims in patients:
             res_ids.append(get_duplicate_same_day_items.remote(logger, claims))
-            patients.append(patient)
+            # patient_duplicate_claims.append(get_duplicate_same_day_items(logger, claims))
+            patient_ids.append(patient)
 
         patient_duplicate_claims = ray.get(res_ids)
         patient_duplicate_claims_by_year.append(patient_duplicate_claims)      
 
         if len(patient_duplicate_claims) != 0:
             outlier_indices = FileUtils.get_outlier_indices(patient_duplicate_claims)
-            patients_of_interest = [patients[i] for i in outlier_indices]
+            patients_of_interest = [patient_ids[i] for i in outlier_indices]
+            for patient_id in patients_of_interest:
+                prescriptions.append(i[1] for i in data if i[0] == patient_id)
         else:
             patients_of_interest = []
 
         patients_of_interest_by_year.append(patients_of_interest)
+
+        break
 
     FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient in {years[0]}-{years[-1]}", "pbs_same_day_claims")
