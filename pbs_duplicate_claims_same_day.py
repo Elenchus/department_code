@@ -43,8 +43,8 @@ if __name__ == "__main__":
 
     filenames = FileUtils.get_pbs_files()
     years = []
-    patients_of_interest_by_year = []
     patient_duplicate_claims_by_year = []
+    duplicate_prescription_frequencies_by_year = []
     for filename in filenames:
         year = re.search("_(\d\d\d\d)\.", filename)[1]
         years.append(year)
@@ -52,23 +52,31 @@ if __name__ == "__main__":
         data = pd.read_parquet(filename, columns=['PTNT_ID', 'ITM_CD', 'SPPLY_DT']).values.tolist()
         patients = itertools.groupby(sorted(data), lambda x: x[0])
         patient_duplicate_claims = []
-        patients = []
+        patient_ids = []
         res_ids = []
         for patient, claims in patients:
             res_ids.append(get_duplicate_same_day_items.remote(logger, claims))
-            patients.append(patient)
+            patient_ids.append(patient)
 
         patient_duplicate_claims = ray.get(res_ids)
-        patient_duplicate_claims_by_year.append(patient_duplicate_claims)      
+        patient_duplicate_claims_by_year.append(patient_duplicate_claims)
 
+        logger.log("Finding patients of interest")
         if len(patient_duplicate_claims) != 0:
             outlier_indices = FileUtils.get_outlier_indices(patient_duplicate_claims)
-            patients_of_interest = [patients[i] for i in outlier_indices]
+            patients_of_interest = [patient_ids[i] for i in outlier_indices]
         else:
             patients_of_interest = []
 
-        patients_of_interest_by_year.append(patients_of_interest)
+        prescriptions = []
+        for patient_id in patients_of_interest:
+            prescriptions.append(i[1] for i in data if data[0] == patient_id)
+
+        prescription_frequencies = [len(list(group)) for key, group in itertools.groupby(sorted(prescriptions))]
+        duplicate_prescription_frequencies_by_year.append(prescription_frequencies)
 
         break
 
+
     FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient in {years[0]}-{years[-1]}", "pbs_same_day_claims")
+    FileUtils.create_boxplot_group(logger, duplicate_prescription_frequencies_by_year, years, f"Distribution of number of duplicate claims per item code for high-risk items in {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")
