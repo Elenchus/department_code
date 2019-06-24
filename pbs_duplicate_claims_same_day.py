@@ -39,7 +39,7 @@ def get_duplicate_same_day_items(logger, claims):
     return number_of_duplicate_claims
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "pbs_duplicate_claims")
+    logger = FileUtils.logger(__name__, "pbs_duplicate_claims", '/mnt/c/data')
 
     filenames = FileUtils.get_pbs_files()
     years = []
@@ -68,5 +68,7 @@ if __name__ == "__main__":
             patients_of_interest = []
 
         patients_of_interest_by_year.append(patients_of_interest)
+
+        break
 
     FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient in {years[0]}-{years[-1]}", "pbs_same_day_claims")

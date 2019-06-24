@@ -184,7 +184,7 @@ class logger:
             copy_folder = path / current
             os.mkdir(copy_folder)
 
-            copy_tree(self.output_path, copy_folder)
+            copy_tree(self.output_path.absolute().as_posix(), copy_folder.absolute().as_posix())
 
 
     def create_output_folder(self, test_name):
