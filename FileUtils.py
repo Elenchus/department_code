@@ -1,15 +1,19 @@
 import os
 import sys
+import atexit
 import logging
+import numpy as np
 import pandas as pd
 
 from datetime import datetime
+from distutils.dir_util import copy_tree
 from matplotlib import pyplot as plt
+from pathlib import Path
 from sklearn import cluster, metrics
 from sklearn.manifold import TSNE
 
 if sys.platform == "win32":
-    path = 'C:/Data/'
+    path = 'C:\\Data\\'
 else:
     path = '/home/elm/data/'
 
@@ -21,12 +25,12 @@ def categorical_plot_group(logger, x, y, legend_labels, title, filename):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     for i in range(len(y)):
-        ax.plot(x[i], y[i], label=legend_labels[i])
+        ax.scatter(x[i], y[i], label=legend_labels[i])
     
-    ax.legend()
-    fig.suptitle(title)
-    fig.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
-    plt.close(fig)
+    # plt.xticks(range(x[0]), (str(i) for i in x[0]))
+    lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    ttl = fig.suptitle(title)
+    save_plt_fig(logger, fig, filename, (lgd,ttl, ))
 
 def create_boxplot(logger, data, title, filename):
     logger.log(f"Plotting boxplot: {title}")
@@ -34,8 +38,7 @@ def create_boxplot(logger, data, title, filename):
     ax = fig.add_subplot(111)
     ax.boxplot(data)
     ax.suptitle(title)
-    fig.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
-    plt.close(fig)
+    save_plt_fig(logger, fig, filename)
 
 def create_boxplot_group(logger, data, labels, title, filename):
     logger.log(f"Plotting boxplot group: {title}")
@@ -44,8 +47,8 @@ def create_boxplot_group(logger, data, labels, title, filename):
     ax.boxplot(data)
     fig.suptitle(title)
     ax.set_xticklabels(labels)
-    fig.savefig(logger.output_path + filename + datetime.now().strftime("%Y%m%dT%H%M%S"))
-    plt.close(fig)
+    save_plt_fig(logger, fig, filename)
+    
 
 def get_best_cluster_size(logger, X, clusters):
     logger.log("Getting best k-means cluster sizer with average silhouette score")
@@ -69,11 +72,30 @@ def get_mbs_files():
 
     return files
 
+def get_outlier_indices(data):
+    q75, q25 = np.percentile(data, [75 ,25])
+    iqr = q75 - q25
+    list_of_outlier_indices = []
+    for i in range(len(data)):
+        if data[i] > q75 + 1.5 * iqr:
+            list_of_outlier_indices.append(i)
+
+    return list_of_outlier_indices
+
 def get_pbs_files():
     pbs_path = path + 'PBS_Patient_10/'
     files = [pbs_path + f for f in os.listdir(pbs_path) if f.lower().endswith('.parquet')]
 
     return files
+
+def save_plt_fig(logger, fig, filename, bbox_extra_artists=None):
+    current = datetime.now().strftime("%Y%m%dT%H%M%S")
+    if bbox_extra_artists == None:
+        fig.savefig(logger.output_path / f"{filename}_{current}")
+    else:
+        fig.savefig(logger.output_path / f"{filename}_{current}", bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
+
+    plt.close(fig)
 
 def tsne_plot(logger, model, perplex):
     logger.info(f"Creating TSNE model with perplexity {perplex}")
@@ -127,30 +149,50 @@ class spr_rsp_converter:
         return self.table.loc[self.table['SPR_RSP'] == int(rsp)]['Label'].values.tolist()[0]
 
     def convert_str(self, rsp):
-        if str(rsp) not in self.valid_num_values:
+        if str(rsp) not in self.valid_str_values:
             raise ValueError(f"{rsp} is not a valid name")
 
         return self.table.loc[self.table['Label'] == str(rsp)]['SPR_RSP'].values.tolist()[0]
-
-
     
 
 class logger:
-    def __init__(self, name, test_name):
-        self.output_path = self.create_output_folder(test_name) + '\\'
+    def __init__(self, name, test_name, copy_path = None):
+        self.copy_path = copy_path
+        self.test_name = test_name
+        self.output_path = self.create_output_folder(test_name)
         self.logger = logging.getLogger(name)
+        atexit.register(self.finalise)
         # handler = logging.StreamHandler(stream=sys.stdout)
         # self.logger.addHandler(handler)
         sys.excepthook = self.handle_exception
-        self.file_name = self.output_path + test_name + '.log'
+        self.file_name = self.output_path / f"{test_name}.log"
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', filename = self.file_name, filemode = 'w+')
         self.log(f"Starting {test_name}")
 
-    def create_output_folder(self, test_name):
-        path = os.getcwd() + '\\Output\\' + test_name + '_' + datetime.now().strftime("%Y%m%dT%H%M%S")
-        os.makedirs(path)
+    def finalise(self):
+        if self.copy_path != None:
+            if type(self.copy_path) != str:
+                raise("Copy path must be a string directory")
+            
+            path = Path(self.copy_path)
 
-        return path
+            if not path.exists():
+                raise(f"Cannot find {self.copy_path}")
+
+            current = datetime.now().strftime("%Y%m%dT%H%M%S")
+            current = f"{self.test_name}_{current}"
+            copy_folder = path / current
+            os.mkdir(copy_folder)
+
+            copy_tree(self.output_path, copy_folder)
+
+
+    def create_output_folder(self, test_name):
+        current = datetime.now().strftime("%Y%m%dT%H%M%S")
+        output_folder = Path(os.getcwd()) / "Output" / f"{test_name}_{current}"
+        os.makedirs(output_folder)
+
+        return output_folder
 
     def handle_exception(self, exc_type, exc_value, exc_traceback):
         if issubclass(exc_type, KeyboardInterrupt):

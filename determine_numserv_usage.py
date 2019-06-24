@@ -9,12 +9,14 @@ if __name__ == "__main__":
     frequencies_by_year = []
     labels_by_year = []
     years = []
+    not_defined = rsp.convert_str("Not Defined")
     for filename in filenames:
         year = re.search("_(\d\d\d\d)\.", filename)[1]
+        logger.log(f"Checking {year}")
         df = pd.read_parquet(filename, columns = ['NUMSERV', 'SPR_RSP'])
-        rows_of_interest = df.loc[df['SPR_RSP'] == rsp.convert_str("Not defined")]
+        rows_of_interest = df.loc[df['SPR_RSP'] == not_defined]
         unique_values = rows_of_interest['NUMSERV'].unique()
-        frequencies = rows_of_interest.values.tolist()
+        frequencies = rows_of_interest['NUMSERV'].value_counts().tolist()
 
         frequencies_by_year.append(frequencies)
         labels_by_year.append(unique_values)

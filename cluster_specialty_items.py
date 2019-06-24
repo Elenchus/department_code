@@ -84,23 +84,17 @@ if __name__ == "__main__":
 
 
     logger.log("Finding outlier specialties by average score")
-    q75, q25 = np.percentile(avg_sims, [75 ,25])
-    iqr = q75 - q25
-    list_of_outlier_number = []
-    for i in range(len(avg_sims)):
-        if avg_sims[i] > q75 + 1.5 * iqr:
-            list_of_outlier_number.append(ids[i])
+    
+    
+    outlier_indices = FileUtils.get_outlier_indices(avg_sims)
+    list_of_outlier_number = [ids[i] for i in outlier_indices]
 
     logger.log(f"Outlier specialties by average score: {str(list_of_outlier_number)}")
 
     
     logger.log("Finding outlier specialties by minimum score")
-    q75, q25 = np.percentile(min_sims, [75 ,25])
-    iqr = q75 - q25
-    list_of_outlier_min = []
-    for i in range(len(min_sims)):
-        if min_sims[i] > q75 + 1.5 * iqr:
-            list_of_outlier_min.append(ids[i])
+    outlier_indices = FileUtils.get_outlier_indices(min_sims)
+    list_of_outlier_min = [ids[i] for i in outlier_indices]
 
     logger.log(f"Outlier specialties by minimum score: {str(list_of_outlier_min)}")
 
@@ -113,7 +107,7 @@ if __name__ == "__main__":
     
     logger.log("Finding most frequent specialties by > q75 + 1.5 * iqr")
     spr_rsp = FileUtils.spr_rsp_converter()
-    q75, q25 = np.percentile(frequency_of_specialties, [75 ,25])
+    q75, q25 = np.percentile(frequency_of_specialties, [75, 25])
     iqr = q75 - q25
     list_of_top_specialties = []
     for i in range(len(frequency_of_specialties)):
@@ -122,6 +116,6 @@ if __name__ == "__main__":
 
     list_of_top_specialties.sort()
     for spec in list_of_top_specialties:
-        logger.log(f"{spr_rsp.convert(spec[1])} - {spec[0]}")
+        logger.log(f"{spr_rsp.convert_num(spec[1])} - {spec[0]}")
 
     logger.log("Finished", '!')

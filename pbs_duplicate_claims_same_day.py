@@ -1,12 +1,13 @@
+import ray
+
 import FileUtils
 import itertools
 import pandas as pd
-# import ray
 import re
 from FileUtils import pbs_header
 from matplotlib import pyplot as plt
 
-# ray.init()
+ray.init()
 
 def get_duplicates(ls):
     seen = set()
@@ -15,7 +16,7 @@ def get_duplicates(ls):
     
     return list(seen_twice)
 
-# @ray.remote
+@ray.remote
 def get_duplicate_same_day_items(logger, claims):
     dos = []
     items = []
@@ -38,15 +39,34 @@ def get_duplicate_same_day_items(logger, claims):
     return number_of_duplicate_claims
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "cluster_specialty_by_item_similarity")
+    logger = FileUtils.logger(__name__, "pbs_duplicate_claims")
 
     filenames = FileUtils.get_pbs_files()
+    years = []
+    patients_of_interest_by_year = []
+    patient_duplicate_claims_by_year = []
     for filename in filenames:
         year = re.search("_(\d\d\d\d)\.", filename)[1]
+        years.append(year)
+        logger.log(f"Loading {year}")
         data = pd.read_parquet(filename, columns=['PTNT_ID', 'ITM_CD', 'SPPLY_DT']).values.tolist()
         patients = itertools.groupby(sorted(data), lambda x: x[0])
         patient_duplicate_claims = []
+        patients = []
+        res_ids = []
         for patient, claims in patients:
-            patient_duplicate_claims.append(get_duplicate_same_day_items(logger, claims))
+            res_ids.append(get_duplicate_same_day_items.remote(logger, claims))
+            patients.append(patient)
 
-    FileUtils.create_boxplot(logger, patient_duplicate_claims, f"Distribution of same-day-duplicate-claims per patient in {year}", "pbs_same_day_claims")
+        patient_duplicate_claims = ray.get(res_ids)
+        patient_duplicate_claims_by_year.append(patient_duplicate_claims)      
+
+        if len(patient_duplicate_claims) != 0:
+            outlier_indices = FileUtils.get_outlier_indices(patient_duplicate_claims)
+            patients_of_interest = [patients[i] for i in outlier_indices]
+        else:
+            patients_of_interest = []
+
+        patients_of_interest_by_year.append(patients_of_interest)
+
+    FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient in {years[0]}-{years[-1]}", "pbs_same_day_claims")
