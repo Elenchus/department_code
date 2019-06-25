@@ -44,7 +44,7 @@ if __name__ == "__main__":
     filenames = FileUtils.get_pbs_files()
     years = []
     patient_duplicate_claims_by_year = []
-    duplicate_prescription_frequencies_by_year = []
+    prescription_frequencies_by_year = []
     for filename in filenames:
         year = re.search("_(\d\d\d\d)\.", filename)[1]
         years.append(year)
@@ -54,7 +54,6 @@ if __name__ == "__main__":
         patients = itertools.groupby(data, lambda x: x[0])
         patient_duplicate_claims = []
         patient_ids = []
-        patient_duplicate_claims = []
         # res_ids = []
         logger.log("Finding duplicate claims")
         for patient, claims in patients:
@@ -82,7 +81,7 @@ if __name__ == "__main__":
             patients_of_interest = []
             prescription_frequencies = []
 
-        duplicate_prescription_frequencies_by_year.append(prescription_frequencies)
+        prescription_frequencies_by_year.append(prescription_frequencies)
 
     FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient {years[0]}-{years[-1]}", "pbs_same_day_claims")
-    FileUtils.create_boxplot_group(logger, duplicate_prescription_frequencies_by_year, years, f"Number of claims per item code for high-risk patients {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")
+    FileUtils.create_boxplot_group(logger, prescription_frequencies_by_year, years, f"Number of claims per item code for high-risk patients {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")
