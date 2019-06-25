@@ -1,4 +1,4 @@
-import ray
+# import ray
 
 import FileUtils
 import itertools
@@ -7,7 +7,7 @@ import re
 from FileUtils import pbs_header
 from matplotlib import pyplot as plt
 
-ray.init()
+# ray.init()
 
 def get_duplicates(ls):
     seen = set()
@@ -16,7 +16,7 @@ def get_duplicates(ls):
     
     return list(seen_twice)
 
-@ray.remote
+# @ray.remote
 def get_duplicate_same_day_items(logger, claims):
     dos = []
     items = []
@@ -50,33 +50,39 @@ if __name__ == "__main__":
         years.append(year)
         logger.log(f"Loading {year}")
         data = pd.read_parquet(filename, columns=['PTNT_ID', 'ITM_CD', 'SPPLY_DT']).values.tolist()
-        patients = itertools.groupby(sorted(data), lambda x: x[0])
+        data.sort()
+        patients = itertools.groupby(data, lambda x: x[0])
         patient_duplicate_claims = []
         patient_ids = []
-        res_ids = []
+        patient_duplicate_claims = []
+        # res_ids = []
+        logger.log("Finding duplicate claims")
         for patient, claims in patients:
-            res_ids.append(get_duplicate_same_day_items.remote(logger, claims))
+            # res_ids.append(get_duplicate_same_day_items.remote(logger, claims))
+            patient_duplicate_claims.append(get_duplicate_same_day_items(logger, claims))
             patient_ids.append(patient)
 
-        patient_duplicate_claims = ray.get(res_ids)
+        # patient_duplicate_claims = ray.get(res_ids)
         patient_duplicate_claims_by_year.append(patient_duplicate_claims)
 
-        logger.log("Finding patients of interest")
+        logger.log("Finding prescription frequencies")
         if len(patient_duplicate_claims) != 0:
             outlier_indices = FileUtils.get_outlier_indices(patient_duplicate_claims)
             patients_of_interest = [patient_ids[i] for i in outlier_indices]
+            prescriptions = []
+            patients = itertools.groupby(data, lambda x: x[0])
+            for patient, claims in patients:
+                if patient in patients_of_interest:
+                    for claim in claims:
+                        if claim != patient:
+                            prescriptions.append(claim[1])
+
+            prescription_frequencies = [len(list(group)) for key, group in itertools.groupby(sorted(prescriptions))]
         else:
             patients_of_interest = []
+            prescription_frequencies = []
 
-        prescriptions = []
-        for patient_id in patients_of_interest:
-            prescriptions.append(i[1] for i in data if data[0] == patient_id)
-
-        prescription_frequencies = [len(list(group)) for key, group in itertools.groupby(sorted(prescriptions))]
         duplicate_prescription_frequencies_by_year.append(prescription_frequencies)
 
-        break
-
-
-    FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient in {years[0]}-{years[-1]}", "pbs_same_day_claims")
-    FileUtils.create_boxplot_group(logger, duplicate_prescription_frequencies_by_year, years, f"Distribution of number of duplicate claims per item code for high-risk items in {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")
+    FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient {years[0]}-{years[-1]}", "pbs_same_day_claims")
+    FileUtils.create_boxplot_group(logger, duplicate_prescription_frequencies_by_year, years, f"Number of duplicate claims per item code for high-risk items {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")
