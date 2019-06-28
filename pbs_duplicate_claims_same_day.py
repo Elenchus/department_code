@@ -68,20 +68,31 @@ if __name__ == "__main__":
         if len(patient_duplicate_claims) != 0:
             outlier_indices = FileUtils.get_outlier_indices(patient_duplicate_claims)
             patients_of_interest = [patient_ids[i] for i in outlier_indices]
+            patients_of_interest.sort()
             prescriptions = []
             patients = itertools.groupby(data, lambda x: x[0])
+            interest_counter = 0
             for patient, claims in patients:
-                if patient in patients_of_interest:
+                if interest_counter == len(patients_of_interest):
+                    break
+
+                if patient == patients_of_interest[interest_counter]:
+                    interest_counter = interest_counter + 1
                     for claim in claims:
                         if claim != patient:
                             prescriptions.append(claim[1])
+            
+            assert interest_counter == len(patients_of_interest)
 
             prescription_frequencies = [len(list(group)) for key, group in itertools.groupby(sorted(prescriptions))]
+            prescription_frequencies_per_patient = [i / len(patients_of_interest) for i in prescription_frequencies]
         else:
             patients_of_interest = []
             prescription_frequencies = []
 
         prescription_frequencies_by_year.append(prescription_frequencies)
+
+        break
 
     FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient {years[0]}-{years[-1]}", "pbs_same_day_claims")
     FileUtils.create_boxplot_group(logger, prescription_frequencies_by_year, years, f"Number of claims per item code for high-risk patients {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")
