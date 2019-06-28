@@ -17,7 +17,7 @@ def get_duplicates(ls):
     return list(seen_twice)
 
 # @ray.remote
-def get_duplicate_same_day_items(logger, claims):
+def get_duplicate_same_day_item_frequencies(logger, claims):
     dos = []
     items = []
     for claim in claims:
@@ -58,7 +58,7 @@ if __name__ == "__main__":
         logger.log("Finding duplicate claims")
         for patient, claims in patients:
             # res_ids.append(get_duplicate_same_day_items.remote(logger, claims))
-            patient_duplicate_claims.append(get_duplicate_same_day_items(logger, claims))
+            patient_duplicate_claims.append(get_duplicate_same_day_item_frequencies(logger, claims))
             patient_ids.append(patient)
 
         # patient_duplicate_claims = ray.get(res_ids)
@@ -90,6 +90,7 @@ if __name__ == "__main__":
             patients_of_interest = []
             prescription_frequencies = []
 
+        top_prescriptions = pd.DataFrame(prescriptions)[0].value_counts().nlargest(15)
         prescription_frequencies_by_year.append(prescription_frequencies)
 
         break
