@@ -48,6 +48,14 @@ def create_boxplot_group(logger, data, labels, title, filename):
     fig.suptitle(title)
     ax.set_xticklabels(labels)
     save_plt_fig(logger, fig, filename)
+
+def create_scatter_plot(logger, data, labels, title, filename):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    scatter = ax.scatter(data[:, 0], data[:, 1], c=labels)
+    legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
+
+    save_plt_fig(logger, fig, filename)
     
 
 def get_best_cluster_size(logger, X, clusters):
@@ -98,7 +106,7 @@ def save_plt_fig(logger, fig, filename, bbox_extra_artists=None):
     plt.close(fig)
 
 def tsne_plot(logger, model, perplex):
-    logger.info(f"Creating TSNE model with perplexity {perplex}")
+    logger.log(f"Creating TSNE model with perplexity {perplex}")
     labels = []
     tokens = []
 
@@ -109,7 +117,7 @@ def tsne_plot(logger, model, perplex):
     tsne_model = TSNE(perplexity=perplex, n_components=2, init='pca', n_iter=2500, random_state=23)
     new_values = tsne_model.fit_transform(tokens)
 
-    logger.info(f"Plotting TSNE figure")
+    logger.log(f"Plotting TSNE figure")
     x = []
     y = []
     for value in new_values:
@@ -128,8 +136,9 @@ def tsne_plot(logger, model, perplex):
                      ha='right',
                      va='bottom')
     
-    path = logger.output_path + "t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S")
-    logger.info(f"Saving TSNE figure to {path}")
+    name = "t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S")
+    path = logger.output_path / name
+    logger.log(f"Saving TSNE figure to {path}")
     fig.savefig(path)
 
 class code_converter:
@@ -189,6 +198,7 @@ class logger:
             if not path.exists():
                 raise(f"Cannot find {self.copy_path}")
 
+            self.log("Copying data folder")
             current = datetime.now().strftime("%Y%m%dT%H%M%S")
             current = f"{self.test_name}_{current}"
             copy_folder = path / current
@@ -210,6 +220,7 @@ class logger:
             return
 
         self.logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+        raise(exc_type(exc_value))
 
     def log(self, line, line_end = '...'):
         print(f"{datetime.now()} {line}{line_end}")

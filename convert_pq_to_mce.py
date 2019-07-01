@@ -1,3 +1,4 @@
+from datetime import datetime as dt
 import FileUtils
 import itertools
 import pandas as pd
@@ -9,7 +10,7 @@ if __name__ == "__main__":
     for filename in FileUtils.get_pbs_files():
         logger.log(f"Opening {filename}")
         year = re.search("_(\d\d\d\d)\.", filename)[1]
-        data = pd.read_parquet(filename, columns=['PTNT_ID', 'DOS', 'ITM_CD']).values.tolist()
+        data = pd.read_parquet(filename, columns=['PTNT_ID', 'SPPLY_DT', 'ITM_CD']).values.tolist()
         data.sort()
         patients = itertools.groupby(data, lambda x: x[0])
         output_name = 'mce_pbs_' + year + '.txt'
@@ -27,10 +28,8 @@ if __name__ == "__main__":
                         else: 
                             first = False
 
-                        f.write(f"[{claim[1]}, [{claim[2]}]]")
-
-                    break
-
+                        timestamp = dt.strptime(claim[1], "%d%b%Y").timestamp()
+                        f.write(f"[{timestamp}, [{claim[2]}]]")
                 f.write("]\r\n")
         
         break
