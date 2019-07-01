@@ -30,20 +30,25 @@ def get_duplicate_same_day_item_frequencies(logger, claims):
     
     number_of_duplicate_claims = 0
     days_with_multiple_claims = get_duplicates(dos)
+    all_duplicate_items = []
     for day in days_with_multiple_claims:
         occurrences = [i for i, value in enumerate(dos) if value == day]
         items_on_day = [items[x] for x in occurrences]
-        duplicate_items = get_duplicates(items_on_day)
-        number_of_duplicate_claims = number_of_duplicate_claims + len(duplicate_items)
+        duplicate_items = get_duplicates(items_on_day) # BECAUSE OF THIS
+        for i in duplicate_items:
+            if i not in all_duplicate_items:
+                all_duplicate_items.append(i)
 
-    return number_of_duplicate_claims
+        number_of_duplicate_claims = number_of_duplicate_claims + len(duplicate_items) # THIS IS WRONG -> IS NOT TELLING ME ACTUAL FREQUENCY
+
+    return (number_of_duplicate_claims, all_duplicate_items)
 
 if __name__ == "__main__":
     logger = FileUtils.logger(__name__, "pbs_duplicate_claims", '/mnt/c/data')
 
     filenames = FileUtils.get_pbs_files()
     years = []
-    patient_duplicate_claims_by_year = []
+    patient_duplicate_claim_frequencies_by_year = []
     prescription_frequencies_by_year = []
     for filename in filenames:
         year = re.search("_(\d\d\d\d)\.", filename)[1]
@@ -61,12 +66,14 @@ if __name__ == "__main__":
             patient_duplicate_claims.append(get_duplicate_same_day_item_frequencies(logger, claims))
             patient_ids.append(patient)
 
+        frequencies, duplicate_claims = zip(*patient_duplicate_claims)
+
         # patient_duplicate_claims = ray.get(res_ids)
-        patient_duplicate_claims_by_year.append(patient_duplicate_claims)
+        patient_duplicate_claim_frequencies_by_year.append(frequencies)
 
         logger.log("Finding prescription frequencies")
-        if len(patient_duplicate_claims) != 0:
-            outlier_indices = FileUtils.get_outlier_indices(patient_duplicate_claims)
+        if len(frequencies) != 0:
+            outlier_indices = FileUtils.get_outlier_indices(frequencies)
             patients_of_interest = [patient_ids[i] for i in outlier_indices]
             patients_of_interest.sort()
             prescriptions = []
@@ -80,20 +87,21 @@ if __name__ == "__main__":
                     interest_counter = interest_counter + 1
                     for claim in claims:
                         if claim != patient:
-                            prescriptions.append(claim[1])
+                            prescriptions.append((patient, claim[1]))
             
             assert interest_counter == len(patients_of_interest)
 
-            prescription_frequencies = [len(list(group)) for key, group in itertools.groupby(sorted(prescriptions))]
-            prescription_frequencies_per_patient = [i / len(patients_of_interest) for i in prescription_frequencies]
+            labelled_prescription_frequencies = [(key, len(list(group))) for key, group in itertools.groupby(sorted(prescriptions))]
+            # prescription_frequencies_per_patient = [i / len(patients_of_interest) for (_, i) in labelled_prescription_frequencies]
         else:
             patients_of_interest = []
             prescription_frequencies = []
+        
 
         top_prescriptions = pd.DataFrame(prescriptions)[0].value_counts().nlargest(15)
         prescription_frequencies_by_year.append(prescription_frequencies)
 
         break
 
-    FileUtils.create_boxplot_group(logger, patient_duplicate_claims_by_year, years, f"Distribution of same-day-duplicate-claims per patient {years[0]}-{years[-1]}", "pbs_same_day_claims")
+    FileUtils.create_boxplot_group(logger, patient_duplicate_claim_frequencies_by_year, years, f"Distribution of same-day-duplicate-claims per patient {years[0]}-{years[-1]}", "pbs_same_day_claims")
     FileUtils.create_boxplot_group(logger, prescription_frequencies_by_year, years, f"Number of claims per item code for high-risk patients {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")
