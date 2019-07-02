@@ -10,6 +10,7 @@ from distutils.dir_util import copy_tree
 from matplotlib import pyplot as plt
 from pathlib import Path
 from sklearn import cluster, metrics
+from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 if sys.platform == "win32":
@@ -53,9 +54,10 @@ def create_scatter_plot(logger, data, labels, title, filename):
     fig = plt.figure()
     ax = fig.add_subplot(111)
     scatter = ax.scatter(data[:, 0], data[:, 1], c=labels)
-    legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
+    legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.", bbox_to_anchor=(1, 0.5))
+    ttl = fig.suptitle(title)
 
-    save_plt_fig(logger, fig, filename)
+    save_plt_fig(logger, fig, filename, [ttl, legend])
     
 
 def get_best_cluster_size(logger, X, clusters):
@@ -105,7 +107,7 @@ def save_plt_fig(logger, fig, filename, bbox_extra_artists=None):
 
     plt.close(fig)
 
-def tsne_plot(logger, model, perplex):
+def tsne_plot(logger, model, perplex, title):
     logger.log(f"Creating TSNE model with perplexity {perplex}")
     labels = []
     tokens = []
@@ -135,6 +137,8 @@ def tsne_plot(logger, model, perplex):
                      textcoords='offset points',
                      ha='right',
                      va='bottom')
+
+    fig.suptitle(title)
     
     name = "t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S")
     path = logger.output_path / name
