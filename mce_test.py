@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA
 if __name__ == "__main__":
     logger = FileUtils.logger(__name__, "mce_test", '/mnt/c/data')
     logger.log("Loading model")
-    model = w2v.load_word2vec_format('mce_test_2.vec', binary = False)
+    model = w2v.load_word2vec_format('mce_test_4.vec', binary = False)
 
     logger.log("Creating TSNE plot")
     FileUtils.tsne_plot(logger, model, math.sqrt(math.sqrt(len(model.wv.vocab))), "t-SNE plot of PBS Item/Drug Type/Provider Specialty")
