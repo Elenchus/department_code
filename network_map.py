@@ -21,14 +21,14 @@ if __name__ == "__main__":
         
         words = data.values.tolist()
 
-        logger.log("Creating model")
+        logger.log("Creating W2V model")
         model = Word2Vec(
             words,
-            size=15,
+            size=12,
             window= len(cols),
             min_count=1,
             workers=3,
-            iter=1)
+            iter=5)
 
-        FileUtils.tsne_plot(logger, model, math.sqrt(math.sqrt(unique_items)), 't-SNE plot of patient/provider/referrer model')
+        FileUtils.umap_plot(logger, model, 'UMAP plot of patient/provider/referrer model')
 

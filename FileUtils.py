@@ -4,6 +4,7 @@ import atexit
 import logging
 import numpy as np
 import pandas as pd
+import umap
 
 from datetime import datetime
 from distutils.dir_util import copy_tree
@@ -144,6 +145,26 @@ def tsne_plot(logger, model, perplex, title):
     path = logger.output_path / name
     logger.log(f"Saving TSNE figure to {path}")
     fig.savefig(path)
+
+def umap_plot(logger, model, title):
+    labels = []
+    tokens = []
+
+    logger.log("Extracting labels and token")
+    for word in model.wv.vocab:
+        tokens.append(model[word])
+        labels.append(word)
+
+    logger.log("Creating UMAP")
+    reducer = umap.UMAP()
+    embedding = reducer.fit_transform(tokens)
+
+    logger.log("Plotting UMAP")
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(embedding[:, 0], embedding[:, 1], c=labels, cmap='Spectral')
+    # ax.gca().set_aspect('equal', 'datalim')
+    fig.suptitle(title)
 
 class code_converter:
     def __init__(self):
