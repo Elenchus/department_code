@@ -231,6 +231,8 @@ class logger:
 
             copy_tree(self.output_path.absolute().as_posix(), copy_folder.absolute().as_posix())
 
+            self.log("Done")
+
 
     def create_output_folder(self, test_name):
         current = datetime.now().strftime("%Y%m%dT%H%M%S")

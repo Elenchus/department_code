@@ -2,6 +2,8 @@ import FileUtils
 import pandas as pd
 import Utils
 
+import gc
+
 def get_feature_risks(risks):
     feature_risks = risks.sum(axis=1)
 
@@ -22,27 +24,35 @@ if __name__ == "__main__":
         logger.log("Calculating risks")
         risks = Utils.get_risks(data)
 
+        del data
+        gc.collect()
+
+        logger.log("Writing risks to file")
+        risks.to_csv("Risks_file.csv")
+
         logger.log("Aggregating risks")
         feature_risks = get_feature_risks(risks)
         individual_risks = get_individual_risks(risks)
 
+        del risks
+        gc.collect
+
         logger.log("Determining risk profile")
         risk_descriptions = []
-        for risk_type in [feature_risks, individual_risks]:
-            minimum = risks[risk_type].min()
-            maximum = risks[risk_type].max()
-            q1 = risks[risk_type].quantile(0.25)
-            q3 = risks[risk_type].quantile(0.75)
-            avg = risks[risk_type].mean()
-            med = risks[risk_type].median()
+        for risks in [feature_risks, individual_risks]:
+            minimum = risks.min()
+            maximum = risks.max()
+            q1 = risks.quantile(0.25)
+            q3 = risks.quantile(0.75)
+            avg = risks.mean()
+            med = risks.median()
             tup = [minimum, q1, avg, med, q3, maximum]
             risk_descriptions.append(tup)
 
-        logger.log("Writing risk to file")
+        logger.log("Writing results to file")
         for i in [0, 1]:
             names = ['Feature', 'Individual']
             df = pd.DataFrame(risk_descriptions[i])
             df.to_csv(df, f'{names[i]} Risks')
-
 
         break
