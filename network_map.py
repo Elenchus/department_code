@@ -6,7 +6,7 @@ from gensim.models import Word2Vec
 if __name__ == "__main__":
     logger = FileUtils.logger(__name__, "network_map", "/mnt/c/data")
     filenames = FileUtils.get_mbs_files()
-    cols=['PIN', 'SPR', 'RPR']
+    cols=['PIN', 'SPR']
     for filename in filenames:
         logger.log(f'Opening {filename}')
         data = pd.read_parquet(filename, columns=cols)
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         logger.log("Creating W2V model")
         model = Word2Vec(
             words,
-            size=12,
+            size=math.sqrt(math.sqrt(unique_items)),
             window= len(cols),
             min_count=1,
             workers=3,

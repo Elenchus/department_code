@@ -109,7 +109,7 @@ def save_plt_fig(logger, fig, filename, bbox_extra_artists=None):
     plt.close(fig)
 
 def tsne_plot(logger, model, perplex, title):
-    logger.log(f"Creating TSNE model with perplexity {perplex}")
+    logger.log("Getting labels and tokens for t-SNE")
     labels = []
     tokens = []
 
@@ -117,6 +117,7 @@ def tsne_plot(logger, model, perplex, title):
         tokens.append(model[word])
         labels.append(word)
     
+    logger.log(f"Creating TSNE model with perplexity {perplex}")
     tsne_model = TSNE(perplexity=perplex, n_components=2, init='pca', n_iter=2500, random_state=23)
     new_values = tsne_model.fit_transform(tokens)
 
