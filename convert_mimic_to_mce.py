@@ -32,7 +32,7 @@ if __name__ == "__main__":
     patients = itertools.groupby(procedure_codes, lambda x: x[0])
     whole_list = []
     for patient, claims in patients: 
-        dates = [[x[1], x[2]] for x in discharge_records if x[0] == patient]
+        dates = [x for x in discharge_records if x[0] == patient]
         claim_list = list(claims)
         string = f"{patient}, ["
         first_date = True
@@ -42,9 +42,9 @@ if __name__ == "__main__":
             else:
                 first_date = False
             
-            hadm = dates[i][0]
+            hadm = dates[i][1]
             claims_to_use = [x for x in claim_list if x[2] == hadm]
-            current_date = dt.strptime(dates[i][1], "%Y-%m-%d %H:%M:%S").timestamp()
+            current_date = dt.strptime(dates[i][2], "%Y-%m-%d %H:%M:%S").timestamp()
             string = f"{string}[{current_date}, ["
             first_claim = True
             for x in claims_to_use:
