@@ -31,6 +31,7 @@ if __name__ == "__main__":
     logger.log("Sorting claims")
     patients = itertools.groupby(procedure_codes, lambda x: x[0])
     whole_list = []
+    claim_count = 0
     for patient, claims in patients: 
         dates = [x for x in discharge_records if x[0] == patient]
         claim_list = list(claims)
@@ -43,20 +44,26 @@ if __name__ == "__main__":
                 first_date = False
             
             hadm = dates[i][1]
-            claims_to_use = [x for x in claim_list if x[2] == hadm]
+            claims_to_use = [x for x in claim_list if x[1] == hadm]
+            # if len(claims_to_use) == 0:
+                # raise(AssertionError("Something is really wrong"))
+
             current_date = dt.strptime(dates[i][2], "%Y-%m-%d %H:%M:%S").timestamp()
             string = f"{string}[{current_date}, ["
             first_claim = True
             for x in claims_to_use:
+                claim_count = claim_count + 1
                 if not first_claim:
                     string = f"{string}, "
                 else:
                     first_claim = False
 
-                string = f"{string}{claims[1]}"
+                string = f"{string}{x[1]}"
 
-        string = "]]\r\n"
+        string = string + "]]]\r\n"
         whole_list.append(string)
+
+    assert claim_count == len(procedure_codes)
 
     logger.log("Writing file")
     output_path = logger.output_path / "mcd_mimic_procedure_icd.txt"

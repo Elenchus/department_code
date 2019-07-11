@@ -8,10 +8,11 @@ from sklearn.decomposition import PCA
 if __name__ == "__main__":
     logger = FileUtils.logger(__name__, "mce_mimic_prescriptions", '/mnt/c/data')
     logger.log("Loading model")
-    model = w2v.load_word2vec_format('mimic_III_procedures.vec', binary = False)
+    model = w2v.load_word2vec_format('MIMIC_procedures.vec', binary = False)
 
     logger.log("Creating TSNE plot")
-    FileUtils.tsne_plot(logger, model, math.sqrt(math.sqrt(len(model.wv.vocab))), "t-SNE plot of MIMIC Prescription Item")
+    perplex = math.ceil(math.sqrt(math.sqrt(len(model.wv.vocab))))
+    FileUtils.tsne_plot(logger, model, perplex, f"t-SNE plot of MIMIC Diagnosis Codes with perplexity {perplex}")
 
     logger.log("Performing PCA")
     X = model.wv.syn0

@@ -24,7 +24,7 @@ if __name__ == "__main__":
         logger.log("Creating W2V model")
         model = Word2Vec(
             words,
-            size=math.sqrt(math.sqrt(unique_items)),
+            size=math.ceil(math.sqrt(math.sqrt(unique_items))),
             window= len(cols),
             min_count=1,
             workers=3,
