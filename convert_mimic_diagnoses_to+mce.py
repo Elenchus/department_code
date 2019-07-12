@@ -57,7 +57,7 @@ if __name__ == "__main__":
                 else:
                     first_claim = False
 
-                string = f"{string}{x[1]}"
+                string = f"{string}{x[2]}"
 
         string = string + "]]]\r\n"
         whole_list.append(string)

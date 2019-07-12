@@ -2,6 +2,7 @@ import os
 import sys
 import atexit
 import logging
+import math
 import numpy as np
 import pandas as pd
 # from cuml import UMAP as umap
@@ -74,9 +75,10 @@ def get_best_cluster_size(logger, X, clusters):
         logger.log(f"n = {n}, silhouette score = {silhouette_score}")
 
     k = clusters[avg_sil.index(max(avg_sil))]
+    max_n = math.ceil(max(avg_sil) * 100)
     logger.log(f"Max silhouette score with {k} clusters")
 
-    return k
+    return (k, max_n)
 
 def get_mbs_files():
     mbs_path = path + 'MBS_Patient_10/'
