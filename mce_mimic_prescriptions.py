@@ -8,7 +8,7 @@ from sklearn.decomposition import PCA
 if __name__ == "__main__":
     logger = FileUtils.logger(__name__, "mce_mimic_prescriptions", '/mnt/c/data')
     logger.log("Loading model")
-    model = w2v.load_word2vec_format('MIMIC_procedures.vec', binary = False)
+    model = w2v.load_word2vec_format('MIMIC_diagnoses.vec', binary = False)
 
     logger.log("Creating TSNE plot")
     perplex = math.ceil(math.sqrt(math.sqrt(len(model.wv.vocab))))
@@ -25,4 +25,4 @@ if __name__ == "__main__":
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
-    FileUtils.create_scatter_plot(logger, Y, labels, "MCE MIMIC PRESCRIPTIONS test", 'mce_mimic_prescriptions')
+    FileUtils.create_scatter_plot(logger, Y, labels, "MCE MIMIC diagnoses test", 'mce_mimic_diagnoses')
