@@ -4,6 +4,7 @@ import atexit
 import logging
 import numpy as np
 import pandas as pd
+# from cuml import UMAP as umap
 import umap
 
 from datetime import datetime
@@ -157,7 +158,7 @@ def umap_plot(logger, model, title):
         labels.append(word)
 
     logger.log("Creating UMAP")
-    reducer = umap.UMAP()
+    reducer = umap.UMAP(verbose=True)
     embedding = reducer.fit_transform(tokens)
 
     logger.log("Plotting UMAP")
