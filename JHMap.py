@@ -2,7 +2,7 @@ import gensim
 import json
 import numpy as np
 import pandas as pd
-from nltk.corpus import stopwords
+# from nltk.corpus import stopwords
 
 class PhraseVector:
     def __init__(self, phrase):
@@ -18,9 +18,9 @@ class PhraseVector:
             return np.dot(np.transpose(vectorSet),ignore)/sum(ignore)
 
     def PhraseToVec(self, phrase):
-        cachedStopWords = stopwords.words("english")
+        # cachedStopWords = stopwords.words("english")
         phrase = phrase.lower()
-        wordsInPhrase = [word for word in phrase.split() if word not in cachedStopWords]
+        wordsInPhrase = [word for word in phrase.split()] # if word not in cachedStopWords]
         vectorSet = []
         for aWord in wordsInPhrase:
             try:
@@ -42,13 +42,10 @@ class PhraseVector:
         return cosine_similarity
 
 if __name__ == "__main__":
-    # import pre-trained model
-    google_model_path = '~/data/CHRISP/GoogleNews-vectors-negative300.bin'
-    model = gensim.models.Word2Vec.load_word2vec_format(google_model_path, binary=True)
-
     # parse data dictionaries
+    print("Parsing data dictionaries")
     jh_file = '~/data/CHRISP/NUW_JH_variables.csv'
-    ed_file = '.~/data/CHRISP/CHRISP-ED.csv'
+    ed_file = '~/data/CHRISP/CHRISP-ED.csv'
     jh_list = pd.read_csv(jh_file)['Variable'].values.tolist()
     jh_replace = [("_", " "), ("DTTM", "Date Time"), (" ID", " Identifier"), ("DESC", "Description"), (" NO", " Number")]
     for idx, var in enumerate(jh_list):
@@ -57,9 +54,15 @@ if __name__ == "__main__":
 
     livpool_path = []
     livpool_ed = pd.read_csv(ed_file)["Variable Name"].values.tolist()
-    livpool_patient = []
+    livpool_ed = livpool_edlivpool_patient = []
+
+    # import pre-trained model
+    print("Importing Google Word2Vec data")    
+    google_model_path = '~/data/CHRISP/GoogleNews-vectors-negative300.bin'
+    model = gensim.models.KeyedVectors.load_word2vec_format(google_model_path, binary=True)
 
     # check sentences for similarity
+    print("Checking sentence similarity")
     match_dict = {}
     for sentence in jh_list:
         pv_1 = PhraseVector(sentence)
@@ -72,6 +75,7 @@ if __name__ == "__main__":
         phrase_score_list.sort(key = lambda x:x[1], reverse = True)
         match_dict[sentence] = phrase_score_list
 
-    json_dict = json.dumps(dict)
+    print("Saving data")
+    json_dict = json.dumps(match_dict)
     with open('ed_match.csv', 'w+') as f:
         f.write(json_dict)
