@@ -6,6 +6,8 @@ import pandas as pd
 
 class PhraseVector:
     def __init__(self, phrase):
+        google_model_path = '~/data/CHRISP/GoogleNews-vectors-negative300.bin'
+        self.model = gensim.models.KeyedVectors.load_word2vec_format(google_model_path, binary=True)
         self.vector = self.PhraseToVec(phrase)
     # <summary> Calculates similarity between two sets of vectors based on the averages of the sets.</summary>
     # <param>name = "vectorSet" description = "An array of arrays that needs to be condensed into a single array (vector). In this class, used to convert word vecs to phrases."</param>
@@ -24,21 +26,29 @@ class PhraseVector:
         vectorSet = []
         for aWord in wordsInPhrase:
             try:
-                wordVector=model1[aWord]
+                wordVector=self.model[aWord]
                 vectorSet.append(wordVector)
             except:
-                pass
+                print(f"Word not found: {aWord}")
+
+        if len(vectorSet) == 0:
+            return None
+
         return self.ConvertVectorSetToVecAverageBased(vectorSet)
 
     # <summary> Calculates Cosine similarity between two phrase vectors.</summary>
     # <param> name = "otherPhraseVec" description = "The other vector relative to which similarity is to be calculated."</param>
     def CosineSimilarity(self, otherPhraseVec):
+        if self.vector == None:
+            return -99
+
         cosine_similarity = np.dot(self.vector, otherPhraseVec) / (np.linalg.norm(self.vector) * np.linalg.norm(otherPhraseVec))
         try:
             if math.isnan(cosine_similarity):
                 cosine_similarity=0
         except:
             cosine_similarity=0		
+
         return cosine_similarity
 
 if __name__ == "__main__":
@@ -48,9 +58,10 @@ if __name__ == "__main__":
     ed_file = '~/data/CHRISP/CHRISP-ED.csv'
     jh_list = pd.read_csv(jh_file)['Variable'].values.tolist()
     jh_replace = [("_", " "), ("DTTM", "Date Time"), (" ID", " Identifier"), ("DESC", "Description"), (" NO", " Number")]
-    for idx, var in enumerate(jh_list):
+    for idx in range(len(jh_list)):
         for (before, after) in jh_replace:
-            jh_list[idx] = var.replace(before, after)
+            x = jh_list[idx].replace(before, after)
+            jh_list[idx] = x
 
     livpool_path = []
     livpool_ed = pd.read_csv(ed_file)["Variable Name"].values.tolist()
@@ -58,13 +69,12 @@ if __name__ == "__main__":
 
     # import pre-trained model
     print("Importing Google Word2Vec data")    
-    google_model_path = '~/data/CHRISP/GoogleNews-vectors-negative300.bin'
-    model = gensim.models.KeyedVectors.load_word2vec_format(google_model_path, binary=True)
 
     # check sentences for similarity
     print("Checking sentence similarity")
     match_dict = {}
     for sentence in jh_list:
+        print(f"Checking  {sentence}")
         pv_1 = PhraseVector(sentence)
         phrase_score_list = []
         for match in livpool_ed:
