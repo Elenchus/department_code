@@ -4,52 +4,34 @@ import numpy as np
 import pandas as pd
 # from nltk.corpus import stopwords
 
-class PhraseVector:
-    def __init__(self, phrase):
-        google_model_path = '~/data/CHRISP/GoogleNews-vectors-negative300.bin'
-        self.model = gensim.models.KeyedVectors.load_word2vec_format(google_model_path, binary=True)
-        self.vector = self.PhraseToVec(phrase)
-    # <summary> Calculates similarity between two sets of vectors based on the averages of the sets.</summary>
-    # <param>name = "vectorSet" description = "An array of arrays that needs to be condensed into a single array (vector). In this class, used to convert word vecs to phrases."</param>
-    # <param>name = "ignore" description = "The vectors within the set that need to be ignored. If this is an empty list, nothing is ignored. In this class, this would be stop words."</param>
-    # <returns> The condensed single vector that has the same dimensionality as the other vectors within the vecotSet.</returns>
-    def ConvertVectorSetToVecAverageBased(self, vectorSet, ignore = []):
-        if len(ignore) == 0: 
-            return np.mean(vectorSet, axis = 0)
-        else: 
-            return np.dot(np.transpose(vectorSet),ignore)/sum(ignore)
+def simul_score(sentence, match_list, model): 
+            phrase_score_list = [] 
+            ignore_list = [' ', 'a', ',', '-', '.', '(', ')']
+            for match in match_list: 
+                score = 0
+                word_count = 0
+                match_count = 0
+                for word in sentence:
+                    if word in ignore_list:
+                        continue
 
-    def PhraseToVec(self, phrase):
-        # cachedStopWords = stopwords.words("english")
-        phrase = phrase.lower()
-        wordsInPhrase = [word for word in phrase.split()] # if word not in cachedStopWords]
-        vectorSet = []
-        for aWord in wordsInPhrase:
-            try:
-                wordVector=self.model[aWord]
-                vectorSet.append(wordVector)
-            except:
-                print(f"Word not found: {aWord}")
+                    match_score = 0
+                    current_match = None
+                    for match_word in match:
+                        if match_word in ignore_list:
+                            continue
 
-        if len(vectorSet) == 0:
-            return None
+                        try:
+                            score = score + model.similarity(word, match_word) 
+                            match_count = match_count + 1
+                        except KeyError as e:
+                           print(e) 
 
-        return self.ConvertVectorSetToVecAverageBased(vectorSet)
+                phrase_score_list.append((match, score / match_count)) 
+    
+            phrase_score_list.sort(key = lambda x:x[1], reverse = True) 
 
-    # <summary> Calculates Cosine similarity between two phrase vectors.</summary>
-    # <param> name = "otherPhraseVec" description = "The other vector relative to which similarity is to be calculated."</param>
-    def CosineSimilarity(self, otherPhraseVec):
-        if self.vector == None:
-            return -99
-
-        cosine_similarity = np.dot(self.vector, otherPhraseVec) / (np.linalg.norm(self.vector) * np.linalg.norm(otherPhraseVec))
-        try:
-            if math.isnan(cosine_similarity):
-                cosine_similarity=0
-        except:
-            cosine_similarity=0		
-
-        return cosine_similarity
+            return phrase_score_list
 
 if __name__ == "__main__":
     # parse data dictionaries
@@ -65,27 +47,22 @@ if __name__ == "__main__":
 
     livpool_path = []
     livpool_ed = pd.read_csv(ed_file)["Variable Name"].values.tolist()
-    livpool_ed = livpool_edlivpool_patient = []
+    livpool_ed = [x.replace('\r', '') for x in livpool_ed]
 
     # import pre-trained model
-    print("Importing Google Word2Vec data")    
-
+    print("Importing Google Word2Vec data")
+    google_model_path = '~/data/CHRISP/GoogleNews-vectors-negative300.bin'
+    model = gensim.models.KeyedVectors.load_word2vec_format(google_model_path, binary=True)
     # check sentences for similarity
     print("Checking sentence similarity")
     match_dict = {}
     for sentence in jh_list:
         print(f"Checking  {sentence}")
-        pv_1 = PhraseVector(sentence)
-        phrase_score_list = []
-        for match in livpool_ed:
-            pv_2 = PhraseVector(match)
-            score = pv_1.CosineSimilarity(pv_2.vector)
-            phrase_score_list.append((pv_2, score))
-        
+        phrase_score_list = simul_score(sentence, livpool_ed, model)
         phrase_score_list.sort(key = lambda x:x[1], reverse = True)
         match_dict[sentence] = phrase_score_list
 
     print("Saving data")
     json_dict = json.dumps(match_dict)
-    with open('ed_match.csv', 'w+') as f:
+    with open('ed_match.json', 'w+') as f:
         f.write(json_dict)
