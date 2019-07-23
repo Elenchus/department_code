@@ -4,32 +4,24 @@ import numpy as np
 import pandas as pd
 # from nltk.corpus import stopwords
 
+# def average_sentence_vectore(words, model):
+#             ignore_list = [' ', 'a', ',', '-', '.', '(', ')', "'"]
+#     featureVec = np.zeros((len(model[word]),), dtype="float32")
+#     nwords = 0
+#     for word in sentence:
+#         if word not in model.vocab or word in ignore_list:
+#             continue
+
+#         nwords = nwords + 1
+#         featureVec = np.add(featureVec, model[word])
+
 def simul_score(sentence, match_list, model): 
             phrase_score_list = [] 
-            ignore_list = [' ', 'a', ',', '-', '.', '(', ')']
-            for match in match_list: 
-                score = 0
-                word_count = 0
-                match_count = 0
-                for word in sentence:
-                    if word in ignore_list:
-                        continue
 
-                    match_score = 0
-                    current_match = None
-                    for match_word in match:
-                        if match_word in ignore_list:
-                            continue
-
-                        try:
-                            score = score + model.similarity(word, match_word) 
-                            match_count = match_count + 1
-                        except KeyError as e:
-                           print(e) 
-
-                phrase_score_list.append((match, score / match_count)) 
+            for match in match_list:
+                current_score = model.wmdistance(sentence, match)
+                phrase_score_list.append((match, current_score)) 
     
-            phrase_score_list.sort(key = lambda x:x[1], reverse = True) 
 
             return phrase_score_list
 
@@ -63,6 +55,9 @@ if __name__ == "__main__":
         match_dict[sentence] = phrase_score_list
 
     print("Saving data")
+    for key in match_dict.keys():
+        match_dict[key].sort(key = lambda x:x[1])
+
     json_dict = json.dumps(match_dict)
     with open('ed_match.json', 'w+') as f:
         f.write(json_dict)
