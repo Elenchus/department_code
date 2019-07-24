@@ -2,6 +2,7 @@ import FileUtils
 import numpy as np
 import pandas as pd
 
+# check for default one hot encoding option
 if __name__ == "__main__":
     logger = FileUtils.logger(__name__, "network_map", "/mnt/c/data")
     filenames = FileUtils.get_mbs_files()[0]
