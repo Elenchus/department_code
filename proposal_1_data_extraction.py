@@ -9,14 +9,14 @@ def append_to_file(file, data):
     with open(file, 'a') as f:
         data.to_csv(f, header=f.tell()==0)
 
-def extract_relevant_claims(group, code_list):
-    claims = pd.DataFrame(list(group))
+def extract_relevant_claims(group, header, code_list):
+    claims = pd.DataFrame(list(group), columns=header)
     dates_of_interest = claims.loc[claims['ITEM'].isin(code_list), 'DOS'].values.tolist()
-    if dates_of_interest.empty:
+    if len(dates_of_interest) == 0:
         return None
 
     claims['DOS'] = pd.to_datetime(claims['DOS'])
-    # dates_of_interest = [dt.strptime(x, "%d%b%Y").timestamp() for x in dates_of_interest]
+    dates_of_interest = [dt.strptime(x, "%d%b%Y") for x in dates_of_interest]
     mask_list = [(claims['DOS'] > x - timedelta(days = 14)) & (claims['DOS'] < x + timedelta(days = 14)) for x in dates_of_interest]
     mask = mask_list[0]
     for i in range(1, len(mask_list)):
@@ -25,7 +25,7 @@ def extract_relevant_claims(group, code_list):
     return claims.loc[mask]
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "proposal_1", "/mnt/c/data")
+    logger = FileUtils.logger(__name__, "proposal_1_data_extract", "/mnt/c/data")
     filenames = FileUtils.get_mbs_files()
     # filenames = FileUtils.get_mbs_files()
     output_file = logger.output_path / 'hip_subset.csv'
@@ -43,7 +43,8 @@ if __name__ == "__main__":
 
         logger.log("Extracting claims")
         for patient, group in patients:
-            relevant_claims = extract_relevant_claims(group, codes_of_interest)
-            append_to_file(output_file, relevant_claims)
+            relevant_claims = extract_relevant_claims(group, data.columns, codes_of_interest)
+            if type(relevant_claims) != type(None):
+                append_to_file(output_file, relevant_claims)
 
         break
