@@ -166,9 +166,13 @@ def umap_plot(logger, model, title):
     logger.log("Plotting UMAP")
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(embedding[:, 0], embedding[:, 1], c=labels, cmap='Spectral')
+    ax.scatter(embedding[:, 0], embedding[:, 1], cmap='Spectral')
     # ax.gca().set_aspect('equal', 'datalim')
     fig.suptitle(title)
+
+    name = "UMAP_" + datetime.now().strftime("%Y%m%dT%H%M%S")
+    path = logger.output_path / name
+    fig.savefig(path)
 
 class code_converter:
     def __init__(self):

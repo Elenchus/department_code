@@ -27,7 +27,6 @@ def extract_relevant_claims(group, header, code_list):
 if __name__ == "__main__":
     logger = FileUtils.logger(__name__, "proposal_1_data_extract", "/mnt/c/data")
     filenames = FileUtils.get_mbs_files()
-    # filenames = FileUtils.get_mbs_files()
     output_file = logger.output_path / 'hip_subset.csv'
 
     cols=['PIN', 'ITEM', 'DOS']
