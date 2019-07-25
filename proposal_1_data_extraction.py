@@ -29,8 +29,6 @@ if __name__ == "__main__":
     filenames = FileUtils.get_mbs_files()
     # filenames = FileUtils.get_mbs_files()
     output_file = logger.output_path / 'hip_subset.csv'
-    with open(output_file, 'w+') as f:
-        f.write('PIN, ITEM, DOS\r\n')
 
     cols=['PIN', 'ITEM', 'DOS']
     codes_of_interest = ['49309','49312', '49315',' 49318','49319', '49321', '49324', '49327', '49330', '49333', '49336', '49339', '49342', '49345','49346', '49360', '49363', '49366']
@@ -46,5 +44,3 @@ if __name__ == "__main__":
             relevant_claims = extract_relevant_claims(group, data.columns, codes_of_interest)
             if type(relevant_claims) != type(None):
                 append_to_file(output_file, relevant_claims)
-
-        break
