@@ -66,12 +66,17 @@ q3 =  distances.quantile(0.75)
 iqr = q3 - q1
 kNN_outlier_file = logger.output_path / "1NN_outliers.txt"
 outlier_count = 0
+out_labels = [0] * len(Y)
 with open(kNN_outlier_file, 'w+') as f:
     for idx, distance in enumerate(distances):
         if distance >= q3 + (1.5 * iqr):
             f.write(f'{model.index2word[idx]}: {distance}\r\n')
             outlier_count = outlier_count + 1
+            out_labels[idx] = 1
 logger.log(f"{outlier_count} outliers detected")
+
+logger.log("Plotting 1NN outliers")
+FileUtils.create_scatter_plot(logger, Y, out_labels, "1NN cluster and outliers", "1NN")
 
 logger.log("Calculating 1NN cosine-similarity distances from word vector similarity")
 nearest = {}
