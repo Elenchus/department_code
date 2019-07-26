@@ -31,7 +31,7 @@ kmeans.fit(Y)
 labels = kmeans.labels_
 FileUtils.create_scatter_plot(logger, Y, labels, f"MCE hip replacement patients test. Silhoutte score {s}%", f'mce_mimic')
 
-logger.log("Calculating 1NN distances from k-means clustering")
+logger.log("Calculating 1NN distances from k-means clusters")
 all_distances = kmeans.transform(Y) 
 assert len(all_distances) == len(labels)
 cluster_indices = {i: np.where(labels == i)[0] for i in range(kmeans.n_clusters)}
@@ -48,7 +48,7 @@ for i in cluster_indices.keys():
         if x >= q3 + (1.5 * iqr):
             outlier_count = outlier_count + 1
             with open(outlier_file, 'a') as f:
-                f.write(f'{Y[cluster_indices[i][idx]]}: {x}\r\n')
+                f.write(f'{model.index2word[cluster_indices[i][idx]]}: {x}\r\n') 
 
 logger.log(f"{outlier_count} outliers detected")
 # {i: Y[np.where(labels == i)] for i in range(kmeans.n_clusters)}
