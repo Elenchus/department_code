@@ -5,6 +5,7 @@ import pandas as pd
 from gensim.models import KeyedVectors as w2v
 from sklearn import cluster
 from sklearn.decomposition import PCA
+from sklearn.neighbors import NearestNeighbors as kNN
 
 input_file = 'prop_1_hip_2003_epoch_1_dim_491_day.vec'
 logger = FileUtils.logger(__name__, f"proposal_1_analysis_{input_file}", '/mnt/c/data')
@@ -31,7 +32,7 @@ kmeans.fit(Y)
 labels = kmeans.labels_
 FileUtils.create_scatter_plot(logger, Y, labels, f"MCE hip replacement patients test. Silhoutte score {s}%", f'mce_mimic')
 
-logger.log("Calculating 1NN distances from k-means clusters")
+logger.log("Calculating distances from k-means clusters")
 all_distances = kmeans.transform(Y) 
 assert len(all_distances) == len(labels)
 cluster_indices = {i: np.where(labels == i)[0] for i in range(kmeans.n_clusters)}
@@ -43,15 +44,34 @@ for i in cluster_indices.keys():
     iqr = q3 - q1
 
     outlier_count = 0
-    outlier_file = logger.output_path / "kmeans_outliers.txt"
+    cluster_outlier_file = logger.output_path / "kmeans_outliers.txt"
     for idx, x in enumerate(cluster_distances):
         if x >= q3 + (1.5 * iqr):
             outlier_count = outlier_count + 1
-            with open(outlier_file, 'a') as f:
+            with open(cluster_outlier_file, 'a') as f:
                 f.write(f'{model.index2word[cluster_indices[i][idx]]}: {x}\r\n') 
 
 logger.log(f"{outlier_count} outliers detected")
 # {i: Y[np.where(labels == i)] for i in range(kmeans.n_clusters)}
+
+logger.log("Calculating unsupervised 1NN distance")
+nn_calc = kNN(n_neighbors=1)
+nn_calc.fit(Y) # 2d
+distances, _ = nn_calc.kneighbors(n_neighbors=1)
+distances = distances.tolist()
+distances = [x[0] for x in distances]
+distances = pd.Series(distances)
+q1 = distances.quantile(0.25)
+q3 =  distances.quantile(0.75)
+iqr = q3 - q1
+kNN_outlier_file = logger.output_path / "1NN_outliers.txt"
+outlier_count = 0
+with open(kNN_outlier_file, 'w+') as f:
+    for idx, distance in enumerate(distances):
+        if distance >= q3 + (1.5 * iqr):
+            f.write(f'{model.index2word[idx]}: {distance}\r\n')
+            outlier_count = outlier_count + 1
+logger.log(f"{outlier_count} outliers detected")
 
 logger.log("Calculating 1NN cosine-similarity distances from word vector similarity")
 nearest = {}
@@ -67,12 +87,12 @@ iqr = q3 - q1
 outliers = []
 keys  = nearest.keys()
 values, keys = (list(t) for t in zip(*sorted(zip(values, keys))))
-outlier_file = logger.output_path / "word2vec_cosine_similarity_outliers.txt"
+cosine_outlier_file = logger.output_path / "word2vec_cosine_similarity_outliers.txt"
 outlier_count = 0
 for i in range(len(keys)):
     if values[i] <= q1 - (0.5 * iqr):
         outlier_count = outlier_count + 1
-        with open(outlier_file, 'a') as f:
+        with open(cosine_outlier_file, 'a') as f:
             f.write(f'{keys[i]}: {values[i]}\r\n')
 
 logger.log(f"{outlier_count} outliers detected")
