@@ -8,8 +8,8 @@ dp_dict = data['dict_dp'][()] #diag_proc dictionary
 cp_dict = data['dict_cp'][()] #charts_prescriptions dictionary
 
 # files = [('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
-# files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict), ('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
-files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict)]
+files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict), ('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
+# files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict)]
 for (name, def_dict) in files:
     f"Loading {name}"
     model = w2v.load_word2vec_format(name, binary=False)
@@ -33,8 +33,19 @@ for (name, def_dict) in files:
     print("Sorting")
     ordered_keys, ordered_items, ordered_matrix = (list(t) for t in zip(*sorted(zip(current_order, all_items, matrix))))
 
-    for i in range(len(keys)):
-        assert keys[i] == ordered_keys[i]
-        assert values[i] == ordered_items[i]
+    offset = 0
+    i = -1
+    while True:
+        i = i + 1
+        if i + offset >= len(keys) or i + offset >= len(ordered_keys):
+            break
+
+        if keys[i] + offset != ordered_keys[i]:
+            offset = offset + 1
+            continue
+
+        assert values[i + offset] == ordered_items[i]
+
+    print(f"offset: {offset}")
 
     np.save(f"{name}.npy", ordered_matrix)
