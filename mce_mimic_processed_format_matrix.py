@@ -21,7 +21,9 @@ for (name, def_dict) in files:
     values = [str(x).replace(' ', '') for x in list(def_dict.values())]
     current_order = [0]
     all_items.insert(0, '0')
-    np.insert(matrix, 0, [0] * len(matrix[0]))
+    print(len(matrix))
+    matrix = np.insert(matrix, 0, [0] * len(matrix[0]))
+    print(len(matrix))
 
     for word in vocab:
         if word == '</s>':
@@ -37,7 +39,7 @@ for (name, def_dict) in files:
     i = -1
     while True:
         i = i + 1
-        if i + offset >= len(keys) or i + offset >= len(ordered_keys):
+        if i + offset >= len(keys) or i + offset >= len(ordered_keys) - 1:
             break
 
         if keys[i] + offset != ordered_keys[i]:
@@ -47,5 +49,10 @@ for (name, def_dict) in files:
         assert values[i + offset] == ordered_items[i]
 
     print(f"offset: {offset}")
+    print(f"{len(keys) - len(ordered_keys)} missing")
+
+    for word in values:
+        if word not in ordered_items:
+            print(word)
 
     np.save(f"{name}.npy", ordered_matrix)
