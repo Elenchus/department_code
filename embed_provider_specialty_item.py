@@ -38,6 +38,7 @@ if __name__ == "__main__":
     no_unique_items = len(data['ITEM'].unique())
     unique_rsp = data['SPR_RSP'].unique()
     no_unique_rsp = len(unique_rsp)
+    provider_labels=data['SPR_RSP'].values.tolist()
 
     del data
     gc.collect()
@@ -82,6 +83,7 @@ if __name__ == "__main__":
 
     # fig.savefig(logger.output_path + "items_and_specialties_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
     FileUtils.create_scatter_plot(logger, Y, labels, "Item/provider specialty clusters", "items_and_specialties_k_means")
+    FileUtils.create_scatter_plot(logger, Y, provider_labels, "Provider specialty labels", "specialty_labels")
     logger.log("Re-loading parquet file")
     data = pd.read_parquet(filename, columns=['PIN', 'ITEM', 'SPR_RSP']).astype(str)
 
