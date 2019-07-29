@@ -11,6 +11,7 @@ from math import ceil, sqrt
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
 from sklearn import cluster
+from sklearn.decomposition import PCA
 
 def sum_patient_vectors(model, patient):
     similarities = []
