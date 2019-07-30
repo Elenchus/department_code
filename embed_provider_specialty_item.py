@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
 
     # fig.savefig(logger.output_path + "items_and_specialties_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
-    FileUtils.create_scatter_plot(logger, r, labels, "Item/provider specialty clusters", "items_and_specialties_k_means")
+    FileUtils.create_scatter_plot(logger, X, labels, "Item/provider specialty clusters", "items_and_specialties_k_means")
     FileUtils.create_scatter_plot(logger, X, provider_labels, "Provider specialty labels", "specialty_labels")
     logger.log("Re-loading parquet file")
     data = pd.read_parquet(filename, columns=['PIN', 'ITEM', 'SPR_RSP']).astype(str)

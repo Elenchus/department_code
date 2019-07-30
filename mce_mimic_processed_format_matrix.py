@@ -8,8 +8,8 @@ dp_dict = data['dict_dp'][()] #diag_proc dictionary
 cp_dict = data['dict_cp'][()] #charts_prescriptions dictionary
 
 # files = [('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
-# files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict), ('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
-files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict)]
+files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict), ('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
+# files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict)]
 for (name, def_dict) in files:
     f"Loading {name}"
     model = w2v.load_word2vec_format(name, binary=False)
@@ -18,9 +18,9 @@ for (name, def_dict) in files:
     all_items = list(vocab)
 
     keys = list(def_dict.keys())
-    values = [str(x).replace(' ', '') for x in list(def_dict.values())]
+    values = list(def_dict.values())
     current_order = [0]
-    all_items.insert(0, '0')
+    all_items.insert(0, 0)
     print(len(matrix))
     matrix = np.insert(matrix, 0, [0] * len(matrix[0]))
     print(len(matrix))
