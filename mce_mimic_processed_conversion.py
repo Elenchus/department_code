@@ -38,7 +38,7 @@ for (name, header) in files:
                 if line is not None:
                     output.write(f"{line}]]]\r\n")
 
-                line = f"{current_id}, [[{current_time}, [{row[1]}"
+                line = f"{current_id}, [[{current_time}, [{str(row[1]).lower()}"
             else:
                 if row[2] == '':
                     new_time = current_time
@@ -47,9 +47,9 @@ for (name, header) in files:
 
                 if new_time != current_time:
                     current_time = new_time
-                    line = f"{line}], {current_time}, [{row[1]}"
+                    line = f"{line}], {current_time}, [{str(row[1]).lower()}"
                 else:
-                    line = f"{line}, {row[1]}"
+                    line = f"{line}, {str(row[1]).lower()}"
         
         output.write(f"{line}]]]\r\n")
 
