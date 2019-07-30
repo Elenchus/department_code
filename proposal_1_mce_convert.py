@@ -21,9 +21,9 @@ for i in range(1, len(pid)):
         current_date = dos[i]
         current_pid = pid[i]
         line = f"{current_pid}, [[{current_date}, [{item[i]}"
-
-    if dos[i] != current_date:
+    elif dos[i] != current_date:
         line = line + f'], {dos[i]}, [{item[i]}'
+        current_date = dos[i]
     else:
         line = line + f', {item[i]}'
 

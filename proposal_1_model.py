@@ -7,7 +7,7 @@ from sklearn import cluster
 from sklearn.decomposition import PCA
 from sklearn.neighbors import NearestNeighbors as kNN
 
-input_file = 'prop_1_hip_2003_epoch_1_dim_491_day.vec'
+input_file = 'prop_1_hip_2003_epoch_1_dim_5_day.vec'
 logger = FileUtils.logger(__name__, f"proposal_1_analysis_{input_file}", '/mnt/c/data')
 logger.log(f'Opening {input_file}')
 model = w2v.load_word2vec_format(input_file, binary = False)

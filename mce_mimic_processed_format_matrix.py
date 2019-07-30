@@ -7,8 +7,8 @@ data = np.load(f'{path}data_dictionaries.npz', allow_pickle=True)
 dp_dict = data['dict_dp'][()] #diag_proc dictionary
 cp_dict = data['dict_cp'][()] #charts_prescriptions dictionary
 
-files = [('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
-# files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict), ('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
+# files = [('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
+files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict), ('diag_proc_size_7.vec', dp_dict), ('diag_proc_size_13.vec', dp_dict)]
 # files = [('chars_prescriptions_size_13.vec', cp_dict), ('chars_prescriptions_size_7.vec', cp_dict)]
 for (name, def_dict) in files:
     f"Loading {name}"
@@ -43,18 +43,18 @@ for (name, def_dict) in files:
             break
 
         if keys[i] + offset != ordered_keys[i]:
+            print(f"Mising {values[keys[i] + offset]}")
             offset = offset + 1
             continue
 
         assert values[i + offset] == ordered_items[i]
 
     print(f"offset: {offset}")
-    print(f"{len(keys) - len(ordered_keys)} missing")
+    print(f"{len(keys) + 1 - len(ordered_keys)} missing")
 
     for word in values:
         if word not in ordered_items:
             print(word)
 
     ordered_matrix = np.delete(ordered_matrix, -1, axis=0)
-    assert len(ordered_matrix) == len(keys)
     np.save(f"{name}.npy", ordered_matrix)
