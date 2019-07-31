@@ -21,9 +21,10 @@ for (name, def_dict) in files:
     values = list(def_dict.values())
     current_order = [0]
     all_items.insert(0, 0)
+    matrix = matrix.tolist()
+    matrix.insert(0, [0] * len(matrix[0]))
     print(len(matrix))
-    matrix = np.insert(matrix, 0, [0] * len(matrix[0]))
-    print(len(matrix))
+    print(len(matrix[0]))
 
     for word in vocab:
         if word == '</s>':
@@ -35,6 +36,7 @@ for (name, def_dict) in files:
     print("Sorting")
     ordered_keys, ordered_items, ordered_matrix = (list(t) for t in zip(*sorted(zip(current_order, all_items, matrix))))
 
+    ordered_matrix = np.array(ordered_matrix)
     offset = 0
     i = -1
     while True:
