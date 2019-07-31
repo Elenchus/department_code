@@ -7,7 +7,7 @@ from sklearn import cluster
 from sklearn.decomposition import PCA
 from sklearn.neighbors import NearestNeighbors as kNN
 
-input_model = 'prop_1_hip_2003_epoch_1_dim_5_day.vec'
+input_model = 'prop_1_hip_2003_epoch_60_dim_20_day.vec'
 input_data = 'hip_subset.csv'
 logger = FileUtils.logger(__name__, f"proposal_1_analysis_{input_model}", '/mnt/c/data')
 logger.log(f'Opening {input_model}')
@@ -22,22 +22,22 @@ with open(input_data, 'r') as f:
         pid, item = row[0], row[1]
         keys = patient_dict.keys()
         if pid not in keys:
-            patient_dict[pid] = {'Sum': model[item], 'Average': model[item], 'n': 1}
+            patient_dict[pid] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
         else:
-            model[pid]['Sum'] += model[item]
-            model[pid]['Average'] = ((model[pid]['Average'] * model[pid]['n']) + model['item']) / (model[pid]['n'] + 1)
-            model[pid]['n'] += 1
+            patient_dict[pid]['Sum'] += model[item]
+            patient_dict[pid]['Average'] = ((patient_dict[pid]['Average'] * patient_dict[pid]['n']) + model[item]) / (patient_dict[pid]['n'] + 1)
+            patient_dict[pid]['n'] += 1
 
 sums = [patient_dict[x]['Sum'] for x in patient_dict.keys()]
 avgs = [patient_dict[x]['Average'] for x in patient_dict.keys()]
 
 perplex = math.ceil(math.sqrt(math.sqrt(len(model.wv.vocab))))
 for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
-    logger.log("Creating TSNE plot")
-    FileUtils.tsne_plot(logger, matrix, perplex, f"t-SNE plot of hip replacement patients {name} with perplexity {perplex}")
+    # logger.log("Creating TSNE plot")
+    # FileUtils.tsne_plot(logger, matrix, perplex, f"t-SNE plot of hip replacement patients {name} with perplexity {perplex}")
 
-    logger.log("Creating UMAP plot")
-    FileUtils.umap_plot(logger, matrix, f"UMAP plot of hip replacement patients {name}")
+    # logger.log("Creating UMAP plot")
+    # FileUtils.umap_plot(logger, matrix, f"UMAP plot of hip replacement patients {name}")
 
     logger.log("Performing PCA")
     pca2d = PCA(n_components=2)
@@ -64,59 +64,60 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
 
         outlier_count = 0
         cluster_outlier_file = logger.output_path / f"{name}_kmeans_outliers.txt"
+        patient_ids = list(patient_dict.keys())
         for idx, x in enumerate(cluster_distances):
             if x >= q3 + (1.5 * iqr):
                 outlier_count = outlier_count + 1
                 with open(cluster_outlier_file, 'a') as f:
-                    f.write(f'{model.index2word[cluster_indices[i][idx]]}: {x}\r\n') 
+                    f.write(f'{patient_ids[cluster_indices[i][idx]]}: {x}, cluster: {i}\r\n') 
 
     logger.log(f"{outlier_count} outliers detected")
+
+    # logger.log("Calculating unsupervised 1NN distance")
     # {i: Y[np.where(labels == i)] for i in range(kmeans.n_clusters)}
+    # nn_calc = kNN(n_neighbors=1)
+    # nn_calc.fit(Y) # 2d
+    # distances, _ = nn_calc.kneighbors(n_neighbors=1)
+    # distances = distances.tolist()
+    # distances = [x[0] for x in distances]
+    # distances = pd.Series(distances)
+    # q1 = distances.quantile(0.25)
+    # q3 =  distances.quantile(0.75)
+    # iqr = q3 - q1
+    # kNN_outlier_file = logger.output_path / f"{name}_1NN_outliers.txt"
+    # outlier_count = 0
+    # out_labels = [0] * len(Y)
+    # with open(kNN_outlier_file, 'w+') as f:
+    #     for idx, distance in enumerate(distances):
+    #         if distance >= q3 + (1.5 * iqr):
+    #             f.write(f'{model.index2word[idx]}: {distance}\r\n')
+    #             outlier_count = outlier_count + 1
+    #             out_labels[idx] = 1
+    # logger.log(f"{outlier_count} outliers detected")
 
-    logger.log("Calculating unsupervised 1NN distance")
-    nn_calc = kNN(n_neighbors=1)
-    nn_calc.fit(Y) # 2d
-    distances, _ = nn_calc.kneighbors(n_neighbors=1)
-    distances = distances.tolist()
-    distances = [x[0] for x in distances]
-    distances = pd.Series(distances)
-    q1 = distances.quantile(0.25)
-    q3 =  distances.quantile(0.75)
-    iqr = q3 - q1
-    kNN_outlier_file = logger.output_path / f"{name}_1NN_outliers.txt"
-    outlier_count = 0
-    out_labels = [0] * len(Y)
-    with open(kNN_outlier_file, 'w+') as f:
-        for idx, distance in enumerate(distances):
-            if distance >= q3 + (1.5 * iqr):
-                f.write(f'{model.index2word[idx]}: {distance}\r\n')
-                outlier_count = outlier_count + 1
-                out_labels[idx] = 1
-    logger.log(f"{outlier_count} outliers detected")
+    # logger.log("Plotting 1NN outliers")
+    # FileUtils.create_scatter_plot(logger, Y, out_labels, "1NN cluster and outliers", f"{name}_1NN")
 
-    logger.log("Plotting 1NN outliers")
-    FileUtils.create_scatter_plot(logger, Y, out_labels, "1NN cluster and outliers", f"{name}_1NN")
+    # logger.log("Calculating 1NN cosine-similarity distances from word vector similarity")
+    # nearest = {}
+    # for word in model.vocab.keys():
+    #     nearest[word] = model.most_similar(word)[0][1]
 
-    logger.log("Calculating 1NN cosine-similarity distances from word vector similarity")
-    nearest = {}
-    for word in model.vocab.keys():
-        nearest[word] = model.most_similar(word)[0][1]
+    # values = list(nearest.values())
+    # distances = pd.Series(values)
+    # q1 = distances.quantile(0.25)
+    # q3 = distances.quantile(0.75)
+    # iqr = q3 - q1
 
-    values = list(nearest.values())
-    distances = pd.Series(values)
-    q1 = distances.quantile(0.25)
-    q3 = distances.quantile(0.75)
-    iqr = q3 - q1
+    # outliers = []
+    # keys  = nearest.keys()
+    # values, keys = (list(t) for t in zip(*sorted(zip(values, keys))))
+    # cosine_outlier_file = logger.output_path / f"{name}_word2vec_cosine_similarity_outliers.txt"
+    # outlier_count = 0
+    # for i in range(len(keys)):
+    #     if values[i] <= q1 - (0.5 * iqr):
+    #         outlier_count = outlier_count + 1
+    #         with open(cosine_outlier_file, 'a') as f:
+    #             f.write(f'{keys[i]}: {values[i]}\r\n')
 
-    outliers = []
-    keys  = nearest.keys()
-    values, keys = (list(t) for t in zip(*sorted(zip(values, keys))))
-    cosine_outlier_file = logger.output_path / f"{name}_word2vec_cosine_similarity_outliers.txt"
-    outlier_count = 0
-    for i in range(len(keys)):
-        if values[i] <= q1 - (0.5 * iqr):
-            outlier_count = outlier_count + 1
-            with open(cosine_outlier_file, 'a') as f:
-                f.write(f'{keys[i]}: {values[i]}\r\n')
-
-    logger.log(f"{outlier_count} outliers detected")
+    # logger.log(f"{outlier_count} outliers detected")
