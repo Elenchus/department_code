@@ -34,6 +34,7 @@ if __name__ == "__main__":
     for filename in filenames:
         logger.log(f'Opening {filename}')
         data = pd.read_parquet(filename, columns=cols)
+        assert data.header == cols
 
         logger.log("Grouping patients")
         patients = itertools.groupby(sorted(data.values.tolist()), lambda x: x[0])

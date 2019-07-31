@@ -7,7 +7,7 @@ from sklearn import cluster
 from sklearn.decomposition import PCA
 from sklearn.neighbors import NearestNeighbors as kNN
 
-input_model = 'prop_1_hip_2003_epoch_1_dim_20_day.vec'
+input_model = 'prop_1_hip_2003_epoch_60_dim_20_day.vec'
 input_data = 'hip_subset.csv'
 logger = FileUtils.logger(__name__, f"proposal_1_analysis_{input_model}", '/mnt/c/data')
 logger.log(f'Opening {input_model}')
@@ -69,7 +69,7 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             if x >= q3 + (1.5 * iqr):
                 outlier_count = outlier_count + 1
                 with open(cluster_outlier_file, 'a') as f:
-                    f.write(f'{patient_ids[cluster_indices[i][idx]]}: {x}\r\n') 
+                    f.write(f'{patient_ids[cluster_indices[i][idx]]}: {x}, cluster: {i}\r\n') 
 
     logger.log(f"{outlier_count} outliers detected")
 
