@@ -75,10 +75,12 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
     logger.log(f"{outlier_count} outliers detected")
 
     logger.log("Calculating GMM")
-    bgmm = BGMM(n_components=20).fit(Y)
+    bgmm = BGMM(n_components=2).fit(Y)
     labels = bgmm.predict(Y)
     FileUtils.create_scatter_plot(logger, Y, labels, f"MCE hip BGMM patients {name} test", f'mce_hip_bgmm_{name}')
-
+    probs = bgmm.predict_proba(Y)
+    probs_output = logger.output_path / f'bmm_probabiliies_{name}.txt'
+    np.savetxt(probs_output, probs)
 
     # logger.log("Calculating unsupervised 1NN distance")
     # {i: Y[np.where(labels == i)] for i in range(kmeans.n_clusters)}
