@@ -5,6 +5,7 @@ import pandas as pd
 from gensim.models import KeyedVectors as w2v
 from sklearn import cluster
 from sklearn.decomposition import PCA
+from sklearn.mixture import BayesianGaussianMixture as BGMM
 from sklearn.neighbors import NearestNeighbors as kNN
 
 input_model = 'prop_1_hip_2003_epoch_60_dim_20_day.vec'
@@ -49,7 +50,7 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
-    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE hip replacement patients {name} test. Silhoutte score {s}%", f'mce_mimic_{name}')
+    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE hip replacement k-meanspatients {name} test. Silhoutte score {s}%", f'mce_hip_kmeans_{name}')
 
     logger.log("Calculating distances from k-means clusters")
     all_distances = kmeans.transform(Y) 
@@ -72,6 +73,12 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
                     f.write(f'{patient_ids[cluster_indices[i][idx]]}: {x}, cluster: {i}\r\n') 
 
     logger.log(f"{outlier_count} outliers detected")
+
+    logger.log("Calculating GMM")
+    bgmm = BGMM(n_components=20).fit(Y)
+    labels = bgmm.predict(Y)
+    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE hip BGMM patients {name} test", f'mce_hip_bgmm_{name}')
+
 
     # logger.log("Calculating unsupervised 1NN distance")
     # {i: Y[np.where(labels == i)] for i in range(kmeans.n_clusters)}
