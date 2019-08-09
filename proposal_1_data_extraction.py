@@ -25,22 +25,24 @@ def extract_relevant_claims(group, header, code_list):
     return claims.loc[mask]
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "proposal_1_data_extract", "/mnt/c/data")
+    code_type = 'knee'
+    logger = FileUtils.logger(__name__, f"proposal_1_data_extract_{code_type}", "/mnt/c/data")
     filenames = FileUtils.get_mbs_files()
-    output_file = logger.output_path / 'hip_subset.csv'
+    output_file = logger.output_path / f'{code_type}_subset.csv'
 
     cols=['PIN', 'ITEM', 'DOS']
-    codes_of_interest = ['49309','49312', '49315',' 49318','49319', '49321', '49324', '49327', '49330', '49333', '49336', '49339', '49342', '49345','49346', '49360', '49363', '49366']
+    hip_replacement_codes_of_interest = ['49309','49312', '49315',' 49318','49319', '49321', '49324', '49327', '49330', '49333', '49336', '49339', '49342', '49345','49346', '49360', '49363', '49366']
+    knee_arthroscopy_codes_of_interest = ['49557', '49558', '49559', '49560', '49561', '49562', '49563', '49564', '49566']
     for filename in filenames:
         logger.log(f'Opening {filename}')
         data = pd.read_parquet(filename, columns=cols)
-        assert data.header == cols
+        assert list(data.columns) == cols
 
         logger.log("Grouping patients")
         patients = itertools.groupby(sorted(data.values.tolist()), lambda x: x[0])
 
         logger.log("Extracting claims")
         for patient, group in patients:
-            relevant_claims = extract_relevant_claims(group, data.columns, codes_of_interest)
+            relevant_claims = extract_relevant_claims(group, data.columns, knee_arthroscopy_codes_of_interest)
             if type(relevant_claims) != type(None):
                 append_to_file(output_file, relevant_claims)

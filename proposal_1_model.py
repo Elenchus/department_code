@@ -8,8 +8,11 @@ from sklearn.decomposition import PCA
 from sklearn.mixture import BayesianGaussianMixture as BGMM
 from sklearn.neighbors import NearestNeighbors as kNN
 
-input_model = 'prop_1_hip_2003_epoch_60_dim_20_day.vec'
-input_data = 'hip_subset.csv'
+code_type = 'knee'
+dimensions = 20
+epochs = 100
+input_model = f'prop_1_{code_type}_2003_epoch_{epochs}_dim_{dimensions}_day.vec'
+input_data = f'{code_type}_subset_2003.csv'
 logger = FileUtils.logger(__name__, f"proposal_1_analysis_{input_model}", '/mnt/c/data')
 logger.log(f'Opening {input_model}')
 model = w2v.load_word2vec_format(input_model, binary = False)
@@ -20,7 +23,7 @@ with open(input_data, 'r') as f:
     f.readline()
     for line in f:
         row = line.split(',')
-        pid, item = row[0], row[1]
+        pid, item = row[1], row[2]
         keys = patient_dict.keys()
         if pid not in keys:
             patient_dict[pid] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
@@ -50,7 +53,7 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
-    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE hip replacement k-meanspatients {name} test. Silhoutte score {s}%", f'mce_hip_kmeans_{name}')
+    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} replacement k-meanspatients {name} test. Silhoutte score {s}%", f'mce_hip_kmeans_{name}')
 
     logger.log("Calculating distances from k-means clusters")
     all_distances = kmeans.transform(Y) 
@@ -77,7 +80,7 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
     logger.log("Calculating GMM")
     bgmm = BGMM(n_components=2).fit(Y)
     labels = bgmm.predict(Y)
-    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE hip BGMM patients {name} test", f'mce_hip_bgmm_{name}')
+    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} BGMM patients {name} test", f'mce_hip_bgmm_{name}')
     probs = bgmm.predict_proba(Y)
     probs_output = logger.output_path / f'bmm_probabiliies_{name}.txt'
     np.savetxt(probs_output, probs)
