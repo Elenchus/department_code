@@ -53,7 +53,7 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
-    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} replacement k-meanspatients {name} test. Silhoutte score {s}%", f'mce_hip_kmeans_{name}')
+    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} replacement k-meanspatients {name} test. Silhoutte score {s}%", f'mce_{code_type}_kmeans_{name}')
 
     logger.log("Calculating distances from k-means clusters")
     all_distances = kmeans.transform(Y) 
@@ -78,7 +78,8 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
     logger.log(f"{outlier_count} outliers detected")
 
     logger.log("Calculating GMM")
-    bgmm = BGMM(n_components=2).fit(Y)
+    n_components = 3
+    bgmm = BGMM(n_components=n_components).fit(Y)
     labels = bgmm.predict(Y)
     FileUtils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} BGMM patients {name} test", f'mce_hip_bgmm_{name}')
     probs = bgmm.predict_proba(Y)
