@@ -28,7 +28,7 @@ def sum_patient_vectors(model, patient):
         return (sum(similarities) / len(similarities), min(similarities))
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "embed_specialty_item")
+    logger = FileUtils.logger(__name__, "embed_specialty_item", "/mnt/c/data")
 
     filename = FileUtils.get_mbs_files()[0]
     
@@ -58,11 +58,11 @@ if __name__ == "__main__":
         if rsp not in model.wv.vocab:
             no_unique_rsp = no_unique_rsp - 1
 
-    # logger.log("Performing PCA")
-    # X = model.wv.syn0
-    # pca2d = PCA(n_components=2)
-    # pca2d.fit(X)
-    # Y = pca2d.transform(X)
+    logger.log("Performing PCA")
+    X = model.wv.syn0
+    pca2d = PCA(n_components=2)
+    pca2d.fit(X)
+    Y = pca2d.transform(X)
 
     logger.log(f"Clustering with {no_unique_rsp} clusters")
     cluster_no = [32, 64, 96, 128, no_unique_rsp, 160, 192, 224, 256]
