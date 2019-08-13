@@ -8,9 +8,13 @@ filenames = FileUtils.get_mbs_files()
 
 # cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "INHOSPITAL", "BILLTYPECD"]
 test_cols = ["SPR", "SPR_RSP", "SPRPRAC"]
+all_test_cols = test_cols + ["NUMSERV"]
 for filename in filenames:
     logger.log(f'Opening {filename}')
-    data = pd.read_parquet(filename, columns=test_cols)
+    # data = pd.read_parquet(filename, columns=test_cols)
+    full_data = pd.read_parquet(filename, columns=all_test_cols)
+    data = full_data[(full_data["NUMSERV"] == 1) & (full_data['SPR_RSP'] != 0)]
+    data = data.drop(['NUMSERV'], axis = 1)
     assert len(data.columns) == len(test_cols)
     for i in range(len(test_cols)):
         assert data.columns[i] == test_cols[i]
@@ -60,4 +64,5 @@ for filename in filenames:
     for rsp in completely_unique:
         x = cdcnvtr.convert_rsp_num(rsp)
         logger.log(f"Unique specialty: {x}")
+
     break
