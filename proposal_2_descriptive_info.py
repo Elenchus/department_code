@@ -3,9 +3,8 @@ import itertools
 import pandas as pd
 
 
-logger = FileUtils.logger(__name__, f"proposal_2", "/mnt/c/data")
+logger = FileUtils.logger(__name__, f"proposal_2_descriptions", "/mnt/c/data")
 filenames = FileUtils.get_mbs_files()
-output_file = logger.output_path / f"proposal_2"
 
 # cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "INHOSPITAL", "BILLTYPECD"]
 test_cols = ["SPR", "SPR_RSP", "SPRPRAC"]
