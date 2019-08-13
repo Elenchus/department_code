@@ -22,6 +22,7 @@ for filename in filenames:
 
     logger.log("Processing groups for unique RSP and location per provider")
     rsp_counts = []
+    rsp_sets = []
     prac_counts = []
     for uid, group in groups:
         rsp_set = set()
@@ -31,6 +32,7 @@ for filename in filenames:
             prac_set.add(item[2])
 
         rsp_counts.append(len(rsp_set))
+        rsp_sets.append(rsp_set)
         prac_counts.append(len(prac_set))
         
     for val in set(rsp_counts):
@@ -39,4 +41,24 @@ for filename in filenames:
     for val in set(prac_counts):
         logger.log(f"{prac_counts.count(val)} occurrences of {val} Locations per provider")
 
+    nique = set()
+    non_unique = set()
+    for s in rsp_sets:
+        x = non_unique
+        if len(s) == 1:
+            x = nique
+
+        for i in s:
+            x.add(i)
+
+    intersect = set.intersection(nique, non_unique)
+    completely_unique = set()
+    for s in nique:
+        if s not in intersect:
+            completely_unique.add(s)
+
+    cdcnvtr = FileUtils.code_converter()
+    for rsp in completely_unique:
+        x = cdcnvtr.convert_rsp_num(rsp)
+        logger.log(f"Unique specialty: {x}")
     break
