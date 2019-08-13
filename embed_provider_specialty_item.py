@@ -64,26 +64,18 @@ if __name__ == "__main__":
     pca2d.fit(X)
     Y = pca2d.transform(X)
 
-    logger.log(f"Clustering with {no_unique_rsp} clusters")
+    logger.log(f"Getting best cluster size")
     cluster_no = [32, 64, 96, 128, no_unique_rsp, 160, 192, 224, 256]
-    k, score = FileUtils.get_best_cluster_size(logger, X, cluster_no)
+    k, score = FileUtils.get_best_cluster_size(logger, Y, cluster_no)
 
-    kmeans = cluster.KMeans(n_clusters=no_unique_rsp)
-    kmeans.fit(X)
+    logger.log(f"Clustering with {k} clusters")
+    kmeans = cluster.KMeans(n_clusters=k)
+    kmeans.fit(Y)
     labels = kmeans.labels_
-    # centroids = kmeans.cluster_centers_
+    FileUtils.create_scatter_plot(logger, Y, labels, f"RSP clusters", f'RSP_clusters_kmeans')
 
-    # logger.log("Plotting t-SNE and k-means")
-    # FileUtils.tsne_plot(logger, model, no_unique_rsp, "t-")
-
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111)
-    # scatter = ax.scatter(X[:, 0], X[:, 1], c=labels)
-    # legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.")
-
-    # fig.savefig(logger.output_path + "items_and_specialties_k-means_" + datetime.now().strftime("%Y%m%dT%H%M%S"))
-    FileUtils.create_scatter_plot(logger, X, labels, "Item/provider specialty clusters", "items_and_specialties_k_means")
-    FileUtils.create_scatter_plot(logger, X, provider_labels, "Provider specialty labels", "specialty_labels")
+    FileUtils.create_scatter_plot(logger, Y, labels, "Item/provider specialty clusters", "items_and_specialties_k_means")
+    FileUtils.create_scatter_plot(logger, Y, provider_labels, "Provider specialty labels", "specialty_labels")
     logger.log("Re-loading parquet file")
     data = pd.read_parquet(filename, columns=['PIN', 'ITEM', 'SPR_RSP']).astype(str)
 
