@@ -35,15 +35,15 @@ for filename in filenames:
     sentences = []
     max_sentence_length = 0
     for rsp, group in groups:
-        sentence = list(set(str(x[1]) for x in list(group)))
-        # sentence = list(str(x[1]) for x in list(group))
+        # sentence = list(set(str(x[1]) for x in list(group)))
+        sentence = list(str(x[1]) for x in list(group))
         if len(sentence) > max_sentence_length:
             max_sentence_length = len(sentence)
 
         sentences.append(sentence)
         # sentences.append([f"RSP_{x[1]}" for x in list(group)])
 
-    model = w2v(sentences=sentences, min_count=4, size = perplex, iter = 5, window=max_sentence_length)
+    model = w2v(sentences=sentences, min_count=20, size = perplex, iter = 5, window=max_sentence_length)
 
     X = model[model.wv.vocab]
 
