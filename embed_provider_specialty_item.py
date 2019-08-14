@@ -35,7 +35,13 @@ if __name__ == "__main__":
     filename = FileUtils.get_mbs_files()[0]
     
     logger.log("Loading parquet file")
-    data = pd.read_parquet(filename, columns=['ITEM', 'SPR_RSP']).astype(str)
+    cols = ["ITEM", "SPR_RSP"]
+    data = pd.read_parquet(filename, columns=['ITEM', 'SPR_RSP', "NUMSERV"]).astype(str)
+    data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0)]
+    data = data.drop(['NUMSERV'], axis = 1)
+    for i in range(len(cols)):
+        assert data.columns[i] == cols[i]
+
     data['SPR_RSP'] = data['SPR_RSP'].apply(lambda x: f"RSP_{x}")
     string_list = data.values.tolist()
     no_unique_items = len(data['ITEM'].unique())
@@ -49,7 +55,7 @@ if __name__ == "__main__":
     logger.log("Embedding vectors")
     size = ceil(sqrt(sqrt(no_unique_items + no_unique_rsp)))
 
-    model = Word2Vec(string_list, size=size, window= 2, min_count=1, workers=5,iter=5)
+    model = Word2Vec(string_list, size=size, window= 2, min_count=20, workers=5,iter=5)
 
     del string_list
     gc.collect()
@@ -127,9 +133,9 @@ if __name__ == "__main__":
             z = y[0][0] 
             if z[0:4] == 'RSP_': 
                 z = z[4:] 
-                logger.log(f"{cdv.convert_rsp_num(x)}: {cdv.convert_rsp_num(z)} at {y[0][1]}%") 
+                logger.log(f"{cdv.convert_rsp_num(x)}: {cdv.convert_rsp_num(z)} at {round(y[0][1], 2)}") 
             else: 
-                logger.log(f"{cdv.convert_rsp_num(x)}: item {z} at {y[0][1]}%") 
+                logger.log(f"{cdv.convert_rsp_num(x)}: item {z} at {round(y[0][1], 2)}") 
         except KeyError: 
             continue 
 
