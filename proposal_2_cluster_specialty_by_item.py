@@ -13,12 +13,16 @@ logger = FileUtils.logger(__name__, f"proposal_2_rsp_item_cluster", "/mnt/c/data
 filenames = FileUtils.get_mbs_files()
 
 full_cols = ["ITEM", "SPR_RSP", "NUMSERV"]
+# full_cols = ["ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
 cols = ["ITEM", "SPR_RSP"]
 for filename in filenames:
     logger.log(f'Opening {filename}')
     data = pd.read_parquet(filename, columns=full_cols)
     data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0)]
+    # data["SPR_RSP"] = data["SPR_RSP"].map(str) + data["INHOSPITAL"].map(str)
+    # data = data.drop(['NUMSERV', "INHOSPITAL"], axis = 1)
     data = data.drop(['NUMSERV'], axis = 1)
+    assert len(data.columns) == len(cols)
     for i in range(len(cols)):
         assert data.columns[i] == cols[i]
 
@@ -26,13 +30,20 @@ for filename in filenames:
     perplex = round(math.sqrt(math.sqrt(no_unique_rsps)))
 
     logger.log("Grouping items")
-    data = sorted(data.values.tolist(), key = lambda x: x[0])
-    groups = itertools.groupby(data, key = lambda x: x[0])
+    data = sorted(data.values.tolist(), key = lambda sentence: sentence[0])
+    groups = itertools.groupby(data, key = lambda sentence: sentence[0])
     sentences = []
+    max_sentence_length = 0
     for rsp, group in groups:
-        sentences.append([f"RSP_{x[1]}" for x in list(group)])
+        sentence = list(set(str(x[1]) for x in list(group)))
+        # sentence = list(str(x[1]) for x in list(group))
+        if len(sentence) > max_sentence_length:
+            max_sentence_length = len(sentence)
 
-    model = w2v(sentences=sentences, min_count=20, size = perplex, iter = 5)
+        sentences.append(sentence)
+        # sentences.append([f"RSP_{x[1]}" for x in list(group)])
+
+    model = w2v(sentences=sentences, min_count=4, size = perplex, iter = 5, window=max_sentence_length)
 
     X = model[model.wv.vocab]
 
@@ -49,7 +60,7 @@ for filename in filenames:
     Y = pca2d.transform(X)
 
     logger.log("k-means clustering")
-    (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,8)))
+    (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
@@ -64,17 +75,19 @@ for filename in filenames:
     probs_output = logger.output_path / f'BGMM_probs.txt'
     np.savetxt(probs_output, probs)
 
+    logger.log("Calculating cosine similarities")
     cdv = FileUtils.code_converter()
-    for x in list(cdv.valid_rsp_num_values): 
-        try: 
-            y = model.most_similar(f"RSP_{x}") 
-            z = y[0][0] 
-            if z[0:4] == 'RSP_': 
-                z = z[4:] 
-                logger.log(f"{cdv.convert_rsp_num(x)}: {cdv.convert_rsp_num(z)} at {round(y[0][1], 2)}") 
-            else: 
-                logger.log(f"{cdv.convert_rsp_num(x)}: item {z} at {round(y[0][1], 2)}") 
-        except KeyError: 
-            continue 
+    output_file = logger.output_path / "Most_similar.csv"
+    with open(output_file, 'w+') as f:
+        f.write("RSP,Most similar to,Cosine similarity\r\n")
+        for rsp in list(cdv.valid_rsp_num_values): 
+            try: 
+                y = model.most_similar(str(rsp)) 
+                z = y[0][0] 
+                f.write(f"{cdv.convert_rsp_num(rsp),cdv.convert_rsp_num(z)},{round(y[0][1], 2)}\r\n") 
+            except KeyError as err: 
+                continue
+            except Exception:
+                raise
 
     break

@@ -127,16 +127,19 @@ if __name__ == "__main__":
     # FileUtils.create_boxplot(logger, avg_sims, "Average patient item/specialty similarity score", "patient_average_similarity_boxplot")
     # FileUtils.create_boxplot(logger, min_sims, "Minimum patient item/specialty similarity score", "patient_minimum_similarity_boxplot")
     cdv = FileUtils.code_converter()
-    for x in list(cdv.valid_rsp_num_values): 
-        try: 
-            y = model.most_similar(f"RSP_{x}") 
-            z = y[0][0] 
-            if z[0:4] == 'RSP_': 
-                z = z[4:] 
-                logger.log(f"{cdv.convert_rsp_num(x)}: {cdv.convert_rsp_num(z)} at {round(y[0][1], 2)}") 
-            else: 
-                logger.log(f"{cdv.convert_rsp_num(x)}: item {z} at {round(y[0][1], 2)}") 
-        except KeyError: 
-            continue 
+    output_file = logger.output_path / "Most_similar.csv"
+    with open(output_file, 'w+') as f:
+        f.write("RSP,Most similar to,Cosine similarity\r\n")
+        for x in list(cdv.valid_rsp_num_values): 
+            try: 
+                y = model.most_similar(f"RSP_{x}") 
+                z = y[0][0] 
+                if z[0:4] == 'RSP_': 
+                    z = z[4:] 
+                    f.write(f"{cdv.convert_rsp_num(x)},{cdv.convert_rsp_num(z)},{round(y[0][1], 2)}\r\n") 
+                else: 
+                    f.write(f"{cdv.convert_rsp_num(x)},item {z},{round(y[0][1], 2)}\r\n") 
+            except KeyError: 
+                continue 
 
     logger.log("Finished", '!')
