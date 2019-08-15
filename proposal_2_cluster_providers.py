@@ -36,7 +36,7 @@ for filename in filenames:
     max_sentence_length = 0
     for provider, group in groups:
         # sentence = list(set(str(x[1]) for x in list(group)))
-        sentence = list(str(x[1]) for x in list(group))
+        sentence = list(set(str(x[1]) for x in list(group)))
         if len(sentence) > max_sentence_length:
             max_sentence_length = len(sentence)
 
