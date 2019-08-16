@@ -49,15 +49,16 @@ for filename in filenames:
     logger.log("Creating vectors for patients")
     patient_dict = {}
     groups = itertools.groupby(data, key = lambda x: x[0])
-    for provider, group in groups:
-        pid, item = group[0], group[1]
-        keys = patient_dict.keys()
-        if pid not in keys:
-            patient_dict[pid] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
-        else:
-            patient_dict[pid]['Sum'] += model[item]
-            patient_dict[pid]['Average'] = ((patient_dict[pid]['Average'] * patient_dict[pid]['n']) + model[item]) / (patient_dict[pid]['n'] + 1)
-            patient_dict[pid]['n'] += 1
+    for pid, group in groups:
+        _, group = zip(*list(group))
+        for item in group:
+            keys = patient_dict.keys()
+            if pid not in keys:
+                patient_dict[pid] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
+            else:
+                patient_dict[pid]['Sum'] += model[item]
+                patient_dict[pid]['Average'] = ((patient_dict[pid]['Average'] * patient_dict[pid]['n']) + model[item]) / (patient_dict[pid]['n'] + 1)
+                patient_dict[pid]['n'] += 1
     
     sums = [patient_dict[x]['Sum'] for x in patient_dict.keys()]
     avgs = [patient_dict[x]['Average'] for x in patient_dict.keys()]
