@@ -79,8 +79,8 @@ for filename in filenames:
     for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
         logger.log("Performing PCA")
         pca2d = PCA(n_components=2)
-        pca2d.fit(X)
-        Y = pca2d.transform(X)
+        pca2d.fit(matrix)
+        Y = pca2d.transform(matrix)
 
         logger.log("k-means clustering")
         (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))
@@ -98,19 +98,19 @@ for filename in filenames:
         probs_output = logger.output_path / f'BGMM_probs_{name}.txt'
         np.savetxt(probs_output, probs)
 
-        logger.log("Calculating cosine similarities")
-        cdv = FileUtils.code_converter()
-        output_file = logger.output_path / f"Most_similar_{name}.csv"
-        with open(output_file, 'w+') as f:
-            f.write("RSP,Most similar to,Cosine similarity\r\n")
-            for rsp in list(cdv.valid_rsp_num_values): 
-                try: 
-                    y = model.most_similar(str(rsp)) 
-                    z = y[0][0] 
-                    f.write(f"{cdv.convert_rsp_num(rsp),cdv.convert_rsp_num(z)},{round(y[0][1], 2)}\r\n") 
-                except KeyError as err: 
-                    continue
-                except Exception:
-                    raise
+        # logger.log("Calculating cosine similarities")
+        # cdv = FileUtils.code_converter()
+        # output_file = logger.output_path / f"Most_similar_{name}.csv"
+        # with open(output_file, 'w+') as f:
+        #     f.write("RSP,Most similar to,Cosine similarity\r\n")
+        #     for rsp in list(cdv.valid_rsp_num_values): 
+        #         try: 
+        #             y = model.most_similar(str(rsp)) 
+        #             z = y[0][0] 
+        #             f.write(f"{cdv.convert_rsp_num(rsp),cdv.convert_rsp_num(z)},{round(y[0][1], 2)}\r\n") 
+        #         except KeyError as err: 
+        #             continue
+        #         except Exception:
+        #             raise
 
     break
