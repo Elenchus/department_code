@@ -64,7 +64,7 @@ def create_scatter_plot(logger, data, labels, title, filename):
     
 
 def get_best_cluster_size(logger, X, clusters):
-    logger.log("Getting best k-means cluster sizer with average silhouette score")
+    logger.log("Getting best k-means cluster size with average silhouette score")
     avg_sil = []
     for n in clusters:
         kmeans = cluster.KMeans(n_clusters=n)

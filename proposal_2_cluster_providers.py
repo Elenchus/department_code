@@ -13,7 +13,7 @@ logger = FileUtils.logger(__name__, f"proposal_2_cluster_providers", "/mnt/c/dat
 filenames = FileUtils.get_mbs_files()
 
 full_cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "NUMSERV"]
-# full_cols = ["ITEM", "SPR_RSP", "NUaMSERV", "INHOSPITAL"]
+# full_cols = ["ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
 cols = ["SPR", "ITEM"]
 for filename in filenames:
     logger.log(f'Opening {filename}')
@@ -46,12 +46,16 @@ for filename in filenames:
     max_sentence_length = 2
     model = w2v(sentences=sentences, min_count=20, size = perplex, iter = 5, window=max_sentence_length)
 
-    logger.log("Creating vectors for patients")
+    logger.log("Creating vectors for providers")
     patient_dict = {}
     groups = itertools.groupby(data, key = lambda x: x[0])
     for pid, group in groups:
         _, group = zip(*list(group))
         for item in group:
+            item = str(item)
+            if item not in model.wv.vocab:
+                continue
+                
             keys = patient_dict.keys()
             if pid not in keys:
                 patient_dict[pid] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
