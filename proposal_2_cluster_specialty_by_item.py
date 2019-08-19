@@ -57,10 +57,13 @@ for filename in filenames:
     FileUtils.umap_plot(logger, model, "RSP cluster UMAP")
 
     # Y = X
-    logger.log("Performing PCA")
-    pca2d = PCA(n_components=2)
-    pca2d.fit(X)
-    Y = pca2d.transform(X)
+    # logger.log("Performing PCA")
+    # pca2d = PCA(n_components=2)
+    # pca2d.fit(X)
+    # Y = pca2d.transform(X)
+
+    logger.log("Autoencoding")
+    
 
     logger.log("k-means clustering")
     (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))
