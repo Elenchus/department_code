@@ -33,3 +33,5 @@ if __name__ == "__main__":
         Y = pca2d.transform(one_hot_table)
 
         FileUtils.create_scatter_plot(logger, Y, rows, f"RSP clusters", f'RSP_clusters')
+
+        break
