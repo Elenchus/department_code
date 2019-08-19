@@ -26,8 +26,8 @@ for filename in filenames:
     for i in range(len(cols)):
         assert data.columns[i] == cols[i]
 
-    no_unique_rsps = len(data['ITEM'].unique())
-    perplex = round(math.sqrt(math.sqrt(no_unique_rsps)))
+    no_unique_items = len(data['ITEM'].unique())
+    perplex = round(math.sqrt(math.sqrt(no_unique_items)))
 
     logger.log("Grouping items")
     data = sorted(data.values.tolist(), key = lambda sentence: sentence[0])
@@ -35,8 +35,11 @@ for filename in filenames:
     sentences = []
     max_sentence_length = 0
     for rsp, group in groups:
-        # sentence = list(set(str(x[1]) for x in list(group)))
-        sentence = list(str(x[1]) for x in list(group))
+        sentence = list(set(str(x[1]) for x in list(group)))
+        # sentence = list(str(x[1]) for x in list(group))
+        if len(sentence) <= 1:
+            continue
+
         if len(sentence) > max_sentence_length:
             max_sentence_length = len(sentence)
 
