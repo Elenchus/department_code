@@ -1,25 +1,28 @@
+'''functions for quick graphing'''
+from datetime import datetime
 import math
 # from cuml import UMAP as umap
 import umap
-from datetime import datetime
 from matplotlib import pyplot as plt
 from sklearn import cluster, metrics
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 def categorical_plot_group(logger, x, y, legend_labels, title, filename):
+    '''creates and saves a categorical plot'''
     logger.log(f"Plotting bar chart: {title}")
     fig = plt.figure()
     ax = fig.add_subplot(111)
     for i in range(len(y)):
         ax.scatter(x[i], y[i], label=legend_labels[i])
-    
+ 
     # plt.xticks(range(x[0]), (str(i) for i in x[0]))
     lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     ttl = fig.suptitle(title)
-    save_plt_fig(logger, fig, filename, (lgd,ttl, ))
+    save_plt_fig(logger, fig, filename, (lgd, ttl, ))
 
 def create_boxplot(logger, data, title, filename):
+    '''creates and saves a single boxplot'''
     logger.log(f"Plotting boxplot: {title}")
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -28,6 +31,7 @@ def create_boxplot(logger, data, title, filename):
     save_plt_fig(logger, fig, filename)
 
 def create_boxplot_group(logger, data, labels, title, filename):
+    '''creates and saves a group of boxplot'''
     logger.log(f"Plotting boxplot group: {title}")
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -37,15 +41,18 @@ def create_boxplot_group(logger, data, labels, title, filename):
     save_plt_fig(logger, fig, filename)
 
 def create_scatter_plot(logger, data, labels, title, filename):
+    '''creates and saves a scatter plot'''
     fig = plt.figure()
     ax = fig.add_subplot(111)
     scatter = ax.scatter(data[:, 0], data[:, 1], c=labels)
-    legend = ax.legend(*scatter.legend_elements(), loc="upper left", title="Cluster no.", bbox_to_anchor=(1, 0.5))
+    legend = ax.legend(*scatter.legend_elements(), \
+                loc="upper left", title="Cluster no.", bbox_to_anchor=(1, 0.5))
     ttl = fig.suptitle(title)
 
     save_plt_fig(logger, fig, filename, [ttl, legend])
 
 def get_best_cluster_size(logger, X, clusters):
+    '''measure silhouette scores for the given cluster sizes and return the best k and its score'''
     logger.log("Getting best k-means cluster size with average silhouette score")
     avg_sil = []
     for n in clusters:
@@ -63,12 +70,13 @@ def get_best_cluster_size(logger, X, clusters):
     return (k, max_n)
 
 def save_plt_fig(logger, fig, filename, bbox_extra_artists=None):
+    '''Save a plot figure to file with timestamp'''
     current = datetime.now().strftime("%Y%m%dT%H%M%S")
     output_path = f"{filename}_{current}"
-    if logger != None:
+    if logger is not None:
         output_path = logger.output_path / output_path
 
-    if bbox_extra_artists == None:
+    if bbox_extra_artists is None:
         fig.savefig(output_path)
     else:
         fig.savefig(output_path, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
@@ -76,6 +84,7 @@ def save_plt_fig(logger, fig, filename, bbox_extra_artists=None):
     plt.close(fig)
 
 def tsne_plot(logger, model, perplex, title):
+    '''create and save a t-SNE plot'''
     logger.log("Getting labels and tokens for t-SNE")
     labels = []
     tokens = []
@@ -83,7 +92,7 @@ def tsne_plot(logger, model, perplex, title):
     for word in model.wv.vocab:
         tokens.append(model[word])
         labels.append(word)
-    
+ 
     logger.log(f"Creating TSNE model with perplexity {perplex}")
     tsne_model = TSNE(perplexity=perplex, n_components=2, init='pca', n_iter=2500, random_state=23)
     new_values = tsne_model.fit_transform(tokens)
@@ -94,27 +103,28 @@ def tsne_plot(logger, model, perplex, title):
     for value in new_values:
         x.append(value[0])
         y.append(value[1])
-        
+ 
     fig = plt.figure(figsize=(16, 16))
     ax = fig.add_subplot(111)
     for i in range(len(x)):
-        ax.scatter(x[i],y[i])
+        ax.scatter(x[i], y[i])
     for i in range(len(x)):
         ax.annotate(labels[i],
-                     xy=(x[i], y[i]),
-                     xytext=(5, 2),
-                     textcoords='offset points',
-                     ha='right',
-                     va='bottom')
+                    xy=(x[i], y[i]),
+                    xytext=(5, 2),
+                    textcoords='offset points',
+                    ha='right',
+                    va='bottom')
 
     fig.suptitle(title)
-    
+ 
     name = "t-SNE_" + datetime.now().strftime("%Y%m%dT%H%M%S")
     path = logger.output_path / name
     logger.log(f"Saving TSNE figure to {path}")
     fig.savefig(path)
 
 def umap_plot(logger, model, title):
+    '''create and save a umap plot'''
     labels = []
     tokens = []
 

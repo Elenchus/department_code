@@ -1,12 +1,12 @@
 from datetime import datetime as dt
-import FileUtils
+import file_utils
 import itertools
 import numpy as np
 import pandas as pd
 import re
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "convert_MIMIC_to_mce", '/mnt/c/data')
+    logger = file_utils.logger(__name__, "convert_MIMIC_to_mce", '/mnt/c/data')
 
     path = "~/data/mimicIII/"
     admissions = path + "ADMISSIONS.csv"

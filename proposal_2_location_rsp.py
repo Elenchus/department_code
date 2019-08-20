@@ -1,4 +1,4 @@
-import FileUtils
+import file_utils
 import itertools
 import pandas as pd
 
@@ -8,8 +8,8 @@ def confirm_num_equals_mdv(logger, filename):
     if test.shape[0] == 0:
         logger.log("***NUMSERV/MDV_NUMSERV MISMATCH!***")
 
-logger = FileUtils.logger(__name__, f"proposal_2_rsps_by_provider_location", "/mnt/c/data")
-filenames = FileUtils.get_mbs_files()
+logger = file_utils.logger(__name__, f"proposal_2_rsps_by_provider_location", "/mnt/c/data")
+filenames = file_utils.get_mbs_files()
 
 # cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "INHOSPITAL", "BILLTYPECD"]
 test_cols = ["SPR", "SPR_RSP", "SPRPRAC"]

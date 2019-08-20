@@ -1,6 +1,6 @@
 import os
 import gc
-import FileUtils
+import file_utils
 import pandas as pd
 
 from copy import deepcopy
@@ -24,7 +24,7 @@ def get_items_per_day(patient):
     return same_day_claim
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "embed.log")
+    logger = file_utils.logger(__name__, "embed.log")
     logger.log("Starting")
     path = 'C:/Data/PBS_Patient_10/'
 

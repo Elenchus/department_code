@@ -1,3 +1,3 @@
-import FileUtils
+import file_utils
 
 test_name = ''

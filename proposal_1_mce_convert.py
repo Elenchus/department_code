@@ -1,10 +1,10 @@
-import FileUtils
+import file_utils
 import itertools
 import pandas as pd
 from datetime import datetime as dt
 
 code_type = 'knee'
-logger = FileUtils.logger(__name__, f"proposal_1_mce_conversion_{code_type}", '/mnt/c/data')
+logger = file_utils.logger(__name__, f"proposal_1_mce_conversion_{code_type}", '/mnt/c/data')
 output_file = logger.output_path / f'{code_type}_replacement_mce_2003.txt'
 data = pd.read_csv(f'{code_type}_subset_2003.csv', usecols=['PIN', 'ITEM', 'DOS']).values.tolist()
 pid, item, dos = zip(*data)

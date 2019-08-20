@@ -1,4 +1,4 @@
-import FileUtils
+import file_utils
 import pandas as pd
 import Utils
 
@@ -15,8 +15,8 @@ def get_individual_risks(risks):
     return individual_risks.values.tolist()
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "CIG", '/mnt/c/data/')
-    filenames = FileUtils.get_mbs_files()
+    logger = file_utils.logger(__name__, "CIG", '/mnt/c/data/')
+    filenames = file_utils.get_mbs_files()
     for filename in filenames:
         logger.log(f"Opening {filename}")
         data = pd.read_parquet(filename)

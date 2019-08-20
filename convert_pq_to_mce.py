@@ -1,13 +1,13 @@
 from datetime import datetime as dt
-import FileUtils
+import file_utils
 import itertools
 import pandas as pd
 import re
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "convert_to_mce", '/mnt/c/data')
+    logger = file_utils.logger(__name__, "convert_to_mce", '/mnt/c/data')
 
-    for filename in FileUtils.get_pbs_files():
+    for filename in file_utils.get_pbs_files():
         logger.log(f"Opening {filename}")
         year = re.search("_(\d\d\d\d)\.", filename)[1]
         data = pd.read_parquet(filename, columns=['PTNT_ID', 'SPPLY_DT', 'ITM_CD']).values.tolist()

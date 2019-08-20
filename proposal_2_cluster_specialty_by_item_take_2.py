@@ -1,4 +1,4 @@
-import FileUtils
+import file_utils
 import itertools
 import math
 import numpy as np
@@ -9,8 +9,8 @@ from sklearn.decomposition import PCA
 from sklearn.mixture import BayesianGaussianMixture as BGMM
 from sklearn.neighbors import NearestNeighbors as kNN
 
-logger = FileUtils.logger(__name__, f"proposal_2_rsp_item_cluster_take_2", "/mnt/c/data")
-filenames = FileUtils.get_mbs_files()
+logger = file_utils.logger(__name__, f"proposal_2_rsp_item_cluster_take_2", "/mnt/c/data")
+filenames = file_utils.get_mbs_files()
 
 full_cols = ["SPR", "ITEM", "SPR_RSP", "NUMSERV"]
 # full_cols = ["ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
@@ -68,10 +68,10 @@ for filename in filenames:
                 rsp_dict[rsp]['Average'] = ((rsp_dict[rsp]['Average'] * rsp_dict[rsp]['n']) + model[item]) / (rsp_dict[rsp]['n'] + 1)
 
     logger.log("Creating t-SNE plot")
-    FileUtils.tsne_plot(logger, model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
+    file_utils.tsne_plot(logger, model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
 
     logger.log("Creating UMAP")
-    FileUtils.umap_plot(logger, model, "RSP cluster UMAP")
+    file_utils.umap_plot(logger, model, "RSP cluster UMAP")
 
     sums = [rsp_dict[x]['Sum'] for x in rsp_dict.keys()]
     avgs = [rsp_dict[x]['Average'] for x in rsp_dict.keys()]
@@ -83,17 +83,17 @@ for filename in filenames:
         Y = pca2d.transform(matrix)
 
         logger.log("k-means clustering")
-        (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))
+        (k, s) = file_utils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))
         kmeans = cluster.KMeans(n_clusters=k)
         kmeans.fit(Y)
         labels = kmeans.labels_
-        FileUtils.create_scatter_plot(logger, Y, labels, f"RSP {name} clusters", f'RSP_clusters_kmeans_{name}')
+        file_utils.create_scatter_plot(logger, Y, labels, f"RSP {name} clusters", f'RSP_clusters_kmeans_{name}')
 
         logger.log("Calculating GMM")
         n_components = 6
         bgmm = BGMM(n_components=n_components).fit(Y)
         labels = bgmm.predict(Y)
-        FileUtils.create_scatter_plot(logger, Y, labels, f"BGMM for RSP clusters_{name}", f'BGMM_RSP_{name}')
+        file_utils.create_scatter_plot(logger, Y, labels, f"BGMM for RSP clusters_{name}", f'BGMM_RSP_{name}')
         probs = bgmm.predict_proba(Y)
         probs_output = logger.output_path / f'BGMM_probs_{name}.txt'
         np.savetxt(probs_output, probs)

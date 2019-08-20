@@ -1,4 +1,4 @@
-import FileUtils
+import file_utils
 import itertools
 import pandas as pd
 from datetime import datetime as dt
@@ -26,8 +26,8 @@ def extract_relevant_claims(group, header, code_list):
 
 if __name__ == "__main__":
     code_type = 'knee'
-    logger = FileUtils.logger(__name__, f"proposal_1_data_extract_{code_type}", "/mnt/c/data")
-    filenames = FileUtils.get_mbs_files()
+    logger = file_utils.logger(__name__, f"proposal_1_data_extract_{code_type}", "/mnt/c/data")
+    filenames = file_utils.get_mbs_files()
     output_file = logger.output_path / f'{code_type}_subset.csv'
 
     cols=['PIN', 'ITEM', 'DOS']

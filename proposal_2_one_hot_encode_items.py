@@ -1,11 +1,11 @@
-import FileUtils
+import file_utils
 import itertools
 import pandas as pd
 from sklearn.decomposition import PCA
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, f"proposal_2_one_hot_rsp_item_cluster", "/mnt/c/data")
-    filenames = FileUtils.get_mbs_files()
+    logger = file_utils.logger(__name__, f"proposal_2_one_hot_rsp_item_cluster", "/mnt/c/data")
+    filenames = file_utils.get_mbs_files()
 
     for filename in filenames:
         logger.log(f'Opening {filename}')
@@ -32,6 +32,6 @@ if __name__ == "__main__":
         pca2d.fit(one_hot_table)
         Y = pca2d.transform(one_hot_table)
 
-        FileUtils.create_scatter_plot(logger, Y, rows, f"RSP clusters", f'RSP_clusters')
+        file_utils.create_scatter_plot(logger, Y, rows, f"RSP clusters", f'RSP_clusters')
 
         break

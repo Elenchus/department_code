@@ -1,11 +1,11 @@
-import FileUtils
+import file_utils
 import pandas as pd
 import re
 
 if __name__ == "__main__":
-    logger = FileUtils.logger(__name__, "descriptive_stats")
-    rsp = FileUtils.spr_rsp_converter()
-    filenames = FileUtils.get_mbs_files()
+    logger = file_utils.logger(__name__, "descriptive_stats")
+    rsp = file_utils.spr_rsp_converter()
+    filenames = file_utils.get_mbs_files()
     frequencies_by_year = []
     labels_by_year = []
     years = []
@@ -22,7 +22,7 @@ if __name__ == "__main__":
         labels_by_year.append(unique_values)
         years.append(year)
 
-    FileUtils.categorical_plot_group(logger, labels_by_year, frequencies_by_year, years, "NUMSERV frequencies for Not Defined Provider Specialties", "numserv_not_defined")
+    file_utils.categorical_plot_group(logger, labels_by_year, frequencies_by_year, years, "NUMSERV frequencies for Not Defined Provider Specialties", "numserv_not_defined")
     
 
 

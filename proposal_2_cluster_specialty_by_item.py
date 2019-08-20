@@ -1,4 +1,4 @@
-import FileUtils
+import file_utils
 import itertools
 import keras
 import math
@@ -10,8 +10,8 @@ from sklearn.decomposition import PCA
 from sklearn.mixture import BayesianGaussianMixture as BGMM
 from sklearn.neighbors import NearestNeighbors as kNN
 
-logger = FileUtils.logger(__name__, f"proposal_2_rsp_item_cluster", "/mnt/c/data")
-filenames = FileUtils.get_mbs_files()
+logger = file_utils.logger(__name__, f"proposal_2_rsp_item_cluster", "/mnt/c/data")
+filenames = file_utils.get_mbs_files()
 
 full_cols = ["ITEM", "SPR_RSP", "NUMSERV"]
 # full_cols = ["ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
@@ -73,26 +73,26 @@ for filename in filenames:
     autoenc.fit(X, X, epochs = 1000, batch_size=16, shuffle=True, validation_split=0.1, verbose=0)
     encr = keras.Model(input_layer, enc)
     Y = encr.predict(X)
-    FileUtils.create_scatter_plot(logger, Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
+    file_utils.create_scatter_plot(logger, Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
 
     logger.log("k-means clustering")
-    (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))
+    (k, s) = file_utils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
-    FileUtils.create_scatter_plot(logger, Y, labels, f"RSP clusters with silhouette score {s}", f'RSP_clusters_kmeans')
+    file_utils.create_scatter_plot(logger, Y, labels, f"RSP clusters with silhouette score {s}", f'RSP_clusters_kmeans')
 
     logger.log("Calculating GMM")
     n_components = 6
     bgmm = BGMM(n_components=n_components).fit(Y)
     labels = bgmm.predict(Y)
-    FileUtils.create_scatter_plot(logger, Y, labels, f"BGMM for RSP clusters", f'BGMM_RSP')
+    file_utils.create_scatter_plot(logger, Y, labels, f"BGMM for RSP clusters", f'BGMM_RSP')
     probs = bgmm.predict_proba(Y)
     probs_output = logger.output_path / f'BGMM_probs.txt'
     np.savetxt(probs_output, probs)
 
     logger.log("Calculating cosine similarities")
-    cdv = FileUtils.code_converter()
+    cdv = file_utils.code_converter()
     output_file = logger.output_path / "Most_similar.csv"
     with open(output_file, 'w+') as f:
         f.write("RSP,Most similar to,Cosine similarity\r\n")

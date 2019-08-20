@@ -1,4 +1,4 @@
-import FileUtils
+import file_utils
 import math
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ dimensions = 20
 epochs = 100
 input_model = f'prop_1_{code_type}_2003_epoch_{epochs}_dim_{dimensions}_day.vec'
 input_data = f'{code_type}_subset_2003.csv'
-logger = FileUtils.logger(__name__, f"proposal_1_analysis_{input_model}", '/mnt/c/data')
+logger = file_utils.logger(__name__, f"proposal_1_analysis_{input_model}", '/mnt/c/data')
 logger.log(f'Opening {input_model}')
 model = w2v.load_word2vec_format(input_model, binary = False)
 
@@ -49,11 +49,11 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
     Y = pca2d.transform(matrix)
 
     logger.log("k-means clustering")
-    (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,8)))
+    (k, s) = file_utils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,8)))
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
-    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} replacement k-meanspatients {name} test. Silhoutte score {s}%", f'mce_{code_type}_kmeans_{name}')
+    file_utils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} replacement k-meanspatients {name} test. Silhoutte score {s}%", f'mce_{code_type}_kmeans_{name}')
 
     logger.log("Calculating distances from k-means clusters")
     all_distances = kmeans.transform(Y) 
@@ -81,7 +81,7 @@ for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
     n_components = 3
     bgmm = BGMM(n_components=n_components).fit(Y)
     labels = bgmm.predict(Y)
-    FileUtils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} BGMM patients {name} test", f'mce_hip_bgmm_{name}')
+    file_utils.create_scatter_plot(logger, Y, labels, f"MCE {code_type} BGMM patients {name} test", f'mce_hip_bgmm_{name}')
     probs = bgmm.predict_proba(Y)
     probs_output = logger.output_path / f'bmm_probabiliies_{name}.txt'
     np.savetxt(probs_output, probs)

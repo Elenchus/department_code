@@ -1,10 +1,10 @@
-import FileUtils
+import file_utils
 import itertools
 import pandas as pd
 
 
-logger = FileUtils.logger(__name__, f"proposal_2_descriptions", "/mnt/c/data")
-filenames = FileUtils.get_mbs_files()
+logger = file_utils.logger(__name__, f"proposal_2_descriptions", "/mnt/c/data")
+filenames = file_utils.get_mbs_files()
 
 # cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "INHOSPITAL", "BILLTYPECD"]
 test_cols = ["ITEM", "SPR_RSP"]
@@ -53,7 +53,7 @@ for filename in filenames:
         if s not in intersect:
             completely_unique.add(s)
 
-    cdcnvtr = FileUtils.code_converter()
+    cdcnvtr = file_utils.code_converter()
     for rsp in completely_unique:
         x = cdcnvtr.convert_rsp_num(rsp)
         logger.log(f"Unique specialty: {x}")
