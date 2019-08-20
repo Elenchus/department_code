@@ -64,20 +64,23 @@ for filename in filenames:
     # Y = pca2d.transform(X)
 
     logger.log("Autoencoding")
+    act = "linear"
     input_layer = keras.layers.Input(shape=(X.shape[1], ))
-    enc = keras.layers.Dense(2, activation='sigmoid')(input_layer)
-    dec = keras.layers.Dense(X.shape[1], activation='sigmoid')(enc)
+    enc = keras.layers.Dense(2, activation=act)(input_layer)
+    dec = keras.layers.Dense(X.shape[1], activation=act)(enc)
     autoenc = keras.Model(inputs=input_layer, outputs=dec)
     autoenc.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+    autoenc.fit(X, X, epochs = 1000, batch_size=16, shuffle=True, validation_split=0.1, verbose=0)
     encr = keras.Model(input_layer, enc)
     Y = encr.predict(X)
+    FileUtils.create_scatter_plot(logger, Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
 
     logger.log("k-means clustering")
     (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
-    FileUtils.create_scatter_plot(logger, Y, labels, f"RSP clusters", f'RSP_clusters_kmeans')
+    FileUtils.create_scatter_plot(logger, Y, labels, f"RSP clusters with silhouette score {s}", f'RSP_clusters_kmeans')
 
     logger.log("Calculating GMM")
     n_components = 6

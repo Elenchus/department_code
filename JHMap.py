@@ -30,6 +30,7 @@ if __name__ == "__main__":
     print("Parsing data dictionaries")
     jh_file = '~/data/CHRISP/NUW_JH_variables.csv'
     ed_file = '~/data/CHRISP/CHRISP-ED.csv'
+    ad_file = '~/data/CHRISP/CHRISP_patient.csv'
     jh_list = pd.read_csv(jh_file)['Variable'].values.tolist()
     jh_replace = [("_", " "), ("DTTM", "Date Time"), (" ID", " Identifier"), ("DESC", "Description"), (" NO", " Number")]
     for idx in range(len(jh_list)):
@@ -38,7 +39,7 @@ if __name__ == "__main__":
             jh_list[idx] = x
 
     livpool_path = []
-    livpool_ed = pd.read_csv(ed_file)["Variable Name"].values.tolist()
+    livpool_ed = pd.read_csv(ad_file)["Variable Name"].values.tolist()
     livpool_ed = [x.replace('\r', '') for x in livpool_ed]
 
     # import pre-trained model
@@ -59,5 +60,5 @@ if __name__ == "__main__":
         match_dict[key].sort(key = lambda x:x[1])
 
     json_dict = json.dumps(match_dict)
-    with open('ed_match.json', 'w+') as f:
+    with open('ad_match.json', 'w+') as f:
         f.write(json_dict)
