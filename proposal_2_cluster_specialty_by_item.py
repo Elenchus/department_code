@@ -1,5 +1,6 @@
 import FileUtils
 import itertools
+import keras
 import math
 import numpy as np
 import pandas as pd
@@ -50,11 +51,11 @@ for filename in filenames:
 
     X = model[model.wv.vocab]
 
-    logger.log("Creating t-SNE plot")
-    FileUtils.tsne_plot(logger, model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
+    # logger.log("Creating t-SNE plot")
+    # FileUtils.tsne_plot(logger, model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
 
-    logger.log("Creating UMAP")
-    FileUtils.umap_plot(logger, model, "RSP cluster UMAP")
+    # logger.log("Creating UMAP")
+    # FileUtils.umap_plot(logger, model, "RSP cluster UMAP")
 
     # Y = X
     # logger.log("Performing PCA")
@@ -63,7 +64,13 @@ for filename in filenames:
     # Y = pca2d.transform(X)
 
     logger.log("Autoencoding")
-    
+    input_layer = keras.layers.Input(shape=(X.shape[1], ))
+    enc = keras.layers.Dense(2, activation='sigmoid')(input_layer)
+    dec = keras.layers.Dense(X.shape[1], activation='sigmoid')(enc)
+    autoenc = keras.Model(inputs=input_layer, outputs=dec)
+    autoenc.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+    encr = keras.Model(input_layer, enc)
+    Y = encr.predict(X)
 
     logger.log("k-means clustering")
     (k, s) = FileUtils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,7)))

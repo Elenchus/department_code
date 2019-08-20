@@ -104,10 +104,14 @@ def get_pbs_files():
 
 def save_plt_fig(logger, fig, filename, bbox_extra_artists=None):
     current = datetime.now().strftime("%Y%m%dT%H%M%S")
+    output_path = f"{filename}_{current}"
+    if logger != None:
+        output_path = logger.output_path / output_path
+
     if bbox_extra_artists == None:
-        fig.savefig(logger.output_path / f"{filename}_{current}")
+        fig.savefig(output_path)
     else:
-        fig.savefig(logger.output_path / f"{filename}_{current}", bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
+        fig.savefig(output_path, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
 
     plt.close(fig)
 
