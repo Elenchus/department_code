@@ -1,10 +1,9 @@
 # import ray
-
-import file_utils
 import itertools
 import pandas as pd
 import re
-from file_utils import PBS_HEADER
+from phd_utils import file_utils, graph_utils, model_utils
+from phd_utils.file_utils import PBS_HEADER
 from matplotlib import pyplot as plt
 
 # ray.init()
@@ -44,7 +43,7 @@ def get_duplicate_same_day_item_frequencies(logger, claims):
     return (number_of_duplicate_claims, all_duplicate_items)
 
 if __name__ == "__main__":
-    logger = file_utils.logger(__name__, "pbs_duplicate_claims", '/mnt/c/data')
+    logger = file_utils.Logger(__name__, "pbs_duplicate_claims", '/mnt/c/data')
 
     filenames = file_utils.get_pbs_files()
     years = []
@@ -73,7 +72,7 @@ if __name__ == "__main__":
 
         logger.log("Finding prescription frequencies")
         if len(frequencies) != 0:
-            outlier_indices = file_utils.get_outlier_indices(frequencies)
+            outlier_indices = model_utils.get_outlier_indices(frequencies)
             patients_of_interest = [patient_ids[i] for i in outlier_indices]
             patients_of_interest.sort()
             prescriptions = []
@@ -103,5 +102,5 @@ if __name__ == "__main__":
 
         break
 
-    file_utils.create_boxplot_group(logger, patient_duplicate_claim_frequencies_by_year, years, f"Distribution of same-day-duplicate-claims per patient {years[0]}-{years[-1]}", "pbs_same_day_claims")
-    file_utils.create_boxplot_group(logger, prescription_frequencies_by_year, years, f"Number of claims per item code for high-risk patients {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")
+    graph_utils.create_boxplot_group(logger, patient_duplicate_claim_frequencies_by_year, years, f"Distribution of same-day-duplicate-claims per patient {years[0]}-{years[-1]}", "pbs_same_day_claims")
+    graph_utils.create_boxplot_group(logger, prescription_frequencies_by_year, years, f"Number of claims per item code for high-risk patients {years[0]}-{years[-1]}", "pbs_duplicate_prescription_frequencies")

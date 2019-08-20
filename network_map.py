@@ -1,10 +1,10 @@
-import file_utils
+from phd_utils import file_utils, graph_utils
 import math
 import pandas as pd
 from gensim.models import Word2Vec
 
 if __name__ == "__main__":
-    logger = file_utils.logger(__name__, "network_map", "/mnt/c/data")
+    logger = file_utils.Logger(__name__, "network_map", "/mnt/c/data")
     filenames = file_utils.get_mbs_files()
     cols=['PIN', 'SPR']
     for filename in filenames:
@@ -30,5 +30,5 @@ if __name__ == "__main__":
             workers=3,
             iter=5)
 
-        file_utils.umap_plot(logger, model, 'UMAP plot of patient/provider/referrer model')
+        graph_utils.umap_plot(logger, model, 'UMAP plot of patient/provider/referrer model')
 

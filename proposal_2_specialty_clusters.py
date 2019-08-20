@@ -1,4 +1,4 @@
-import file_utils
+from phd_utils import file_utils, graph_utils
 import itertools
 import math
 import numpy as np
@@ -9,7 +9,7 @@ from sklearn.decomposition import PCA
 from sklearn.mixture import BayesianGaussianMixture as BGMM
 from sklearn.neighbors import NearestNeighbors as kNN
 
-logger = file_utils.logger(__name__, f"proposal_2_rsp_cluster", "/mnt/c/data")
+logger = file_utils.Logger(__name__, f"proposal_2_rsp_cluster", "/mnt/c/data")
 filenames = file_utils.get_mbs_files()
 
 # cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "INHOSPITAL", "BILLTYPECD"]
@@ -38,10 +38,10 @@ for filename in filenames:
     X = model[model.wv.vocab]
 
     logger.log("Creating t-SNE plot")
-    file_utils.tsne_plot(logger, model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
+    graph_utils.tsne_plot(logger, model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
 
     logger.log("Creating UMAP")
-    file_utils.umap_plot(logger, model, "RSP cluster UMAP")
+    graph_utils.umap_plot(logger, model, "RSP cluster UMAP")
 
     logger.log("Performing PCA")
     pca2d = PCA(n_components=2)
@@ -49,17 +49,17 @@ for filename in filenames:
     Y = pca2d.transform(X)
 
     logger.log("k-means clustering")
-    (k, s) = file_utils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,8)))
+    (k, s) = graph_utils.get_best_cluster_size(logger, Y, list(2**i for i in range(1,8)))
     kmeans = cluster.KMeans(n_clusters=k)
     kmeans.fit(Y)
     labels = kmeans.labels_
-    file_utils.create_scatter_plot(logger, Y, labels, f"RSP clusters", f'RSP_clusters_kmeans')
+    graph_utils.create_scatter_plot(logger, Y, labels, f"RSP clusters", f'RSP_clusters_kmeans')
 
     logger.log("Calculating GMM")
     n_components = 6
     bgmm = BGMM(n_components=n_components).fit(Y)
     labels = bgmm.predict(Y)
-    file_utils.create_scatter_plot(logger, Y, labels, f"BGMM for RSP clusters", f'BGMM_RSP')
+    graph_utils.create_scatter_plot(logger, Y, labels, f"BGMM for RSP clusters", f'BGMM_RSP')
     probs = bgmm.predict_proba(Y)
     probs_output = logger.output_path / f'BGMM_probs.txt'
     np.savetxt(probs_output, probs)

@@ -1,10 +1,10 @@
-import file_utils
+from phd_utils import file_utils, graph_utils
 import numpy as np
 import pandas as pd
 
 # check for default one hot encoding option
 if __name__ == "__main__":
-    logger = file_utils.logger(__name__, "network_map", "/mnt/c/data")
+    logger = file_utils.Logger(__name__, "network_map", "/mnt/c/data")
     filenames = file_utils.get_mbs_files()[0]
     # filenames = FileUtils.get_mbs_files()
     cols=['PIN', 'SPR']

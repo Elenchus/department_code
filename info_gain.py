@@ -1,4 +1,4 @@
-import file_utils
+from phd_utils import file_utils, graph_utils
 import pandas as pd
 import Utils
 
@@ -15,7 +15,7 @@ def get_individual_risks(risks):
     return individual_risks.values.tolist()
 
 if __name__ == "__main__":
-    logger = file_utils.logger(__name__, "CIG", '/mnt/c/data/')
+    logger = file_utils.Logger(__name__, "CIG", '/mnt/c/data/')
     filenames = file_utils.get_mbs_files()
     for filename in filenames:
         logger.log(f"Opening {filename}")

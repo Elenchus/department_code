@@ -1,5 +1,5 @@
 import os
-import file_utils
+from phd_utils import file_utils, graph_utils
 import gc
 import numpy as np
 import pandas as pd
@@ -94,7 +94,7 @@ def tsne_plot(model):
     return fig
 
 if __name__ == "__main__":
-    logger = file_utils.logger(__name__, "embed.log")
+    logger = file_utils.Logger(__name__, "embed.log")
     logger.log("Starting")
     path = 'C:/Data/MBS_Patient_10/'
 

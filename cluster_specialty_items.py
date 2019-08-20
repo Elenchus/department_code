@@ -1,11 +1,11 @@
 import os
-import file_utils
+from phd_utils import file_utils, graph_utils, model_utils
 import gc
 import itertools
 import numpy as np
 import pandas as pd
 from datetime import datetime
-from file_utils import tsne_plot
+from phd_utils.graph_utils import tsne_plot
 from functools import partial
 from gensim.models import Word2Vec
 from math import ceil, sqrt
@@ -30,7 +30,7 @@ def sum_similarity_pair(model, group):
         return (sum(similarities) / len(similarities), min(similarities), id)
 
 if __name__ == "__main__":
-    logger = file_utils.logger(__name__, "cluster_specialty_by_item_similarity")
+    logger = file_utils.Logger(__name__, "cluster_specialty_by_item_similarity")
 
     filename = file_utils.get_mbs_files()[0]
     
@@ -79,21 +79,18 @@ if __name__ == "__main__":
     avg_sims, min_sims, ids = zip(*data_map)
 
     logger.log("Plotting patient boxplots")
-    file_utils.create_boxplot(logger, avg_sims, "Average specialty similarity score", "specialty_average_similarity_boxplot")
-    file_utils.create_boxplot(logger, min_sims, "Minimum specialty similarity score", "specialty_minimum_similarity_boxplot")
-
+    graph_utils.create_boxplot(logger, avg_sims, "Average specialty similarity score", "specialty_average_similarity_boxplot")
+    graph_utils.create_boxplot(logger, min_sims, "Minimum specialty similarity score", "specialty_minimum_similarity_boxplot")
 
     logger.log("Finding outlier specialties by average score")
-    
-    
-    outlier_indices = file_utils.get_outlier_indices(avg_sims)
+    outlier_indices = model_utils.get_outlier_indices(avg_sims)
     list_of_outlier_number = [ids[i] for i in outlier_indices]
 
     logger.log(f"Outlier specialties by average score: {str(list_of_outlier_number)}")
 
     
     logger.log("Finding outlier specialties by minimum score")
-    outlier_indices = file_utils.get_outlier_indices(min_sims)
+    outlier_indices = model_utils.get_outlier_indices(min_sims)
     list_of_outlier_min = [ids[i] for i in outlier_indices]
 
     logger.log(f"Outlier specialties by minimum score: {str(list_of_outlier_min)}")
@@ -103,10 +100,10 @@ if __name__ == "__main__":
     for spec in unique_rsp:
         frequency_of_specialties.append(claims.count(int(spec)))
 
-    file_utils.create_boxplot(logger, frequency_of_specialties, "Number of claims by specialty", "frequency_of_specialty")
+    graph_utils.create_boxplot(logger, frequency_of_specialties, "Number of claims by specialty", "frequency_of_specialty")
     
     logger.log("Finding most frequent specialties by > q75 + 1.5 * iqr")
-    spr_rsp = file_utils.spr_rsp_converter()
+    spr_rsp = file_utils.CodeConverter()
     q75, q25 = np.percentile(frequency_of_specialties, [75, 25])
     iqr = q75 - q25
     list_of_top_specialties = []
@@ -116,6 +113,6 @@ if __name__ == "__main__":
 
     list_of_top_specialties.sort()
     for spec in list_of_top_specialties:
-        logger.log(f"{spr_rsp.convert_num(spec[1])} - {spec[0]}")
+        logger.log(f"{spr_rsp.convert_rsp_num(spec[1])} - {spec[0]}")
 
     logger.log("Finished", '!')

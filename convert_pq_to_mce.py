@@ -1,11 +1,11 @@
 from datetime import datetime as dt
-import file_utils
+from phd_utils import file_utils, graph_utils
 import itertools
 import pandas as pd
 import re
 
 if __name__ == "__main__":
-    logger = file_utils.logger(__name__, "convert_to_mce", '/mnt/c/data')
+    logger = file_utils.Logger(__name__, "convert_to_mce", '/mnt/c/data')
 
     for filename in file_utils.get_pbs_files():
         logger.log(f"Opening {filename}")

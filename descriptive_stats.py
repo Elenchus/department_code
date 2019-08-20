@@ -1,12 +1,11 @@
-import file_utils
+from phd_utils import file_utils, graph_utils
 from functools import partial
-import graph_utils
 import gc
 import itertools
 from multiprocessing import Pool
 import pandas as pd
 import re
-from file_utils import MBS_HEADER, PBS_HEADER
+from phd_utils.file_utils import MBS_HEADER, PBS_HEADER
 
 def boxplot_all_header_items(logger, mbs_filenames, pbs_filenames):
     for (source, header, filenames) in [('MBS', MBS_HEADER, mbs_filenames), ('PBS', PBS_HEADER, pbs_filenames)]: 
