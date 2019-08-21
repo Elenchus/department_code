@@ -12,29 +12,26 @@ from sklearn.neighbors import NearestNeighbors as kNN
 logger = file_utils.Logger(__name__, f"proposal_2_cluster_providers", "/mnt/c/data")
 filenames = file_utils.get_mbs_files()
 
-full_cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "NUMSERV"]
+initial_cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "NUMSERV"]
 # full_cols = ["ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
-cols = ["SPR", "ITEM"]
-for filename in filenames:
-    logger.log(f'Opening {filename}')
-    data = pd.read_parquet(filename, columns=full_cols)
+final_cols = ["SPR", "ITEM"]
+def process_dataframe(data):
     data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0)]
     data["SPR"] = data["SPR"].map(str) + "_" + data["SPRPRAC"].map(str)
-    # no_unique_rsps = len(data['SPR_RSP'].unique())
     data = data.drop(['NUMSERV', 'SPR_RSP', "SPRPRAC"], axis = 1)
-    assert len(data.columns) == len(cols)
-    for i in range(len(cols)):
-        assert data.columns[i] == cols[i]
+    assert len(data.columns) == len(final_cols)
+    for i in range(len(final_cols)):
+        assert data.columns[i] == final_cols[i]
 
-    no_unique_items = len(data['ITEM'].unique())
-    perplex = round(math.sqrt(math.sqrt(no_unique_items)))
+    return data
 
+def get_test_data(data):
     logger.log("Grouping providers")
     data = sorted(data.values.tolist(), key = lambda x: x[0])
     groups = itertools.groupby(data, key = lambda x: x[0])
     sentences = []
     max_sentence_length = 0
-    for provider, group in groups:
+    for _, group in groups:
         sentence = sorted(list(str(x[1]) for x in list(group)))
         # sentence = list(set(str(x[1]) for x in list(group)))
         if len(sentence) > max_sentence_length:
@@ -43,7 +40,15 @@ for filename in filenames:
         sentences.append(sentence)
         # sentences.append([f"RSP_{x[1]}" for x in list(group)])
 
-    max_sentence_length = 2
+    return (groups, max_sentence_length)
+
+def run_test(data, sentences, max_sentence_length=None):
+    no_unique_items = len(data['ITEMS'].uniques().tolist())
+    perplex = round(math.sqrt(math.sqrt(no_unique_items)))
+
+    if max_sentence_length is None:
+        max_sentence_length = 2
+
     model = w2v(sentences=sentences, min_count=20, size = perplex, iter = 5, window=max_sentence_length)
 
     logger.log("Creating vectors for providers")
@@ -112,5 +117,3 @@ for filename in filenames:
     #             continue
     #         except Exception:
     #             raise
-
-    break
