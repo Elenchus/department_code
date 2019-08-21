@@ -1,3 +1,4 @@
+import keras
 import numpy as np
 from phd_utils.code_converter import CodeConverter
 from sklearn.decomposition import PCA
@@ -32,6 +33,20 @@ class ModelUtils():
 
         return list_of_outlier_indices
         
+    def one_layer_autoencoder_prediction(self, data, activation_function):
+        self.logger.log("Autoencoding")
+        act = "linear"
+        input_layer = keras.layers.Input(shape=(data.shape[1], ))
+        enc = keras.layers.Dense(2, activation=act)(input_layer)
+        dec = keras.layers.Dense(data.shape[1], activation=act)(enc)
+        autoenc = keras.Model(inputs=input_layer, outputs=dec)
+        autoenc.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+        autoenc.fit(data, data, epochs = 1000, batch_size=16, shuffle=True, validation_split=0.1, verbose=0)
+        encr = keras.Model(input_layer, enc)
+        Y = encr.predict(data)
+
+        return Y
+
     def pca_2d(self, data):
         self.logger.log("Performing PCA")
         pca2d = PCA(n_components=2)

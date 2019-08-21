@@ -35,5 +35,5 @@ class ProposalTest(ABC):
         pass
 
     @abstractmethod
-    def run_test(self, logger, data, test_data, params=None):
+    def run_test(self, logger, data, params=None):
         pass

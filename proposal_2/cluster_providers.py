@@ -1,4 +1,4 @@
-from BaseProposalTest import ProposalTest
+from phd_utils.base_proposal_test import ProposalTest
 import itertools
 import math
 from gensim.models import Word2Vec as w2v
