@@ -34,7 +34,7 @@ class TestCase(ProposalTest):
     def get_test_data(self):
         super().get_test_data()
         data = self.processed_data
-        self.logger.log("Grouping items")
+        self.log("Grouping items")
         data = sorted(data.values.tolist(), key = lambda sentence: sentence[0])
         groups = itertools.groupby(data, key = lambda sentence: sentence[0])
         sentences = []
@@ -57,7 +57,7 @@ class TestCase(ProposalTest):
 
     def run_test(self):
         super().run_test()
-        self.logger.log("Starting test")
+        self.log("Starting test")
         if self.test_data is None:
             raise KeyError("No test data has been specified")
 
@@ -74,7 +74,7 @@ class TestCase(ProposalTest):
         # self.graphs.tsne_plot(model, self.perplex, f"t-SNE plot of item clusters with perplex {self.perplex}")
         # self.graphs.umap_plot(model, f"{self.required_params['specialty']} item cluster UMAP")
     
-        self.logger.log("Creating provider vectors")
+        self.log("Creating provider vectors")
         data = sorted(self.processed_data.values.tolist())
         groups = itertools.groupby(data, key = lambda x: x[0])
         (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
@@ -87,7 +87,7 @@ class TestCase(ProposalTest):
 
             self.graphs.k_means_cluster(Y, f"Clusters of {self.required_params['specialty']} providers by {name} item use", "k_means_cluster")
             self.graphs.calculate_BGMM(Y, 6, f"BMM of {self.required_params['specialty']} providers by {name} item use", "BGMM")
-            # self.logger.log("Calculating cosine similarities")
+            # self.log("Calculating cosine similarities")
             # cdv = file_utils.CodeConverter()
             # output_file = self.logger.output_path / "Most_similar.csv"
             # with open(output_file, 'w+') as f:

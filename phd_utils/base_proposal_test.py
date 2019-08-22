@@ -39,19 +39,25 @@ class ProposalTest(ABC):
         self.models = ModelUtils(logger)
         if params is not None:
             self.required_params = params
-    
+
+    def log(self, text):
+        if self.logger is None:
+            print(text)
+        else:
+            self.logger.log(text)
+
     @abstractmethod
     def process_dataframe(self, data):
-        self.logger.log("Processing dataframe")
+        self.log("Processing dataframe")
 
     @abstractmethod
     def get_test_data(self):
-        self.logger.log("Getting test data")
+        self.log("Getting test data")
         if self.processed_data is None:
             raise KeyError("No data specified")
 
     @abstractmethod
     def run_test(self):
-        self.logger.log("Running test")
+        self.log("Running test")
         if self.test_data is None:
             raise KeyError("No test data specified")
