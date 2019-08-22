@@ -10,7 +10,6 @@ class TestCase(ProposalTest):
     INITIAL_COLS = ["SPR", "ITEM", "SPR_RSP", "NUMSERV"]
     FINAL_COLS = ["SPR", "ITEM"]
     REQUIRED_PARAMS: dict = {'specialty': "Vocational Register", 'max_sentence_length': None}
-    unprocessed_data: pd.DataFrame
     processed_data: pd.DataFrame 
     test_data = None
 
