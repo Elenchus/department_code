@@ -9,14 +9,14 @@ from gensim.models import Word2Vec as w2v
 class TestCase(ProposalTest):
     INITIAL_COLS = ["SPR", "ITEM", "SPR_RSP", "NUMSERV"]
     FINAL_COLS = ["SPR", "ITEM"]
-    REQUIRED_PARAMS: dict = {'specialty': "Vocational Register", 'max_sentence_length': None}
+    required_params: dict = {'specialty': "Vocational Register", 'max_sentence_length': None}
     processed_data = None
     test_data = None
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
         cdv = CodeConverter()
-        specialty = cdv.convert_rsp_str(self.REQUIRED_PARAMS['specialty'])
+        specialty = cdv.convert_rsp_str(self.required_params['specialty'])
         data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] == specialty)]
         # data["SPR_RSP"] = data["SPR_RSP"].map(str) + data["INHOSPITAL"].map(str)
         # data = data.drop(['NUMSERV', "INHOSPITAL"], axis = 1)
@@ -63,16 +63,16 @@ class TestCase(ProposalTest):
 
         data = self.test_data
 
-        max_sentence_length = self.REQUIRED_PARAMS['max_sentence_length']
+        max_sentence_length = self.required_params['max_sentence_length']
         if max_sentence_length is None:
             max_sentence_length = self.max_sentence_length
 
-        model = w2v(sentences=data, min_count=20, size = self.perplex, iter = 5, window=max_sentence_length)
+        model = w2v(sentences=data, min_count=20, size = max([2, self.perplex]), iter = 5, window=max_sentence_length)
 
         # X = model[model.wv.vocab]
 
         # self.graphs.tsne_plot(model, self.perplex, f"t-SNE plot of item clusters with perplex {self.perplex}")
-        # self.graphs.umap_plot(model, f"{self.REQUIRED_PARAMS['specialty']} item cluster UMAP")
+        # self.graphs.umap_plot(model, f"{self.required_params['specialty']} item cluster UMAP")
     
         self.logger.log("Creating provider vectors")
         provider_dict = {}
@@ -101,8 +101,8 @@ class TestCase(ProposalTest):
             # Y = self.models.one_layer_autoencoder_prediction(X, act)
             # self.graphs.create_scatter_plot(Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
 
-            self.graphs.k_means_cluster(Y, f"Clusters of {self.REQUIRED_PARAMS['specialty']} providers by {name} item use", "k_means_cluster")
-            self.graphs.calculate_BGMM(Y, 6, f"BMM of {self.REQUIRED_PARAMS['specialty']} providers by {name} item use", "BGMM")
+            self.graphs.k_means_cluster(Y, f"Clusters of {self.required_params['specialty']} providers by {name} item use", "k_means_cluster")
+            self.graphs.calculate_BGMM(Y, 6, f"BMM of {self.required_params['specialty']} providers by {name} item use", "BGMM")
             # self.logger.log("Calculating cosine similarities")
             # cdv = file_utils.CodeConverter()
             # output_file = self.logger.output_path / "Most_similar.csv"

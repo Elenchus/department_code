@@ -8,9 +8,9 @@ def run_combined_test(years, data_file, test_data, proposal, test_file_name, par
     test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}'
     logger = Logger(__name__, test_name, '/mnt/c/data')
     test_file = __import__(f"proposal_{proposal}.{test_file_name}", fromlist=['TestCase'])
-    test_case = test_file.TestCase(logger)
+    test_case = test_file.TestCase(logger, params)
     if params is None:
-        params = test_case.REQUIRED_PARAMS
+        params = test_case.required_params
 
     logger.log(notes)
     logger.log(params)

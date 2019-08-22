@@ -18,7 +18,7 @@ class ProposalTest(ABC):
     @property
     @classmethod
     @abstractmethod
-    def REQUIRED_PARAMS(self):
+    def required_params(self):
         raise NotImplementedError
 
     @property
@@ -33,10 +33,12 @@ class ProposalTest(ABC):
     def test_data(self):
         raise NotImplementedError
     
-    def __init__(self, logger):
+    def __init__(self, logger, params):
         self.logger = logger
         self.graphs = GraphUtils(logger)
         self.models = ModelUtils(logger)
+        if params is not None:
+            self.required_params = params
     
     @abstractmethod
     def process_dataframe(self, data):
