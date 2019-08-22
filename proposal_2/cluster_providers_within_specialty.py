@@ -10,10 +10,11 @@ class TestCase(ProposalTest):
     INITIAL_COLS = ["SPR", "ITEM", "SPR_RSP", "NUMSERV"]
     FINAL_COLS = ["SPR", "ITEM"]
     REQUIRED_PARAMS: dict = {'specialty': "Vocational Register", 'max_sentence_length': None}
-    processed_data: pd.DataFrame 
+    processed_data = None
     test_data = None
 
     def process_dataframe(self, data):
+        super().process_dataframe(data)
         cdv = CodeConverter()
         specialty = cdv.convert_rsp_str(self.REQUIRED_PARAMS['specialty'])
         data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] == specialty)]
@@ -31,6 +32,7 @@ class TestCase(ProposalTest):
         return data
 
     def get_test_data(self):
+        super().get_test_data()
         data = self.processed_data
         self.logger.log("Grouping items")
         data = sorted(data.values.tolist(), key = lambda sentence: sentence[0])
@@ -54,6 +56,7 @@ class TestCase(ProposalTest):
         self.test_data = data
 
     def run_test(self):
+        super().run_test()
         self.logger.log("Starting test")
         if self.test_data is None:
             raise KeyError("No test data has been specified")
@@ -68,8 +71,8 @@ class TestCase(ProposalTest):
 
         # X = model[model.wv.vocab]
 
-        self.graphs.tsne_plot(model, self.perplex, f"t-SNE plot of item clusters with perplex {self.perplex}")
-        self.graphs.umap_plot(model, f"{self.REQUIRED_PARAMS['specialty']} item cluster UMAP")
+        # self.graphs.tsne_plot(model, self.perplex, f"t-SNE plot of item clusters with perplex {self.perplex}")
+        # self.graphs.umap_plot(model, f"{self.REQUIRED_PARAMS['specialty']} item cluster UMAP")
     
         self.logger.log("Creating provider vectors")
         provider_dict = {}

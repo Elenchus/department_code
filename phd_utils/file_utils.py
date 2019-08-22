@@ -31,6 +31,10 @@ def combine_10p_data(logger, data_type, initial_cols, final_cols, years, callbac
         logger.log(f"Opening {filename}")
         all_data = pd.read_parquet(filename, columns=initial_cols)
         processed_data = callback(all_data)
+        assert len(final_cols) == len(processed_data.columns)
+        for i in range(len(final_cols)):
+            assert final_cols[i] == processed_data.columns[i]
+
         data = data.append(processed_data)
 
     return data

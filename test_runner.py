@@ -4,7 +4,7 @@ from functools import partial
 from phd_utils import file_utils
 from phd_utils.logger import Logger
 
-def run_test(years, data_file, test_data, proposal, test_file_name, params, notes):
+def run_combined_test(years, data_file, test_data, proposal, test_file_name, params, notes):
     test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}'
     logger = Logger(__name__, test_name, '/mnt/c/data')
     test_file = __import__(f"proposal_{proposal}.{test_file_name}", fromlist=['TestCase'])
@@ -25,14 +25,25 @@ def run_test(years, data_file, test_data, proposal, test_file_name, params, note
 
     return (data, test_data, test_case)
 
+def run_test(combine_years, params):
+    if combine_years:
+        run_combined_test(*params)
+    else:
+        part_params = params[1:]
+        for year in years:
+            new_params = [[year]] + part_params
+            run_combined_test(*new_params)
+
 if __name__ == "__main__":
     # variables
+    combine_years = False
     years = ['2013']
     data_file = None
     test_data = 'mbs'
     proposal = 2
     test_file_name = 'cluster_providers_within_specialty'
-    params = None
+    params = {'specialty': "Dietitian", 'max_sentence_length': None}
     notes = "Test draft script"
 
-    run_test(years, data_file, test_data, proposal, test_file_name, params, notes)
+    test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
+    run_test(combine_years, test_details)
