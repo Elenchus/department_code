@@ -65,30 +65,51 @@ class TestCase(ProposalTest):
 
         model = w2v(sentences=data, min_count=20, size = self.perplex, iter = 5, window=max_sentence_length)
 
-        X = model[model.wv.vocab]
+        # X = model[model.wv.vocab]
 
-        self.graphs.tsne_plot(model, self.perplex, f"t-SNE plot of provider clusters with perplex {self.perplex}")
-        self.graphs.umap_plot(model, "RSP cluster UMAP")
+        self.graphs.tsne_plot(model, self.perplex, f"t-SNE plot of item clusters with perplex {self.perplex}")
+        self.graphs.umap_plot(model, f"{self.REQUIRED_PARAMS['specialty']} item cluster UMAP")
     
-        Y = self.models.pca_2d(X)
+        self.logger.log("Creating provider vectors")
+        provider_dict = {}
+        data = sorted(self.processed_data.values.tolist())
+        groups = itertools.groupby(data, key = lambda x: x[0])
+        for provider, group in groups:
+            _, group = zip(*list(group))
+            for item in group:
+                item = str(item)
+                if item not in model.wv.vocab:
+                    continue
+                    
+                keys = provider_dict.keys()
+                if provider not in keys:
+                    provider_dict[provider] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
+                else:
+                    provider_dict[provider]['Sum'] += model[item]
+                    provider_dict[provider]['Average'] = ((provider_dict[provider]['Average'] * provider_dict[provider]['n']) + model[item]) / (provider_dict[provider]['n'] + 1)
+    
+        sums = [provider_dict[x]['Sum'] for x in provider_dict.keys()]
+        avgs = [provider_dict[x]['Average'] for x in provider_dict.keys()]
+        for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
+            Y = self.models.pca_2d(matrix)
 
-        # act = 'sigmoid'
-        # Y = self.models.one_layer_autoencoder_prediction(X, act)
-        # self.graphs.create_scatter_plot(Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
+            # act = 'sigmoid'
+            # Y = self.models.one_layer_autoencoder_prediction(X, act)
+            # self.graphs.create_scatter_plot(Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
 
-        self.graphs.k_means_cluster(Y, f"Clusters of {self.REQUIRED_PARAMS['specialty']} providers by item use", "k_means_cluster")
-        self.graphs.calculate_BGMM(Y, 6, f"BMM of {self.REQUIRED_PARAMS['specialty']} providers by item use", "BGMM")
-        # self.logger.log("Calculating cosine similarities")
-        # cdv = file_utils.CodeConverter()
-        # output_file = self.logger.output_path / "Most_similar.csv"
-        # with open(output_file, 'w+') as f:
-        #     f.write("RSP,Most similar to,Cosine similarity\r\n")
-        #     for rsp in list(cdv.valid_rsp_num_values): 
-        #         try: 
-        #             y = model.most_similar(str(rsp)) 
-        #             z = y[0][0] 
-        #             f.write(f"{cdv.convert_rsp_num(rsp),cdv.convert_rsp_num(z)},{round(y[0][1], 2)}\r\n") 
-        #         except KeyError as err: 
-        #             continue
-        #         except Exception:
-        #             raise
+            self.graphs.k_means_cluster(Y, f"Clusters of {self.REQUIRED_PARAMS['specialty']} providers by {name} item use", "k_means_cluster")
+            self.graphs.calculate_BGMM(Y, 6, f"BMM of {self.REQUIRED_PARAMS['specialty']} providers by {name} item use", "BGMM")
+            # self.logger.log("Calculating cosine similarities")
+            # cdv = file_utils.CodeConverter()
+            # output_file = self.logger.output_path / "Most_similar.csv"
+            # with open(output_file, 'w+') as f:
+            #     f.write("RSP,Most similar to,Cosine similarity\r\n")
+            #     for rsp in list(cdv.valid_rsp_num_values): 
+            #         try: 
+            #             y = model.most_similar(str(rsp)) 
+            #             z = y[0][0] 
+            #             f.write(f"{cdv.convert_rsp_num(rsp),cdv.convert_rsp_num(z)},{round(y[0][1], 2)}\r\n") 
+            #         except KeyError as err: 
+            #             continue
+            #         except Exception:
+            #             raise
