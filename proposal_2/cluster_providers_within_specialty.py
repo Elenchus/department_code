@@ -9,13 +9,11 @@ from gensim.models import Word2Vec as w2v
 class TestCase(ProposalTest):
     INITIAL_COLS = ["SPR", "ITEM", "SPR_RSP", "NUMSERV"]
     FINAL_COLS = ["SPR", "ITEM"]
-    REQUIRED_PARAMS: dict = {'specialty': "Vocational Register", 'max_sentence_length': None}
-    unprocessed_data: pd.DataFrame
+    REQUIRED_PARAMS: dict = {'specialty': "Ultrasound Services", 'max_sentence_length': None}
     processed_data: pd.DataFrame 
     test_data = None
 
-    def process_dataframe(self):
-        data = self.unprocessed_data
+    def process_dataframe(self, data):
         cdv = CodeConverter()
         specialty = cdv.convert_rsp_str(self.REQUIRED_PARAMS['specialty'])
         data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] == specialty)]
@@ -26,9 +24,11 @@ class TestCase(ProposalTest):
         for i in range(len(self.FINAL_COLS)):
             assert data.columns[i] == self.FINAL_COLS[i]
         no_unique_items = len(data['ITEM'].unique())
+        data['ITEM'] = data['ITEM'].astype(str)
+        data['SPR'] = data['SPR'].astype(str)
         self.perplex = round(math.sqrt(math.sqrt(no_unique_items)))
 
-        self.processed_data = data 
+        return data
 
     def get_test_data(self):
         data = self.processed_data
@@ -54,6 +54,7 @@ class TestCase(ProposalTest):
         self.test_data = data
 
     def run_test(self):
+        self.logger.log("Starting test")
         if self.test_data is None:
             raise KeyError("No test data has been specified")
 

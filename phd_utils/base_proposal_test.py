@@ -21,11 +21,10 @@ class ProposalTest(ABC):
     def REQUIRED_PARAMS(self):
         raise NotImplementedError
 
-    def __init__(self, logger, data):
+    def __init__(self, logger):
         self.logger = logger
         self.graphs = GraphUtils(logger)
         self.models = ModelUtils(logger)
-        self.unprocessed_data = data
     
     @abstractmethod
     def process_dataframe(self, logger, data, params=None):
