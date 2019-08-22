@@ -5,8 +5,8 @@ import pandas as pd
 class CodeConverter:
     '''Converter for PBS items and MBS RSP codes'''
     def __init__(self):
-        rsp_filename = 'SPR_RSP.csv'
-        pbs_item_filename = 'pbs-item-drug-map.csv'
+        rsp_filename = 'phd_utils/SPR_RSP.csv'
+        pbs_item_filename = 'phd_utils/pbs-item-drug-map.csv'
 
         if not os.path.isfile(rsp_filename):
             raise OSError("Cannot find SPR_RSP.csv - please put it in the file_utils folder")

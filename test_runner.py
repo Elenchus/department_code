@@ -19,19 +19,20 @@ def run_test(years, data_file, test_data, proposal, test_file_name, params, note
     else:
         data = test_case.load_data(data_file)
 
-    test_data = test_case.get_test_data(data)
-    test_case.run_test(test_data, params)
+    test_case.processed_data = data
+    test_data = test_case.get_test_data()
+    test_case.run_test()
 
     return (data, test_data, test_case)
 
 if __name__ == "__main__":
     # variables
-    years = ['2003']
+    years = ['2013']
     data_file = None
     test_data = 'mbs'
     proposal = 2
-    test_file_name = 'proposal_2_cluster_providers'
+    test_file_name = 'cluster_providers_within_specialty'
     params = None
-    notes = "Testing re-factor"
+    notes = "Test draft script"
 
     run_test(years, data_file, test_data, proposal, test_file_name, params, notes)

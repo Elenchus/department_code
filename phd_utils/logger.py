@@ -30,7 +30,7 @@ class Logger:
     def finalise(self):
         '''Copy directory and finish log at test end'''
         if self.copy_path is not None:
-            if isinstance(self.copy_path, str):
+            if not isinstance(self.copy_path, str):
                 raise "Copy path must be a string directory"
 
             path = Path(self.copy_path)
