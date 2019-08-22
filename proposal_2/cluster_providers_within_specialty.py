@@ -75,25 +75,9 @@ class TestCase(ProposalTest):
         # self.graphs.umap_plot(model, f"{self.required_params['specialty']} item cluster UMAP")
     
         self.logger.log("Creating provider vectors")
-        provider_dict = {}
         data = sorted(self.processed_data.values.tolist())
         groups = itertools.groupby(data, key = lambda x: x[0])
-        for provider, group in groups:
-            _, group = zip(*list(group))
-            for item in group:
-                item = str(item)
-                if item not in model.wv.vocab:
-                    continue
-                    
-                keys = provider_dict.keys()
-                if provider not in keys:
-                    provider_dict[provider] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
-                else:
-                    provider_dict[provider]['Sum'] += model[item]
-                    provider_dict[provider]['Average'] = ((provider_dict[provider]['Average'] * provider_dict[provider]['n']) + model[item]) / (provider_dict[provider]['n'] + 1)
-    
-        sums = [provider_dict[x]['Sum'] for x in provider_dict.keys()]
-        avgs = [provider_dict[x]['Average'] for x in provider_dict.keys()]
+        (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             Y = self.models.pca_2d(matrix)
 

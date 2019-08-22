@@ -54,3 +54,24 @@ class ModelUtils():
         output = pca2d.transform(data)
 
         return output
+
+    def sum_and_average_vectors(self, model, groups):
+        item_dict = {}
+        for key, group in groups:
+            _, group = zip(*list(group))
+            for item in group:
+                item = str(item)
+                if item not in model.wv.vocab:
+                    continue
+                    
+                keys = item_dict.keys()
+                if key not in keys:
+                    item_dict[key] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
+                else:
+                    item_dict[key]['Sum'] += model[item]
+                    item_dict[key]['Average'] = ((item_dict[key]['Average'] * item_dict[key]['n']) + model[item]) / (item_dict[key]['n'] + 1)
+    
+        sums = [item_dict[x]['Sum'] for x in item_dict.keys()]
+        avgs = [item_dict[x]['Average'] for x in item_dict.keys()]
+
+        return (sums, avgs)
