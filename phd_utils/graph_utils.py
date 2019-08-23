@@ -93,7 +93,6 @@ class GraphUtils():
         labels = kmeans.labels_
         self.create_scatter_plot(data, labels, f"{title} with {s}% silhoutte score", filename)
 
-
     def save_plt_fig(self, fig, filename, bbox_extra_artists=None):
         '''Save a plot figure to file with timestamp'''
         current = datetime.now().strftime("%Y%m%dT%H%M%S")

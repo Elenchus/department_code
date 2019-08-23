@@ -10,7 +10,7 @@ class TestCase(ProposalTest):
     INITIAL_COLS = ["SPR", "ITEM", "SPR_RSP", "NUMSERV"]
     FINAL_COLS = ["SPR", "ITEM"]
     required_params: dict = {'specialty': "Vocational Register", 'max_sentence_length': None}
-    processed_data = None
+    processed_data: pd.DataFrame = None
     test_data = None
 
     def process_dataframe(self, data):
@@ -80,6 +80,7 @@ class TestCase(ProposalTest):
         (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             Y = self.models.pca_2d(matrix)
+            assert len(self.processed_data['SPR'].uniques.values.tolist()) == len(Y[0])
 
             # act = 'sigmoid'
             # Y = self.models.one_layer_autoencoder_prediction(X, act)
@@ -101,3 +102,4 @@ class TestCase(ProposalTest):
             #             continue
             #         except Exception:
             #             raise
+
