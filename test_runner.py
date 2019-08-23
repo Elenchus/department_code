@@ -1,4 +1,5 @@
 '''Run tests from proposals'''
+import gc
 import pandas as pd
 from functools import partial
 from phd_utils import file_utils
@@ -6,7 +7,7 @@ from phd_utils.logger import Logger
 
 def run_combined_test(years, data_file, test_data, proposal, test_file_name, params, notes):
     test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}'
-    with Logger(__name__, test_name, '/mnt/c/data') as logger:
+    with Logger(test_name, '/mnt/c/data') as logger:
         test_file = __import__(f"proposal_{proposal}.{test_file_name}", fromlist=['TestCase'])
         test_case = test_file.TestCase(logger, params)
         if params is None:
@@ -20,10 +21,8 @@ def run_combined_test(years, data_file, test_data, proposal, test_file_name, par
             data = test_case.load_data(data_file)
 
         test_case.processed_data = data
-        test_data = test_case.get_test_data()
+        test_case.get_test_data()
         test_case.run_test()
-
-        return (data, test_data, test_case)
 
 def run_test(combine_years, params):
     if combine_years:
@@ -45,9 +44,9 @@ if __name__ == "__main__":
     params = {'specialty': "Dietitian", 'max_sentence_length': None}
     # test_file_name = 'number_of_providers_using_each_specialty'
     # params = None
-    notes = "Getting info"
+    notes = "Testing closing logger post test"
 
-    for spec in ["Magnetic Resonance Imaging", "Orthopaedic Surgery"]:
+    for spec in ["Anaesthetics", "Clinical Psychologist"]:
         params['specialty'] = spec
         test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
         run_test(combine_years, test_details)
