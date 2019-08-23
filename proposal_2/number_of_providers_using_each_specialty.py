@@ -7,7 +7,7 @@ from phd_utils.code_converter import CodeConverter
 class TestCase(ProposalTest):
     INITIAL_COLS = ["SPR_RSP", "SPR"]
     FINAL_COLS = INITIAL_COLS
-    REQUIRED_PARAMS: dict = {}
+    required_params: dict = {}
     processed_data = None
     test_data = None
 

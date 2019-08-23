@@ -52,8 +52,8 @@ class TestCase(ProposalTest):
 
         X = model[model.wv.vocab]
 
-        self.graphs.tsne_plot(model, self.perplex, f"t-SNE plot of RSP clusters with perplex {self.perplex}")
-        self.graphs.umap_plot(model, "RSP cluster UMAP")
+        self.models.t_sne(model, self.perplex, f"t-SNE plot of RSP clusters with perplex {self.perplex}")
+        self.models.u_map(model, "RSP cluster UMAP")
     
         # Y = self.models.pca_2d(X)
 
@@ -61,8 +61,8 @@ class TestCase(ProposalTest):
         Y = self.models.one_layer_autoencoder_prediction(X, act)
         self.graphs.create_scatter_plot(Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
 
-        self.graphs.k_means_cluster(Y, "Clusters of specialties by item use", "k_means_cluster")
-        self.graphs.calculate_BGMM(Y, 6, "BMM of specialties by item use", "BGMM")
+        self.models.k_means_cluster(Y, "Clusters of specialties by item use", "k_means_cluster")
+        self.models.calculate_BGMM(Y, 6, "BMM of specialties by item use", "BGMM")
         # self.logger.log("Calculating cosine similarities")
         # cdv = file_utils.CodeConverter()
         # output_file = self.logger.output_path / "Most_similar.csv"

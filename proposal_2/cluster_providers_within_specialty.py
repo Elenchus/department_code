@@ -80,14 +80,13 @@ class TestCase(ProposalTest):
         (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             Y = self.models.pca_2d(matrix)
-            assert len(self.processed_data['SPR'].unique()) == len(Y)
 
             # act = 'sigmoid'
             # Y = self.models.one_layer_autoencoder_prediction(X, act)
             # self.graphs.create_scatter_plot(Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
 
-            self.graphs.k_means_cluster(Y, f"Clusters of {self.required_params['specialty']} providers by {name} item use", "k_means_cluster")
-            self.graphs.calculate_BGMM(Y, 6, f"BMM of {self.required_params['specialty']} providers by {name} item use", "BGMM")
+            self.models.k_means_cluster(Y, f"Clusters of {self.required_params['specialty']} providers by {name} item use", "k_means_cluster")
+            self.models.calculate_BGMM(Y, 6, f"BMM of {self.required_params['specialty']} providers by {name} item use", "BGMM")
             # self.log("Calculating cosine similarities")
             # cdv = file_utils.CodeConverter()
             # output_file = self.logger.output_path / "Most_similar.csv"

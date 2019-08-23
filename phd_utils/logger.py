@@ -12,61 +12,75 @@ from pathlib import Path
 class Logger:
     '''Logging functions and output path'''
     def __init__(self, name, test_name, copy_path=None):
-        self.copy_path = copy_path
+        self.name = name
         self.test_name = test_name
-        self.output_path = self.create_output_folder(test_name)
-        self.logger = logging.getLogger(name)
-        atexit.register(self.finalise)
-        # handler = logging.StreamHandler(stream=sys.stdout)
-        # self.logger.addHandler(handler)
-        sys.excepthook = self.handle_exception
-        self.file_name = self.output_path / f"{test_name}.log"
-        logging.basicConfig(level=logging.INFO,
-                            format='%(asctime)s - %(message)s',
-                            filename=self.file_name, filemode='w+')
-        self.log(f"Starting {test_name}")
-        self.log(subprocess.check_output(["git", "describe", "--always"]).strip())
+        self.copy_path = copy_path
 
-    def finalise(self):
-        '''Copy directory and finish log at test end'''
-        if self.copy_path is not None:
-            if not isinstance(self.copy_path, str):
-                raise "Copy path must be a string directory"
+    def __enter__(self):
+        class LoggingStructure:
+            def __init__(self, name, test_name, copy_path=None):
+                self.copy_path = copy_path
+                self.test_name = test_name
+                self.output_path = self.create_output_folder(test_name)
+                self.logger = logging.getLogger(name)
+                atexit.register(self.finalise)
+                # handler = logging.StreamHandler(stream=sys.stdout)
+                # self.logger.addHandler(handler)
+                sys.excepthook = self.handle_exception
+                self.file_name = self.output_path / f"{test_name}.log"
+                logging.basicConfig(level=logging.INFO,
+                                    format='%(asctime)s - %(message)s',
+                                    filename=self.file_name, filemode='w+')
+                self.log(f"Starting {test_name}")
+                self.log(subprocess.check_output(["git", "describe", "--always"]).strip())
 
-            path = Path(self.copy_path)
+            def finalise(self):
+                '''Copy directory and finish log at test end'''
+                if self.copy_path is not None:
+                    if not isinstance(self.copy_path, str):
+                        raise "Copy path must be a string directory"
 
-            if not path.exists():
-                raise f"Cannot find {self.copy_path}"
+                    path = Path(self.copy_path)
 
-            self.log("Copying data folder")
-            current = datetime.now().strftime("%Y%m%dT%H%M%S")
-            current = f"{self.test_name}_{current}"
-            copy_folder = path / current
-            os.mkdir(copy_folder)
+                    if not path.exists():
+                        raise f"Cannot find {self.copy_path}"
 
-            copy_tree(self.output_path.absolute().as_posix(), copy_folder.absolute().as_posix())
+                    self.log("Copying data folder")
+                    current = datetime.now().strftime("%Y%m%dT%H%M%S")
+                    current = f"{self.test_name}_{current}"
+                    copy_folder = path / current
+                    os.mkdir(copy_folder)
 
-            self.log("Done")
+                    copy_tree(self.output_path.absolute().as_posix(), copy_folder.absolute().as_posix())
 
-    @classmethod
-    def create_output_folder(cls, test_name):
-        '''create an output folder for the log and any test results'''
-        current = datetime.now().strftime("%Y%m%dT%H%M%S")
-        output_folder = Path(os.getcwd()) / "Output" / f"{test_name}_{current}"
-        os.makedirs(output_folder)
+                    self.log("Done")
 
-        return output_folder
+            @classmethod
+            def create_output_folder(cls, test_name):
+                '''create an output folder for the log and any test results'''
+                current = datetime.now().strftime("%Y%m%dT%H%M%S")
+                output_folder = Path(os.getcwd()) / "Output" / f"{test_name}_{current}"
+                os.makedirs(output_folder)
 
-    def handle_exception(self, exc_type, exc_value, exc_traceback):
-        '''log exceptions to file'''
-        if issubclass(exc_type, KeyboardInterrupt):
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
-            return
+                return output_folder
 
-        self.logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-        raise exc_type(exc_value)
+            def handle_exception(self, exc_type, exc_value, exc_traceback):
+                '''log exceptions to file'''
+                if issubclass(exc_type, KeyboardInterrupt):
+                    sys.__excepthook__(exc_type, exc_value, exc_traceback)
+                    return
 
-    def log(self, line, line_end='...'):
-        '''add to log file'''
-        print(f"{datetime.now()} {line}{line_end}")
-        self.logger.info(line)
+                self.logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+                raise exc_type(exc_value)
+
+            def log(self, line, line_end='...'):
+                '''add to log file'''
+                print(f"{datetime.now()} {line}{line_end}")
+                self.logger.info(line)
+
+        self.logger = LoggingStructure(self.name, self.test_name, self.copy_path)
+
+        return self.logger
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.logger.finalise()
