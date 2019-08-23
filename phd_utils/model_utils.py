@@ -1,11 +1,19 @@
+import math
+from datetime import datetime
 import keras
 import numpy as np
+import umap
+from phd_utils.graph_utils import GraphUtils
 from phd_utils.code_converter import CodeConverter
+from sklearn import cluster, metrics
 from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.mixture import BayesianGaussianMixture as BGMM
 
 class ModelUtils():
     def __init__(self, logger):
         self.logger = logger
+        self.graph_utils = GraphUtils(logger)
 
     # def calculate_cosine_similarity(self, model):
     #     self.logger.log("Calculating cosine similarities")
@@ -21,7 +29,44 @@ class ModelUtils():
     #             except KeyError as err: 
     #                 continue
     #             except Exception:
-    #                 raise
+    #
+    
+    def calculate_BGMM(self, data, n_components, title, filename):
+        self.logger.log(f"Calculating GMM with {n_components} components")
+        bgmm = BGMM(n_components=n_components).fit(data)
+        labels = bgmm.predict(data)
+        self.graph_utils.create_scatter_plot(data, labels, f"BGMM {title}", f'BGMM_{title}')
+        probs = bgmm.predict_proba(data)
+        probs_output = self.logger.output_path / f'BGMM_probs_{title}.txt'
+        np.savetxt(probs_output, probs)
+
+    def get_best_cluster_size(self, X, clusters):
+        '''measure silhouette scores for the given cluster sizes and return the best k and its score'''
+        self.logger.log("Getting best k-means cluster size with average silhouette score")
+        avg_sil = []
+        for n in clusters:
+            kmeans = cluster.KMeans(n_clusters=n)
+            kmeans.fit(X)
+            labels = kmeans.labels_
+            silhouette_score = metrics.silhouette_score(X, labels, metric='euclidean')
+            avg_sil.append(silhouette_score)
+            self.logger.log(f"n = {n}, silhouette score = {silhouette_score}")
+
+        k = clusters[avg_sil.index(max(avg_sil))]
+        max_n = math.ceil(max(avg_sil) * 100)
+        self.logger.log(f"Max silhouette score with {k} clusters")
+
+        return (k, max_n)
+
+    def k_means_cluster(self, data, title, filename):
+        '''Creates and saves k-means clusters using the best cluster size based on silhouette score'''
+        self.logger.log("k-means clustering")
+        max_binary_test = math.floor(math.log2(len(data) / 3))
+        (k, s) = self.get_best_cluster_size(data, list(2**i for i in range(1,max_binary_test)))
+        kmeans = cluster.KMeans(n_clusters=k)
+        kmeans.fit(data)
+        labels = kmeans.labels_
+        self.graph_utils.create_scatter_plot(data, labels, f"{title} with {s}% silhoutte score", filename)
 
     def get_outlier_indices(self, data):
         q75, q25 = np.percentile(data, [75 ,25])
@@ -54,6 +99,23 @@ class ModelUtils():
         output = pca2d.transform(data)
 
         return output
+    
+    def t_sne(self, model, perplex, title):
+        '''create and save a t-SNE plot'''
+        self.logger.log("Creating t-SNE plot")
+        self.logger.log("Getting labels and tokens for t-SNE")
+        labels = []
+        tokens = []
+
+        for word in model.wv.vocab:
+            tokens.append(model[word])
+            labels.append(word)
+    
+        self.logger.log(f"Creating TSNE model with perplexity {perplex}")
+        tsne_model = TSNE(perplexity=perplex, n_components=2, init='pca', n_iter=2500, random_state=23)
+        new_values = tsne_model.fit_transform(tokens)
+
+        self.graph_utils.plot_tsne(new_values, labels, title)
 
     def sum_and_average_vectors(self, model, groups):
         item_dict = {}
@@ -75,3 +137,20 @@ class ModelUtils():
         avgs = [item_dict[x]['Average'] for x in item_dict.keys()]
 
         return (sums, avgs)
+
+    def u_map(self, model, title):
+        self.logger.log("Creating UMAP")
+        '''create and save a umap plot'''
+        labels = []
+        tokens = []
+
+        self.logger.log("Extracting labels and token")
+        for word in model.wv.vocab:
+            tokens.append(model[word])
+            labels.append(word)
+
+        self.logger.log("Creating UMAP")
+        reducer = umap.UMAP(verbose=True)
+        embedding = reducer.fit_transform(tokens)
+
+        self.graph_utils.plot_umap(embedding, title) 

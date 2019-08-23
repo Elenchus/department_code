@@ -80,7 +80,7 @@ class TestCase(ProposalTest):
         (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             Y = self.models.pca_2d(matrix)
-            assert len(self.processed_data['SPR'].uniques.values.tolist()) == len(Y[0])
+            assert len(self.processed_data['SPR'].unique()) == len(Y)
 
             # act = 'sigmoid'
             # Y = self.models.one_layer_autoencoder_prediction(X, act)
