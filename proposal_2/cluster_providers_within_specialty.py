@@ -1,6 +1,7 @@
 '''Cluster providers within specialty'''
 import itertools
 import math
+import numpy as np
 import pandas as pd
 from phd_utils.base_proposal_test import ProposalTest
 from phd_utils.code_converter import CodeConverter
@@ -79,12 +80,16 @@ class TestCase(ProposalTest):
         groups = itertools.groupby(data, key = lambda x: x[0])
         (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
+            no_unique_points = np.array(list(set(tuple(p) for p in Y)))
+            self.log(f"Set of provider vectors contains {no_unique_points} unique values from {matrix.shape[0]} samples")
             Y = self.models.pca_2d(matrix)
 
             # act = 'sigmoid'
             # Y = self.models.one_layer_autoencoder_prediction(X, act)
             # self.graphs.create_scatter_plot(Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
 
+            no_unique_points = np.array(list(set(tuple(p) for p in Y)))
+            self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {Y.shape[0]} samples")
             self.models.k_means_cluster(Y, f"Clusters of {self.required_params['specialty']} providers by {name} item use", "k_means_cluster")
             self.models.calculate_BGMM(Y, 6, f"BMM of {self.required_params['specialty']} providers by {name} item use", "BGMM")
             # self.log("Calculating cosine similarities")
