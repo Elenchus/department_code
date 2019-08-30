@@ -1,5 +1,6 @@
 '''Classifier to predict item specialty from provider item set'''
 import itertools
+import numpy as np
 import pandas as pd
 from phd_utils.base_proposal_test import ProposalTest
 from phd_utils.code_converter import CodeConverter
@@ -17,7 +18,7 @@ class TestCase(ProposalTest):
     def process_dataframe(self, data):
         super().process_dataframe(data)
         data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0)]
-        data["SPR"] = data[["SPR", "SPRPRAC"]].apply('_'.join, axis=1)
+        data["SPR"] = data["SPR"].map(str) + '_' + data["SPRPRAC"].map(str)
         data = data.drop(["NUMSERV", "SPRPRAC"], axis=1)
 
         return data
@@ -25,7 +26,7 @@ class TestCase(ProposalTest):
     def get_test_data(self):
         super().get_test_data()
         cdv = CodeConverter()
-        groups = itertools.groupby(sorted(self.processed_data), key=lambda x: x[0])
+        groups = itertools.groupby(sorted(self.processed_data.values.tolist()), key=lambda x: x[0])
         provider_list, item_list, rsp_list = [], [], []
         for spr, group in groups:
             (_, items, rsps) = tuple(set(x) for x in zip(*list(group)))
@@ -34,11 +35,12 @@ class TestCase(ProposalTest):
             if len(rsps) > 1:
                 rsps = "Multiple RSPs"
             else:
-                rsps = cdv.convert_rsp_str(list(rsps)[0])
+                rsps = cdv.convert_rsp_num(list(rsps)[0])
+
 
             rsp_list.append(rsps)
 
-        self.test_data = [provider_list, item_list, rsp_list]
+        self.test_data = [provider_list, np.array(item_list), np.array(rsp_list)]
 
     def run_test(self):
         super().run_test()
