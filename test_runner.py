@@ -43,9 +43,9 @@ if __name__ == "__main__":
     proposal = 2
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
-    test_file_name = 'predict_specialty_from_item_set'
+    test_file_name = 'descriptive_info_by_item'
     params = None
-    notes = 'Trying classifier'
+    notes = 'Getting 2014 RSP item info'
 
     # for spec in ["Anaesthetics", "Clinical Psychologist"]:
     #     params['specialty'] = spec
