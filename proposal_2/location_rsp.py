@@ -1,80 +1,73 @@
-from phd_utils import file_utils, graph_utils
 import itertools
 import pandas as pd
+from phd_utils.base_proposal_test import ProposalTest
 
-def confirm_num_equals_mdv(logger, filename):
-    data = pd.read_parquet(filename, columns=["NUMSERV", "MDV_NUMSERV"])
-    test = data[data["NUMSERV"] != "MDV_NUMSERV"]
-    if test.shape[0] == 0:
-        logger.log("***NUMSERV/MDV_NUMSERV MISMATCH!***")
+class TestCase(ProposalTest):
+    def confirm_num_equals_mdv(self, data):
+        test = data[data["NUMSERV"] != "MDV_NUMSERV"]
+        if test.shape[0] != 0:
+            self.log("***NUMSERV/MDV_NUMSERV MISMATCH!***")
 
-logger = file_utils.Logger(__name__, f"proposal_2_rsps_by_provider_location", "/mnt/c/data")
-filenames = file_utils.get_mbs_files()
+    FINAL_COLS = ["SPR", "SPR_RSP", "SPRPRAC"]
+    INITIAL_COLS = FINAL_COLS + ["NUMSERV", "MDV_NUMSERV"]
 
-# cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "INHOSPITAL", "BILLTYPECD"]
-test_cols = ["SPR", "SPR_RSP", "SPRPRAC"]
-all_test_cols = test_cols + ["NUMSERV"]
-for filename in filenames:
-    logger.log(f'Opening {filename}')
-    logger.log("Confirming NUMSERV and MDV_NUMSERV equality")
-    confirm_num_equals_mdv(logger, filename)
+    def process_dataframe(self, data):
+        super().process_dataframe(data)
+        self.log("Confirming NUMSERV and MDV_NUMSERV equality")
+        self.confirm_num_equals_mdv(data)
+        data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0)]
+        data = data.drop(['NUMSERV', 'MDV_NUMSERV'], axis = 1)
 
-    logger.log("Loading data")    
-    full_data = pd.read_parquet(filename, columns=all_test_cols)
-    data = full_data[(full_data["NUMSERV"] == 1) & (full_data['SPR_RSP'] != 0)]
-    data = data.drop(['NUMSERV'], axis = 1)
-    assert len(data.columns) == len(test_cols)
-    for i in range(len(test_cols)):
-        assert data.columns[i] == test_cols[i]
+        return data
 
-    logger.log("Grouping values")
-    data = sorted(data.values.tolist())
-    groups = itertools.groupby(data, key=lambda x: x[0])
+    def get_test_data(self):
+        super().get_test_data()
+        self.log("Grouping values")
+        data = sorted(self.processed_data.values.tolist())
+        groups = itertools.groupby(data, key=lambda x: x[0])
 
-    logger.log("Processing groups for unique RSP and location per provider")
-    
-    provider_rsps_per_loc = []
-    non_unique_loc_rsps = []
-    for uid, group in groups:
-        group = sorted(list(group), key = lambda x: x[2])
-        group = itertools.groupby(group, key = lambda x: x[2])
-        for loc, sub_group in group:
-            s = pd.DataFrame(list(sub_group), columns = test_cols)
-            unique_rsps = s['SPR_RSP'].unique().tolist()
-            if len(unique_rsps) != 1:
-                x = set(s['SPR_RSP'])
-                non_unique_loc_rsps.append(x)
+        self.test_data = groups
 
-            provider_rsps_per_loc.append(len(unique_rsps))
+    def run_test(self):
+        self.log("Processing groups for unique RSP and location per provider")
+        provider_rsps_per_loc = []
+        non_unique_loc_rsps = []
+        for _, group in self.test_data:
+            group = sorted(list(group), key = lambda x: x[2])
+            group = itertools.groupby(group, key = lambda x: x[2])
+            for _, sub_group in group:
+                s = pd.DataFrame(list(sub_group), columns = self.FINAL_COLS)
+                unique_rsps = s['SPR_RSP'].unique().tolist()
+                if len(unique_rsps) != 1:
+                    x = set(s['SPR_RSP'])
+                    non_unique_loc_rsps.append(x)
 
-    provider_rsps_per_loc = pd.DataFrame(provider_rsps_per_loc)
-    logger.log(f"RSPS per loc")
-    logger.log(f"{provider_rsps_per_loc.describe()}")
-    
-    logger.log("Getting info")
-    flat_list = []
-    tuple_list = list()
-    for a in non_unique_loc_rsps:
-        tuple_list.append(tuple(a))
-        for b in a:
-            flat_list.append(b)
+                provider_rsps_per_loc.append(len(unique_rsps))
 
-    series = pd.Series(flat_list)
-    counts = series.value_counts()
-    tuple_series = pd.Series(tuple_list)
-    tuple_counts = tuple_series.value_counts()
+        provider_rsps_per_loc = pd.DataFrame(provider_rsps_per_loc)
+        self.log(f"RSPS per loc")
+        self.log(f"{provider_rsps_per_loc.describe()}")
+        
+        self.log("Getting info")
+        flat_list = []
+        tuple_list = list()
+        for a in non_unique_loc_rsps:
+            tuple_list.append(tuple(a))
+            for b in a:
+                flat_list.append(b)
 
-    logger.log(f"There are {len(tuple_counts)} combinations of RSPs at any single location")
-    logger.log(f"{len(counts)} RSPs are combined by location")
-    logger.log(f"Counts")
-    logger.log(counts)
-    logger.log("Counts summary")
-    logger.log(counts.describe())
-    logger.log("Tuple counts")
-    logger.log(tuple_counts)
-    logger.log("Tuple counts summary")
-    logger.log(tuple_counts.describe())
+        series = pd.Series(flat_list)
+        counts = series.value_counts()
+        tuple_series = pd.Series(tuple_list)
+        tuple_counts = tuple_series.value_counts()
 
-
-
-    break
+        self.log(f"There are {len(tuple_counts)} combinations of RSPs at any single location")
+        self.log(f"{len(counts)} RSPs are combined by location")
+        self.log(f"Counts")
+        self.log(counts)
+        self.log("Counts summary")
+        self.log(counts.describe())
+        self.log("Tuple counts")
+        self.log(tuple_counts)
+        self.log("Tuple counts summary")
+        self.log(tuple_counts.describe())

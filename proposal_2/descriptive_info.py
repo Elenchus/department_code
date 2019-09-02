@@ -1,68 +1,67 @@
-from phd_utils import file_utils, graph_utils
 import itertools
 import pandas as pd
+from phd_utils.base_proposal_test import ProposalTest
 
 
-logger = file_utils.Logger(__name__, f"proposal_2_descriptions", "/mnt/c/data")
-filenames = file_utils.get_mbs_files()
+class TestCase(ProposalTest):
+    FINAL_COLS = ["SPR", "SPR_RSP", "SPRPRAC"]
+    INITIAL_COLS = FINAL_COLS + ["NUMSERV"]
+    required_params = {}
+    processed_data: pd.DataFrame = None
+    test_data = None
 
-# cols = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "INHOSPITAL", "BILLTYPECD"]
-test_cols = ["SPR", "SPR_RSP", "SPRPRAC"]
-all_test_cols = test_cols + ["NUMSERV"]
-for filename in filenames:
-    logger.log(f'Opening {filename}')
-    # data = pd.read_parquet(filename, columns=test_cols)
-    full_data = pd.read_parquet(filename, columns=all_test_cols)
-    data = full_data[(full_data["NUMSERV"] == 1) & (full_data['SPR_RSP'] != 0)]
-    data = data.drop(['NUMSERV'], axis = 1)
-    assert len(data.columns) == len(test_cols)
-    for i in range(len(test_cols)):
-        assert data.columns[i] == test_cols[i]
+    def process_dataframe(self, data):
+        super().process_dataframe(data)
+        data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0)]
+        data = data.drop(['NUMSERV'], axis = 1)
 
-    logger.log("Grouping values")
-    data = sorted(data.values.tolist())
-    groups = itertools.groupby(data, key=lambda x: x[0])
+        return data
 
-    logger.log("Processing groups for unique RSP and location per provider")
-    rsp_counts = []
-    rsp_sets = []
-    prac_counts = []
-    for uid, group in groups:
-        rsp_set = set()
-        prac_set = set()
-        for item in group:
-            rsp_set.add(item[1])
-            prac_set.add(item[2])
+    def get_test_data(self):
+        self.log("Grouping values")
+        data = sorted(self.processed_data.values.tolist())
+        groups = itertools.groupby(data, key=lambda x: x[0])
 
-        rsp_counts.append(len(rsp_set))
-        rsp_sets.append(rsp_set)
-        prac_counts.append(len(prac_set))
-        
-    for val in set(rsp_counts):
-        logger.log(f"{rsp_counts.count(val)} occurrences of {val} RSPs per provider")
+        self.test_data = groups
 
-    for val in set(prac_counts):
-        logger.log(f"{prac_counts.count(val)} occurrences of {val} Locations per provider")
+    def run_test(self):
+        self.log("Processing groups for unique RSP and location per provider")
+        rsp_counts = []
+        rsp_sets = []
+        prac_counts = []
+        for _, group in self.test_data:
+            rsp_set = set()
+            prac_set = set()
+            for item in group:
+                rsp_set.add(item[1])
+                prac_set.add(item[2])
 
-    nique = set()
-    non_unique = set()
-    for s in rsp_sets:
-        x = non_unique
-        if len(s) == 1:
-            x = nique
+            rsp_counts.append(len(rsp_set))
+            rsp_sets.append(rsp_set)
+            prac_counts.append(len(prac_set))
+            
+        for val in set(rsp_counts):
+            self.log(f"{rsp_counts.count(val)} occurrences of {val} RSPs per provider")
 
-        for i in s:
-            x.add(i)
+        for val in set(prac_counts):
+            self.log(f"{prac_counts.count(val)} occurrences of {val} Locations per provider")
 
-    intersect = set.intersection(nique, non_unique)
-    completely_unique = set()
-    for s in nique:
-        if s not in intersect:
-            completely_unique.add(s)
+        nique = set()
+        non_unique = set()
+        for s in rsp_sets:
+            x = non_unique
+            if len(s) == 1:
+                x = nique
 
-    cdcnvtr = file_utils.CodeConverter()
-    for rsp in completely_unique:
-        x = cdcnvtr.convert_rsp_num(rsp)
-        logger.log(f"Unique specialty: {x}")
+            for i in s:
+                x.add(i)
 
-    break
+        intersect = set.intersection(nique, non_unique)
+        completely_unique = set()
+        for s in nique:
+            if s not in intersect:
+                completely_unique.add(s)
+
+        for rsp in completely_unique:
+            x = self.code_converter.convert_rsp_num(rsp)
+            self.log(f"Unique specialty: {x}")

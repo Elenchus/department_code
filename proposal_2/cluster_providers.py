@@ -1,12 +1,15 @@
 from phd_utils.base_proposal_test import ProposalTest
 import itertools
 import math
+import pandas as pd
 from gensim.models import Word2Vec as w2v
 
 class TestCase(ProposalTest):
     INITIAL_COLS = ["SPR", "SPRPRAC", "SPR_RSP", "ITEM", "NUMSERV"]
     FINAL_COLS = ["SPR", "ITEM"]
-    REQUIRED_PARAMS = {'max_sentence_length': None}
+    required_params = {'max_sentence_length': None}
+    processed_data: pd.DataFrame = None
+    test_data = None
     # full_cols = ["ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
 
     def process_dataframe(self, data):
@@ -72,11 +75,11 @@ class TestCase(ProposalTest):
         avgs = [patient_dict[x]['Average'] for x in patient_dict.keys()]
         # X = model[model.wv.vocab]
 
-        self.graphs.tsne_plot(model, self.perplex, f"t-SNE plot of provider clusters with perplex {self.perplex}")
-        self.graphs.umap_plot(model, "provider cluster UMAP")
+        self.graphs.plot_tsne(model, self.perplex, f"t-SNE plot of provider clusters with perplex {self.perplex}")
+        self.graphs.plot_umap(model, "provider cluster UMAP")
 
 
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             output = self.models.pca_2d(matrix)
-            self.graphs.k_means_cluster(output, f"provider {name} k-means", f"provider_{name}_kmeans")
-            self.graphs.calculate_BGMM(output, 6, "provider clusters", "provider")                    
+            self.models.k_means_cluster(output, f"provider {name} k-means", f"provider_{name}_kmeans")
+            self.models.calculate_BGMM(output, 6, "provider clusters", "provider")                    

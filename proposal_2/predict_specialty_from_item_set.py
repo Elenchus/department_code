@@ -26,7 +26,9 @@ class TestCase(ProposalTest):
     def get_test_data(self):
         super().get_test_data()
         cdv = CodeConverter()
+        self.log("Grouping providers")
         groups = itertools.groupby(sorted(self.processed_data.values.tolist()), key=lambda x: x[0])
+        self.log("Creating lists")
         provider_list, item_list, rsp_list = [], [], []
         for spr, group in groups:
             (_, items, rsps) = tuple(set(x) for x in zip(*list(group)))

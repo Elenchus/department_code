@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.model_utils import ModelUtils
+from phd_utils.code_converter import CodeConverter
 
 class ProposalTest(ABC):
     @property
@@ -37,6 +38,7 @@ class ProposalTest(ABC):
         self.logger = logger
         self.graphs = GraphUtils(logger)
         self.models = ModelUtils(logger)
+        self.code_converter = CodeConverter()
         if params is not None:
             self.required_params = params
 
