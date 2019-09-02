@@ -68,6 +68,8 @@ class ModelUtils():
         labels = kmeans.labels_
         self.graph_utils.create_scatter_plot(data, labels, f"{title} with {s}% silhoutte score", filename)
 
+        return kmeans
+
     def get_outlier_indices(self, data):
         q75, q25 = np.percentile(data, [75 ,25])
         iqr = q75 - q25

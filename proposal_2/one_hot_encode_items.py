@@ -1,37 +1,39 @@
-from phd_utils import file_utils, graph_utils
 import itertools
 import pandas as pd
-from sklearn.decomposition import PCA
+from phd_utils.base_proposal_test import ProposalTest
 
-if __name__ == "__main__":
-    logger = file_utils.Logger(__name__, f"proposal_2_one_hot_rsp_item_cluster", "/mnt/c/data")
-    filenames = file_utils.get_mbs_files()
+class TestCase(ProposalTest):
+    FINAL_COLS = ["SPR_RSP", "ITEM"]
+    INITIAL_COLS = FINAL_COLS
+    required_params = {}
+    processed_data : pd.DataFrame = None
+    test_data = None
 
-    for filename in filenames:
-        logger.log(f'Opening {filename}')
-        cols = ["SPR_RSP", "ITEM"]
-        data = pd.read_parquet(filename, columns=cols)
-        columns = data["ITEM"].unique().tolist()
-        rows = data["SPR_RSP"].unique().tolist()
-        for i in range(len(cols)):
-            assert data.columns[i] == cols[i]
+    def process_dataframe(self, data):
+        super().process_dataframe(data)
 
-        logger.log("Grouping values")
-        groups = sorted(data.values.tolist())
+        return data
+
+    def get_test_data(self):
+        super().get_test_data()
+        self.log("Grouping values")
+        groups = sorted(self.processed_data.values.tolist())
         groups = itertools.groupby(groups, key=lambda x: x[0]) 
 
-        logger.log("One-hot encoding")
+        self.test_data = groups
+
+    def run_test(self):
+        super().run_test()
+        columns = self.processed_data["ITEM"].unique().tolist()
+        rows = self.processed_data["SPR_RSP"].unique().tolist()
+
+        self.log("One-hot encoding")
         one_hot_table = pd.DataFrame(0, index=rows, columns=columns)
-        for rsp, group in groups:
+        for rsp, group in self.test_data:
             items = set(x[1] for x in list(group))
             for col in items:
                 one_hot_table.loc[rsp, col] = 1
 
-        logger.log("Performing PCA")
-        pca2d = PCA(n_components=2)
-        pca2d.fit(one_hot_table)
-        Y = pca2d.transform(one_hot_table)
+        Y = self.models.pca_2d(one_hot_table)
 
-        graph_utils.create_scatter_plot(logger, Y, rows, f"RSP clusters", f'RSP_clusters')
-
-        break
+        self.graphs.create_scatter_plot(Y, rows, f"RSP clusters", f'RSP_clusters')
