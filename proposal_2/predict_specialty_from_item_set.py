@@ -3,7 +3,6 @@ import itertools
 import numpy as np
 import pandas as pd
 from phd_utils.base_proposal_test import ProposalTest
-from phd_utils.code_converter import CodeConverter
 from sklearn.model_selection import KFold
 from sklearn.naive_bayes import MultinomialNB
 
@@ -25,7 +24,6 @@ class TestCase(ProposalTest):
 
     def get_test_data(self):
         super().get_test_data()
-        cdv = CodeConverter()
         self.log("Grouping providers")
         groups = itertools.groupby(sorted(self.processed_data.values.tolist()), key=lambda x: x[0])
         self.log("Creating lists")
@@ -37,7 +35,7 @@ class TestCase(ProposalTest):
             if len(rsps) > 1:
                 rsps = "Multiple RSPs"
             else:
-                rsps = cdv.convert_rsp_num(list(rsps)[0])
+                rsps = self.code_converter.convert_rsp_num(list(rsps)[0])
 
 
             rsp_list.append(rsps)

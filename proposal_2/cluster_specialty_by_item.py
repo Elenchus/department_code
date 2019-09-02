@@ -55,11 +55,10 @@ class TestCase(ProposalTest):
         self.models.t_sne(model, self.perplex, f"t-SNE plot of RSP clusters with perplex {self.perplex}")
         self.models.u_map(model, "RSP cluster UMAP")
     
-        # Y = self.models.pca_2d(X)
+        Y = self.models.pca_2d(X)
 
-        act = 'sigmoid'
-        Y = self.models.one_layer_autoencoder_prediction(X, act)
-        self.graphs.create_scatter_plot(Y, range(Y.shape[0]), f"Autoenc {act} test", f"autoenc_{act}")
+        # act = 'sigmoid'
+        # Y = self.models.one_layer_autoencoder_prediction(X, act)
 
         self.models.k_means_cluster(Y, "Clusters of specialties by item use", "k_means_cluster")
         self.models.calculate_BGMM(Y, 6, "BMM of specialties by item use", "BGMM")
