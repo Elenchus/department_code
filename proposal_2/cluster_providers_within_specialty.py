@@ -80,7 +80,7 @@ class TestCase(ProposalTest):
         groups = itertools.groupby(data, key = lambda x: x[0])
         (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
-            no_unique_points = len(list(set(tuple(p) for p in matrix)))
+        no_unique_points = len(list(set(tuple(p) for p in matrix)))
             self.log(f"Set of provider vectors contains {no_unique_points} unique values from {len(matrix)} samples")
             Y = self.models.pca_2d(matrix)
 

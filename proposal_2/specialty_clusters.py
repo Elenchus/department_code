@@ -32,11 +32,18 @@ class TestCase(ProposalTest):
             words.append(sentence)
 
         model = Word2Vec(words, size = perplex)
-        X = model[model.wv.vocab]
 
         self.graphs.plot_tsne(model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
         self.graphs.plot_umap(model, "RSP cluster UMAP")
 
-        Y = self.models.pca_2d(X)
-        self.models.k_means_cluster(Y, f"RSP clusters", f'RSP_clusters_kmeans')
-        self.models.calculate_BGMM(Y, 6, "RSP BGMM", "RSP_bgmm")
+        self.get_test_data()
+        (sums, avgs) = self.models.sum_and_average_vectors(model, self.test_data)
+        for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
+            no_unique_points = len(list(set(tuple(p) for p in matrix)))
+            self.log(f"Set of provider vectors contains {no_unique_points} unique values from {len(matrix)} samples")
+            Y = self.models.pca_2d(matrix)
+
+            no_unique_points = len(list(set(tuple(p) for p in Y)))
+            self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {Y.shape[0]} samples")
+            self.models.k_means_cluster(Y, f"RSP {name} clusters", f'RSP_clusters_kmeans_{name}')
+            self.models.calculate_BGMM(Y, 6, f"RSP {name} BGMM", f"RSP_bgmm_{name}")
