@@ -7,6 +7,7 @@ from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
     FINAL_COLS = ["SPR", "SPR_RSP"]
+    INITIAL_COLS = FINAL_COLS
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
@@ -15,19 +16,18 @@ class TestCase(ProposalTest):
 
     def get_test_data(self):
         super().get_test_data()
+        data = sorted(self.processed_data.values.tolist())
+        groups = itertools.groupby(data, key=lambda x: x[0])
+
+        self.test_data = groups
 
     def run_test(self):
         super().run_test()
         uniques = self.processed_data['SPR_RSP'].unique().tolist()
         perplex = round(math.sqrt(math.sqrt(len(uniques))))
-
-        self.log("Grouping values")
-        data = sorted(self.processed_data.values.tolist())
-        groups = itertools.groupby(data, key=lambda x: x[0])
-
         self.log("Processing groups")
         words = []
-        for _, group in groups:
+        for _, group in self.test_data:
             sentence = [str(x[1]) for x in list(group)]
             words.append(sentence)
 

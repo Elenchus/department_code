@@ -1,11 +1,9 @@
-from phd_utils import file_utils, graph_utils
 import itertools
 import pandas as pd
 from datetime import datetime as dt
 
 code_type = 'knee'
-logger = file_utils.Logger(__name__, f"proposal_1_mce_conversion_{code_type}", '/mnt/c/data')
-output_file = logger.output_path / f'{code_type}_replacement_mce_2003.txt'
+output_file = f'{code_type}_replacement_mce_2003.txt'
 data = pd.read_csv(f'{code_type}_subset_2003.csv', usecols=['PIN', 'ITEM', 'DOS']).values.tolist()
 pid, item, dos = zip(*data)
 dos = [dt.strptime(x, "%Y-%m-%d").timestamp() for x in dos]

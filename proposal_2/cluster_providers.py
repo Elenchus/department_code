@@ -46,15 +46,16 @@ class TestCase(ProposalTest):
 
         return sentences
 
-    def run_test(self, data, params):
-        max_sentence_length = params['max_sentence_length']
+    def run_test(self):
+        max_sentence_length = self.required_params['max_sentence_length']
         if max_sentence_length is None:
             max_sentence_length = self.max_sentence_length
 
-        model = w2v(sentences=data, min_count=20, size = self.perplex, iter = 5, window=max_sentence_length)
+        model = w2v(sentences=self.test_data, min_count=20, size = self.perplex, iter = 5, window=max_sentence_length)
 
         self.logger.log("Creating vectors for providers")
         patient_dict = {}
+        data = sorted(self.processed_data.values.tolist(), key = lambda x: x[0])
         groups = itertools.groupby(data, key = lambda x: x[0])
         for pid, group in groups:
             _, group = zip(*list(group))
