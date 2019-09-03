@@ -41,16 +41,16 @@ if __name__ == "__main__":
     data_file = None
     test_data = 'mbs'
     proposal = 2
-    test_file_name = 'cluster_providers_within_specialty'
-    params = {'specialty': "Dietitian", 'max_sentence_length': None}
-    # test_file_name = 'predict_specialty_from_item_set'
-    # params = None
-    notes = 'Trying classifier'
+    # test_file_name = 'cluster_providers_within_specialty'
+    # params = {'specialty': "Dietitian", 'max_sentence_length': None}
+    test_file_name = 'specialty_clusters'
+    params = None
+    notes = 'Cluster providers by specialty'
 
-    for spec in ["Anaesthetics", "Clinical Psychologist"]:
-        params['specialty'] = spec
-        test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
-        run_test(combine_years, test_details)
+    # for spec in ["Anaesthetics", "Clinical Psychologist"]:
+    #     params['specialty'] = spec
+    #     test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
+    #     run_test(combine_years, test_details)
 
-    # test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
-    # run_test(combine_years, test_details)
+    test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
+    run_test(combine_years, test_details)

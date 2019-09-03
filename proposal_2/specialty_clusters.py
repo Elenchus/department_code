@@ -8,6 +8,8 @@ from phd_utils.base_proposal_test import ProposalTest
 class TestCase(ProposalTest):
     FINAL_COLS = ["SPR", "SPR_RSP"]
     INITIAL_COLS = FINAL_COLS
+    required_params: dict = {}
+    test_data = None
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
@@ -33,17 +35,17 @@ class TestCase(ProposalTest):
 
         model = Word2Vec(words, size = perplex)
 
-        self.graphs.plot_tsne(model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
-        self.graphs.plot_umap(model, "RSP cluster UMAP")
+        self.models.t_sne(model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
+        self.models.u_map(model, "RSP cluster UMAP")
 
         self.get_test_data()
         (sums, avgs) = self.models.sum_and_average_vectors(model, self.test_data)
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             no_unique_points = len(list(set(tuple(p) for p in matrix)))
-            self.log(f"Set of provider vectors contains {no_unique_points} unique values from {len(matrix)} samples")
+            self.log(f"Set of provider vectors contains {no_unique_points} unique values from {len(matrix)} {name} samples")
             Y = self.models.pca_2d(matrix)
 
             no_unique_points = len(list(set(tuple(p) for p in Y)))
-            self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {Y.shape[0]} samples")
+            self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {Y.shape[0]} {name} samples")
             self.models.k_means_cluster(Y, f"RSP {name} clusters", f'RSP_clusters_kmeans_{name}')
             self.models.calculate_BGMM(Y, 6, f"RSP {name} BGMM", f"RSP_bgmm_{name}")

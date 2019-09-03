@@ -1,3 +1,4 @@
+import pandas as pd
 from abc import ABC, abstractmethod
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.model_utils import ModelUtils
@@ -25,12 +26,6 @@ class ProposalTest(ABC):
     @property
     @classmethod
     @abstractmethod
-    def processed_data(self):
-        raise NotImplementedError
-
-    @property
-    @classmethod
-    @abstractmethod
     def test_data(self):
         raise NotImplementedError
     
@@ -39,6 +34,7 @@ class ProposalTest(ABC):
         self.graphs = GraphUtils(logger)
         self.models = ModelUtils(logger)
         self.code_converter = CodeConverter()
+        self.processed_data = pd.DataFrame()
         if params is not None:
             self.required_params = params
 
@@ -55,7 +51,7 @@ class ProposalTest(ABC):
     @abstractmethod
     def get_test_data(self):
         self.log("Getting test data")
-        if self.processed_data is None:
+        if len(self.processed_data.columns) == 0:
             raise KeyError("No data specified")
 
     @abstractmethod

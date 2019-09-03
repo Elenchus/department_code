@@ -120,6 +120,7 @@ class ModelUtils():
         self.graph_utils.plot_tsne(new_values, labels, title)
 
     def sum_and_average_vectors(self, model, groups):
+        self.logger.log("Summing and averaging vectors")
         item_dict = {}
         for key, group in groups:
             _, group = zip(*list(group))

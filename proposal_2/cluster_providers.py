@@ -79,7 +79,6 @@ class TestCase(ProposalTest):
         self.graphs.plot_tsne(model, self.perplex, f"t-SNE plot of provider clusters with perplex {self.perplex}")
         self.graphs.plot_umap(model, "provider cluster UMAP")
 
-
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             output = self.models.pca_2d(matrix)
             self.models.k_means_cluster(output, f"provider {name} k-means", f"provider_{name}_kmeans")

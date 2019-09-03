@@ -26,26 +26,28 @@ class TestCase(ProposalTest):
         super().get_test_data()
         groups = itertools.groupby(sorted(self.processed_data.values.tolist()), key=lambda x: x[0])
         self.log("Creating lists")
-        provider_list, item_list, rsp_list = [], [], []
+        columns = self.processed_data["ITEM"].unique().values.tolist()
+        index = self.processed_data["SPR"].unique().values.tolist()
+        data = pd.DataFrame(0, index=index, columns=columns)
+        specialties = pd.DataFrame(np.empty((len(index), 1), dtype = np.str), index=index, columns=["Specialty"])
         for spr, group in groups:
             (_, items, rsps) = tuple(set(x) for x in zip(*list(group)))
-            provider_list.append(spr)
-            item_list.append(items)
+            for item in items:
+                data.iloc[spr][item] = 1
             if len(rsps) > 1:
                 rsps = "Multiple RSPs"
             else:
                 rsps = self.code_converter.convert_rsp_num(list(rsps)[0])
 
+            specialties.iloc[spr]["Specialty"] = rsps
 
-            rsp_list.append(rsps)
-
-        self.test_data = [provider_list, np.array(item_list), np.array(rsp_list)]
+        self.test_data = [data, specialties]
 
     def run_test(self):
         super().run_test()
         clf = MultinomialNB()
-        items = self.test_data[1]
-        labels = self.test_data[2]
+        items = self.test_data[0]
+        labels = self.test_data[1]
         kf = KFold(n_splits=5)
         for train_index, test_index in kf.split(labels):
             X_train, X_test = items[train_index], items[test_index]
