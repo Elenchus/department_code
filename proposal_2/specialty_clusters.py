@@ -47,5 +47,5 @@ class TestCase(ProposalTest):
 
             no_unique_points = len(list(set(tuple(p) for p in Y)))
             self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {Y.shape[0]} {name} samples")
-            self.models.k_means_cluster(Y, f"RSP {name} clusters", f'RSP_clusters_kmeans_{name}')
+            self.models.k_means_cluster(Y, 128, f"RSP {name} clusters", f'RSP_clusters_kmeans_{name}')
             self.models.calculate_BGMM(Y, 6, f"RSP {name} BGMM", f"RSP_bgmm_{name}")
