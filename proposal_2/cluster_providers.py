@@ -54,32 +54,19 @@ class TestCase(ProposalTest):
         model = w2v(sentences=self.test_data, min_count=20, size = self.perplex, iter = 5, window=max_sentence_length)
 
         self.logger.log("Creating vectors for providers")
-        patient_dict = {}
         data = sorted(self.processed_data.values.tolist(), key = lambda x: x[0])
         groups = itertools.groupby(data, key = lambda x: x[0])
-        for pid, group in groups:
-            _, group = zip(*list(group))
-            for item in group:
-                item = str(item)
-                if item not in model.wv.vocab:
-                    continue
-                    
-                keys = patient_dict.keys()
-                if pid not in keys:
-                    patient_dict[pid] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
-                else:
-                    patient_dict[pid]['Sum'] += model[item]
-                    patient_dict[pid]['Average'] = ((patient_dict[pid]['Average'] * patient_dict[pid]['n']) + model[item]) / (patient_dict[pid]['n'] + 1)
-                    patient_dict[pid]['n'] += 1
-        
-        sums = [patient_dict[x]['Sum'] for x in patient_dict.keys()]
-        avgs = [patient_dict[x]['Average'] for x in patient_dict.keys()]
-        # X = model[model.wv.vocab]
+        (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
+       # X = model[model.wv.vocab]
 
         self.graphs.plot_tsne(model, self.perplex, f"t-SNE plot of provider clusters with perplex {self.perplex}")
         self.graphs.plot_umap(model, "provider cluster UMAP")
 
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
+            no_unique_points = len(list(set(tuple(p) for p in matrix)))
+            self.log(f"Set of provider vectors contains {no_unique_points} unique values from {len(matrix)} {name} samples")
             output = self.models.pca_2d(matrix)
-            self.models.k_means_cluster(output, f"provider {name} k-means", f"provider_{name}_kmeans")
+            no_unique_points = len(list(set(tuple(p) for p in output)))
+            self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} {name} samples")
+            self.models.k_means_cluster(output, 512, f"provider {name} k-means", f"provider_{name}_kmeans")
             self.models.calculate_BGMM(output, 6, "provider clusters", "provider")                    

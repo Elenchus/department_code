@@ -61,7 +61,7 @@ class ModelUtils():
     def k_means_cluster(self, data, max_clusters, title, filename):
         '''Creates and saves k-means clusters using the best cluster size based on silhouette score'''
         self.logger.log("k-means clustering")
-        max_binary_test = min((math.floor(math.log2(len(data) / 3)), math.log2(max_clusters)))
+        max_binary_test = min((math.floor(math.log2(len(data) / 3)), math.floor(math.log2(max_clusters))))
         (k, s) = self.get_best_cluster_size(data, list(2**i for i in range(1,max_binary_test)))
         kmeans = cluster.KMeans(n_clusters=k)
         kmeans.fit(data)
