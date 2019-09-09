@@ -1,5 +1,6 @@
 import itertools
 import pandas as pd
+from gensim.models import Word2Vec
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
@@ -8,6 +9,13 @@ class TestCase(ProposalTest):
     required_params: dict = {}
     processed_data: pd.DataFrame = None
     test_data = None
+
+    def get_provider_label(self, rsp_list):
+        x = list(set(rsp_list))
+        if len(x) > 1:
+            return "Mixed"
+        else:
+            return self.code_converter.convert_rsp_num(x[0])
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
@@ -22,11 +30,24 @@ class TestCase(ProposalTest):
         patient_data = sorted(self.processed_data.values.tolist())
         patient_groups = itertools.groupby(patient_data, key=lambda x: x[0])
         sentences = []
+        labels = []
+        patient_provider = []
         for pin, patient_group in patient_groups:
-            provider_data = sorted([x[1:] for x in list(patient_group)])
+            patient_group = list(patient_group)
+            provider_data = sorted([x[1:] for x in patient_group])
             provider_groups = itertools.groupby(provider_data, key=lambda x: x[0])
             for spr, provider_group in provider_groups:
-                sentence
+                sentence = [x[1] for x in list(provider_group)]
+                if len(sentence) > 1:
+                    sentences.append(sentence)
+                    patient_provider.append(f"{pin}_{spr}")
+                    labels.append(self.get_provider_label([x[2] for x in patient_group]))
 
+        self.test_data = (sentences, labels, patient_provider)
+                    
     def run_test(self):
         super().run_test()
+        (sentences, labels, patient_providers) = self.test_data
+        perplex = len(self.processed_data['ITEM'].unique().values.tolist())
+        max_sentence_length = max([len(x) for x in sentences])
+        model = Word2Vec(sentences, size = perplex, window=max_sentence_length)
