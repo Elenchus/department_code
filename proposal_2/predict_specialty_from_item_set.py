@@ -26,20 +26,20 @@ class TestCase(ProposalTest):
         super().get_test_data()
         groups = itertools.groupby(sorted(self.processed_data.values.tolist()), key=lambda x: x[0])
         self.log("Creating lists")
-        columns = self.processed_data["ITEM"].unique().values.tolist()
-        index = self.processed_data["SPR"].unique().values.tolist()
+        columns = list(self.processed_data["ITEM"].unique())
+        index = list(self.processed_data["SPR"].unique())
         data = pd.DataFrame(0, index=index, columns=columns)
         specialties = pd.DataFrame(np.empty((len(index), 1), dtype = np.str), index=index, columns=["Specialty"])
         for spr, group in groups:
             (_, items, rsps) = tuple(set(x) for x in zip(*list(group)))
             for item in items:
-                data.iloc[spr][item] = 1
+                data.loc[spr, item] = 1
             if len(rsps) > 1:
                 rsps = "Multiple RSPs"
             else:
                 rsps = self.code_converter.convert_rsp_num(list(rsps)[0])
 
-            specialties.iloc[spr]["Specialty"] = rsps
+            specialties.loc[spr, "Specialty"] = rsps
 
         self.test_data = [data, specialties]
 

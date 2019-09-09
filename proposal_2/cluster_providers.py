@@ -18,9 +18,6 @@ class TestCase(ProposalTest):
         self.logger.log("Combining SPR and SPRPRAC")
         data["SPR"] = data["SPR"].map(str) + "_" + data["SPRPRAC"].map(str)
         data = data.drop(['NUMSERV', 'SPR_RSP', "SPRPRAC"], axis = 1)
-        assert len(data.columns) == len(self.FINAL_COLS)
-        for i in range(len(self.FINAL_COLS)):
-            assert data.columns[i] == self.FINAL_COLS[i]
 
         return data
 
