@@ -43,9 +43,9 @@ if __name__ == "__main__":
     proposal = 2
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
-    test_file_name = 'specialty_clusters'
+    test_file_name = 'predict_specialty_from_item_set'
     params = None
-    notes = 'Cluster providers by specialty'
+    notes = 'Test supervised method'
 
     # for spec in ["Anaesthetics", "Clinical Psychologist"]:
     #     params['specialty'] = spec
