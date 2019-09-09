@@ -31,7 +31,7 @@ class TestCase(ProposalTest):
         patient_groups = itertools.groupby(patient_data, key=lambda x: x[0])
         sentences = []
         labels = []
-        patient_provider = []
+        patient_providers = []
         for pin, patient_group in patient_groups:
             patient_group = list(patient_group)
             provider_data = sorted([x[1:] for x in patient_group])
@@ -40,14 +40,14 @@ class TestCase(ProposalTest):
                 sentence = [x[1] for x in list(provider_group)]
                 if len(sentence) > 1:
                     sentences.append(sentence)
-                    patient_provider.append(f"{pin}_{spr}")
+                    patient_providers.append(f"{pin}_{spr}")
                     labels.append(self.get_provider_label([x[2] for x in patient_group]))
 
-        self.test_data = (sentences, labels, patient_provider)
+        self.test_data = (sentences, labels, patient_providers)
                     
     def run_test(self):
         super().run_test()
-        (sentences, labels, patient_providers) = self.test_data
+        (sentences, labels, _) = self.test_data
         perplex = len(self.processed_data['ITEM'].unique().values.tolist())
         max_sentence_length = max([len(x) for x in sentences])
         model = Word2Vec(sentences, size = perplex, window=max_sentence_length)
@@ -58,4 +58,4 @@ class TestCase(ProposalTest):
             output = self.models.pca_2d(matrix)
             no_unique_points = len(list(set(tuple(p) for p in output)))
             self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} {name} samples")
-            self.models.k_means_cluster(output, 512, f"provider {name} k-means", f"provider_{name}_kmeans")
+            self.models.k_means_cluster(output, 512, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
