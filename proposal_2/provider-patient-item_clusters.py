@@ -5,7 +5,7 @@ from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
     INITIAL_COLS = ["PIN", "SPR", "ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
-    FINAL_COLS = ["SPR", "ITEM", "SPR_RSP"]
+    FINAL_COLS = ["PIN", "SPR", "ITEM", "SPR_RSP"]
     required_params: dict = {}
     processed_data: pd.DataFrame = None
     test_data = None
@@ -51,3 +51,11 @@ class TestCase(ProposalTest):
         perplex = len(self.processed_data['ITEM'].unique().values.tolist())
         max_sentence_length = max([len(x) for x in sentences])
         model = Word2Vec(sentences, size = perplex, window=max_sentence_length)
+        data = sorted(self.processed_data["SPR", "ITEM"])
+        groups = itertools.groupby(data, key=lambda x: x[0])
+        (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
+        for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
+            output = self.models.pca_2d(matrix)
+            no_unique_points = len(list(set(tuple(p) for p in output)))
+            self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} {name} samples")
+            self.models.k_means_cluster(output, 512, f"provider {name} k-means", f"provider_{name}_kmeans")
