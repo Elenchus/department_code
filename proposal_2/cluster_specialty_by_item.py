@@ -60,7 +60,7 @@ class TestCase(ProposalTest):
         # act = 'sigmoid'
         # Y = self.models.one_layer_autoencoder_prediction(X, act)
 
-        self.models.k_means_cluster(Y, "Clusters of specialties by item use", "k_means_cluster")
+        self.models.k_means_cluster(Y, 128, "Clusters of specialties by item use", "k_means_cluster")
         self.models.calculate_BGMM(Y, 6, "BMM of specialties by item use", "BGMM")
         # self.logger.log("Calculating cosine similarities")
         # cdv = file_utils.CodeConverter()
