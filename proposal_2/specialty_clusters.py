@@ -7,12 +7,14 @@ from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
     FINAL_COLS = ["SPR", "SPR_RSP"]
-    INITIAL_COLS = FINAL_COLS
+    INITIAL_COLS = FINAL_COLS + ["INHOSPITAL", "NUMSERV"]
     required_params: dict = {}
     test_data = None
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
+        data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0) & (data['INHOSPITAL'] == "N")]
+        data = data.drop(["NUMSERV", "INHOSPITAL"], axis=1)
 
         return data
 
@@ -29,11 +31,16 @@ class TestCase(ProposalTest):
         perplex = round(math.sqrt(math.sqrt(len(uniques))))
         self.log("Processing groups")
         words = []
+        max_sentence_length = 0
         for _, group in self.test_data:
             sentence = [str(x[1]) for x in list(group)]
+            length = len(sentence)
+            if length > max_sentence_length:
+                max_sentence_length = length
+
             words.append(sentence)
 
-        model = Word2Vec(words, size = perplex)
+        model = Word2Vec(words, size = perplex, window=max_sentence_length)
 
         self.models.t_sne(model, perplex, f"t-SNE plot of RSP clusters with perplex {perplex}")
         self.models.u_map(model, "RSP cluster UMAP")

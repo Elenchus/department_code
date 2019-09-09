@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
     test_file_name = 'specialty_clusters'
     params = None
-    notes = 'Cluster providers by specialty'
+    notes = 'Cluster without INHOSPITAL and NUMSERV not 1'
 
     # for spec in ["Anaesthetics", "Clinical Psychologist"]:
     #     params['specialty'] = spec

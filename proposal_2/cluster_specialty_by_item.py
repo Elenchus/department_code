@@ -7,15 +7,12 @@ class TestCase(ProposalTest):
     INITIAL_COLS = ["ITEM", "SPR_RSP", "NUMSERV"]
     # full_cols = ["ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
     FINAL_COLS = ["ITEM", "SPR_RSP"]
+    required_params = {}
 
     def process_dataframe(self, data):
-        data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0)]
-        # data["SPR_RSP"] = data["SPR_RSP"].map(str) + data["INHOSPITAL"].map(str)
-        # data = data.drop(['NUMSERV', "INHOSPITAL"], axis = 1)
-        data = data.drop(['NUMSERV'], axis = 1)
-        assert len(data.columns) == len(self.FINAL_COLS)
-        for i in range(len(self.FINAL_COLS)):
-            assert data.columns[i] == self.FINAL_COLS[i]
+        data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0) & (data['INHOSPITAL'] == 'N')]
+        data = data.drop(['NUMSERV', "INHOSPITAL"], axis = 1)
+        # data = data.drop(['NUMSERV'], axis = 1)
         no_unique_items = len(data['ITEM'].unique())
         self.perplex = round(math.sqrt(math.sqrt(no_unique_items)))
 

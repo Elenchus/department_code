@@ -7,18 +7,18 @@ from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
     INITIAL_COLS = ["SPR", "ITEM", "SPR_RSP", "NUMSERV"]
-    FINAL_COLS = ["SPR", "ITEM"]
+    FINAL_COLS = ["SPR", "ITEM", "SPR_RSP"]
     required_params = {}
     processed_data: pd.DataFrame = None
     test_data = None
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
-        data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0)]
+        data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] != 0) & (data["INHOSPITAL"] == 'N')]
         data["SPR"] = data["SPR"].map(str) + "_" + data["SPR_RSP"].map(str)
         # data["SPR_RSP"] = data["SPR_RSP"].map(str) + data["INHOSPITAL"].map(str)
         # data = data.drop(['NUMSERV', "INHOSPITAL"], axis = 1)
-        data = data.drop(['NUMSERV', 'SPR_RSP'], axis = 1)
+        data = data.drop(['NUMSERV'], axis = 1)
 
 
         return data
@@ -26,7 +26,7 @@ class TestCase(ProposalTest):
     def get_test_data(self):
         super().get_test_data()
         self.log("Grouping providers")
-        data = sorted(self.processed_data.values.tolist(), key = lambda sentence: sentence[0])
+        data = sorted(self.processed_data["SPR", "ITEM"].values.tolist(), key = lambda sentence: sentence[0])
         groups = itertools.groupby(data, key = lambda sentence: sentence[0])
         sentences = []
         max_sentence_length = 0
@@ -47,11 +47,9 @@ class TestCase(ProposalTest):
         perplex = round(math.sqrt(math.sqrt(no_unique_rsps)))
         model = w2v(sentences=self.test_data, min_count=20, size = perplex, iter = 5, window=self.required_params['max_sentence_length'])
 
-        X = model[model.wv.vocab]
-
         self.log("Creating RSP vectors")
         rsp_dict = {}
-        data = sorted(.read_parquet(filename, columns=['SPR_RSP', 'ITEM']).values.tolist())
+        data = sorted(self.processed_data["SPR_RSP", "ITEM"].values.tolist())
         groups = itertools.groupby(data, key = lambda x: x[0])
         for rsp, group in groups:
             _, group = zip(*list(group))
@@ -75,11 +73,13 @@ class TestCase(ProposalTest):
 
         sums = [rsp_dict[x]['Sum'] for x in rsp_dict.keys()]
         avgs = [rsp_dict[x]['Average'] for x in rsp_dict.keys()]
-        # Y = X
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
+            no_unique_points = len(list(set(tuple(p) for p in matrix)))
+            self.log(f"Set of provider vectors contains {no_unique_points} unique values from {len(matrix)} {name} samples")
             Y = self.models.pca_2d(matrix)
-            self.models.k_means_cluster(Y, f"RSP {name} clusters", f'RSP_clusters_kmeans_{name}')
-
+            no_unique_points = len(list(set(tuple(p) for p in Y)))
+            self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {Y.shape[0]} {name} samples")
+            self.models.k_means_cluster(Y, 128, f"RSP {name} clusters", f'RSP_clusters_kmeans_{name}')
             self.models.calculate_BGMM(Y, 6, f"RSP {name} BGMM", f"RSP_{name}_BGMM")
             # self.log("Calculating cosine similarities")
             # cdv = FileUtils.code_converter()
