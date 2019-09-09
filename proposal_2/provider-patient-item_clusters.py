@@ -37,11 +37,12 @@ class TestCase(ProposalTest):
             provider_data = sorted([x[1:] for x in patient_group])
             provider_groups = itertools.groupby(provider_data, key=lambda x: x[0])
             for spr, provider_group in provider_groups:
-                sentence = [x[1] for x in list(provider_group)]
+                provider_group = list(provider_group)
+                sentence = [x[1] for x in provider_group]
                 if len(sentence) > 1:
                     sentences.append(sentence)
                     patient_providers.append(f"{pin}_{spr}")
-                    labels.append(self.get_provider_label([x[2] for x in patient_group]))
+                    labels.append(self.get_provider_label([x[2] for x in provider_group]))
 
         self.test_data = (sentences, labels, patient_providers)
                     
