@@ -17,6 +17,17 @@ class TestCase(ProposalTest):
         else:
             return self.code_converter.convert_rsp_num(x[0])
 
+    # def process_patient_group(self, group):
+    #     pin, patient_group = group
+    #     patient_group = list(patient_group)
+    #     provider_data = sorted([x[1:] for x in patient_group])
+    #     provider_groups = itertools.groupby(provider_data, key=lambda x: x[0])
+    #     for spr, provider_group in provider_groups:
+    #         provider_group = list(provider_group)
+    #         sentence = [str(x[1]) for x in provider_group]
+    #         patient_provider = f"{pin}_{spr}"
+    #         labels = self.get_provider_label([x[2] for x in provider_group])
+
     def process_dataframe(self, data):
         super().process_dataframe(data)
         self.logger.log("Extracting NUMSERV 1 and SPR_RSP not Not_Defined")
