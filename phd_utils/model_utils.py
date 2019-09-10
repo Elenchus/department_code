@@ -1,8 +1,10 @@
 import math
+import itertools
 from datetime import datetime
 import keras
 import numpy as np
 import umap
+from multiprocessing import Pool
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.code_converter import CodeConverter
 from sklearn import cluster, metrics
@@ -81,6 +83,18 @@ class ModelUtils():
                 list_of_outlier_indices.append(i)
 
         return list_of_outlier_indices
+
+    def multiprocess_generator(self, function, generator, threads=6):
+        pool = Pool(processes=threads)
+        result = []
+        while True:
+            r = pool.map(function, itertools.islice(generator, threads))
+            if r:
+                result.extend(r)
+            else:
+                break
+
+        return result
         
     def one_layer_autoencoder_prediction(self, data, activation_function):
         self.logger.log("Autoencoding")

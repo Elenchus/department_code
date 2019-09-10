@@ -6,7 +6,7 @@ from phd_utils.base_proposal_test import ProposalTest
 class TestCase(ProposalTest):
     INITIAL_COLS = ["PIN", "SPR", "ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
     FINAL_COLS = ["PIN", "SPR", "ITEM", "SPR_RSP"]
-    required_params: dict = {size: 9}
+    required_params: dict = {'size': 9}
     processed_data: pd.DataFrame = None
     test_data = None
 
