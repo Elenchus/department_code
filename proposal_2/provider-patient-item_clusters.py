@@ -52,7 +52,7 @@ class TestCase(ProposalTest):
             provider_groups = itertools.groupby(provider_data, key=lambda x: x[0])
             for spr, provider_group in provider_groups:
                 provider_group = list(provider_group)
-                sentence = [str(x[1]) for x in provider_group]
+                sentence = [str(x[1]) for x in provider_group] # should probably use unique values for creating the model, but not for creating provider vectors
                 if len(sentence) > 1:
                     sentences.append(sentence)
                     patient_providers.append(f"{pin}_{spr}")
