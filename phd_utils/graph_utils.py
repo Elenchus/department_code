@@ -40,13 +40,18 @@ class GraphUtils():
         ax.set_xticklabels(labels)
         self.save_plt_fig(self, fig, filename)
 
-    def create_scatter_plot(self, data, labels, title, filename):
+    def create_scatter_plot(self, data, labels, title, filename, legend_names=None):
         '''creates and saves a scatter plot'''
         fig = plt.figure()
         ax = fig.add_subplot(111)
         scatter = ax.scatter(data[:, 0], data[:, 1], c=labels)
-        legend = ax.legend(*scatter.legend_elements(), \
-                    loc="upper left", title="Cluster no.", bbox_to_anchor=(1, 0.5))
+        if legend_names is None:
+            legend = ax.legend(*scatter.legend_elements(), \
+                        loc="upper left", title="Cluster no.", bbox_to_anchor=(1, 0.5))
+        else:
+            handles, _ = scatter.legend_elements()
+            legend = ax.legend(handles, legend_names, loc="upper left", title="Legend", bbox_to_anchor=(1, 0.5))
+
         ttl = fig.suptitle(title)
 
         self.save_plt_fig(fig, filename, [ttl, legend])
@@ -63,6 +68,7 @@ class GraphUtils():
         ax = fig.add_subplot(111)
         for i in range(len(x)):
             ax.scatter(x[i], y[i])
+
         for i in range(len(x)):
             ax.annotate(labels[i],
                         xy=(x[i], y[i]),

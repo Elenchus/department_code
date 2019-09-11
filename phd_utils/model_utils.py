@@ -2,8 +2,11 @@ import math
 import itertools
 from datetime import datetime
 import keras
+import pandas as pd
 import numpy as np
 import umap
+from matplotlib import markers
+from matplotlib import pyplot as plt
 from multiprocessing import Pool
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.code_converter import CodeConverter
@@ -69,8 +72,11 @@ class ModelUtils():
         kmeans.fit(data)
         if labels == None:
             labels = kmeans.labels_
+            legend_names = None
+        else:
+            labels, legend_names = pd.factorize(labels)
 
-        self.graph_utils.create_scatter_plot(data, labels, f"{title} with {s}% silhoutte score", filename)
+        self.graph_utils.create_scatter_plot(data, labels, f"{title} with {s}% silhoutte score", filename, legend_names)
 
         return kmeans
 
@@ -139,7 +145,9 @@ class ModelUtils():
         self.logger.log("Summing and averaging vectors")
         item_dict = {}
         for key, group in groups:
-            _, group = zip(*list(group))
+            if isinstance(group, itertools._grouper):
+                _, group = zip(*list(group))
+
             for item in group:
                 item = str(item)
                 if item not in model.wv.vocab:

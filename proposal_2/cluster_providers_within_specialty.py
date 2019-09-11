@@ -90,7 +90,7 @@ class TestCase(ProposalTest):
 
             no_unique_points = len(list(set(tuple(p) for p in Y)))
             self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {Y.shape[0]} samples")
-            self.models.k_means_cluster(Y, f"Clusters of {self.required_params['specialty']} providers by {name} item use", "k_means_cluster")
+            self.models.k_means_cluster(Y, 128, f"Clusters of {self.required_params['specialty']} providers by {name} item use", "k_means_cluster")
             self.models.calculate_BGMM(Y, 6, f"BMM of {self.required_params['specialty']} providers by {name} item use", "BGMM")
             # self.log("Calculating cosine similarities")
             # cdv = file_utils.CodeConverter()

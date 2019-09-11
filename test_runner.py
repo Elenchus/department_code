@@ -37,7 +37,7 @@ def run_test(combine_years, params):
 if __name__ == "__main__":
     # variables
     combine_years = False
-    years = ['2014']
+    years = ['0000']
     data_file = None
     test_data = 'mbs'
     proposal = 2
