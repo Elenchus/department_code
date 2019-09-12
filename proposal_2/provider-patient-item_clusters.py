@@ -65,7 +65,8 @@ class TestCase(ProposalTest):
         (sentences, row_labels, patient_providers) = self.test_data
         labels, legend_names = pd.factorize(row_labels)
         max_sentence_length = max([len(x) for x in sentences])
-        model = Word2Vec(sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
+        unique_item_sentences = [list(set(x)) for x in sentences]
+        model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
         groups = zip(patient_providers, sentences)
         (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
