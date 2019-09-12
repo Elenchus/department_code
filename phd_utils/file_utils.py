@@ -1,7 +1,12 @@
 '''File and logging classes and functions'''
 import os
 import sys
+from enum import Enum, auto
 import pandas as pd
+
+class DataSource(Enum):
+    MBS = auto()
+    PBS = auto()
 
 if sys.platform == "win32":
     PATH = 'C:\\Data\\'
@@ -19,12 +24,12 @@ PBS_HEADER = ['PTNT_ID', 'SPPLY_DT', 'ITM_CD', 'PBS_RGLTN24_ADJST_QTY', 'BNFT_AM
 
 def combine_10p_data(logger, data_type, initial_cols, final_cols, years, callback):
     '''gets columnar parquet data from given list of years and returns a pd dataframe'''
-    if data_type == 'pbs':
+    if data_type == DataSource.PBS:
         filenames = get_pbs_files(years)
-    elif data_type == 'mbs':
+    elif data_type == DataSource.MBS:
         filenames = get_mbs_files(years)
     else:
-        raise KeyError("Invalid data_type")
+        raise KeyError("Data type should be a DataSource value")
 
     data = pd.DataFrame(columns=final_cols)
     for filename in filenames:

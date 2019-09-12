@@ -5,6 +5,9 @@ from functools import partial
 from phd_utils import file_utils
 from phd_utils.logger import Logger
 
+mbs = file_utils.DataSource.MBS
+pbs = file_utils.DataSource.PBS
+
 def run_combined_test(years, data_file, test_data, proposal, test_file_name, params, notes):
     test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}'
     with Logger(test_name, '/mnt/c/data') as logger:
@@ -39,7 +42,7 @@ if __name__ == "__main__":
     combine_years = False
     years = ['2003']
     data_file = None
-    test_data = 'mbs'
+    test_data = mbs
     proposal = 2
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}

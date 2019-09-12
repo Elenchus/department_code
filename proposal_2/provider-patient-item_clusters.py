@@ -71,4 +71,6 @@ class TestCase(ProposalTest):
             output = self.models.pca_2d(matrix)
             no_unique_points = len(list(set(tuple(p) for p in output)))
             self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} {name} samples")
-            self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
+            # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
+            labels, legend_names = pd.factorize(labels)
+            self.graphs.create_scatter_plot(output, labels, f"provider-patient vector {name} scatter plot", f"provider_patient_vector_{name}_scatter", legend_names)
