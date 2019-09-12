@@ -10,12 +10,17 @@ class TestCase(ProposalTest):
     processed_data: pd.DataFrame = None
     test_data = None
 
-    def get_provider_label(self, rsp_list):
-        x = list(set(rsp_list))
-        if len(x) > 1:
-            return "Mixed"
-        else:
-            return self.code_converter.convert_rsp_num(x[0])
+    def get_item_labels(self, vocab):
+        labels = []
+        data = sorted(self.processed_data[["ITEM", "SPR_RSP"]].values.tolist())
+        groups = itertools.groupby(data, key=lambda x: x[0])
+        for item, group in groups:
+            if str(item) in vocab:
+                group = [x[1] for x in group]
+                most_common = max(set(group), key=group.count)
+                labels.append(self.code_converter.convert_rsp_num(most_common))
+
+        return labels
 
     # def process_patient_group(self, group):
     #     pin, patient_group = group
@@ -39,39 +44,41 @@ class TestCase(ProposalTest):
     def get_test_data(self):
         super().get_test_data()
         self.log("Sorting data")
-        patient_data = sorted(self.processed_data.values.tolist())
+        patient_data = sorted(self.processed_data[["PIN", "SPR", "ITEM"]].values.tolist())
         self.log("Grouping data")
         patient_groups = itertools.groupby(patient_data, key=lambda x: x[0])
         sentences = []
-        labels = []
-        patient_providers = []
         self.log("Creating sentence/label lists")
-        for pin, patient_group in patient_groups:
+        for _, patient_group in patient_groups:
             patient_group = list(patient_group)
             provider_data = sorted([x[1:] for x in patient_group])
             provider_groups = itertools.groupby(provider_data, key=lambda x: x[0])
-            for spr, provider_group in provider_groups:
+            for _, provider_group in provider_groups:
                 provider_group = list(provider_group)
-                sentence = [str(x[1]) for x in provider_group] # should probably use unique values for creating the model, but not for creating provider vectors
+                sentence = list(set(str(x[1]) for x in provider_group))
                 if len(sentence) > 1:
                     sentences.append(sentence)
-                    patient_providers.append(f"{pin}_{spr}")
-                    labels.append(self.get_provider_label([x[2] for x in provider_group]))
 
-        self.test_data = (sentences, labels, patient_providers)
+        self.test_data = sentences
                     
     def run_test(self):
         super().run_test()
-        (sentences, row_labels, patient_providers) = self.test_data
-        labels, legend_names = pd.factorize(row_labels)
+        sentences = self.test_data
         max_sentence_length = max([len(x) for x in sentences]) # should change this to use unique_item_sentences
         unique_item_sentences = [list(set(x)) for x in sentences]
         model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
-        groups = zip(patient_providers, sentences)
-        (sums, avgs) = self.models.sum_and_average_vectors(model, groups)
-        for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
-            output = self.models.pca_2d(matrix)
-            no_unique_points = len(list(set(tuple(p) for p in output)))
-            self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} {name} samples")
-            # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
-            self.graphs.create_scatter_plot(output, labels, f"provider-patient vector {name} scatter plot", f"provider_patient_vector_{name}_scatter", legend_names)
+        vocab_labels = self.get_item_labels(model.wv.vocab)
+        with open(self.logger.output_path / 'legend.txt', 'a') as f:
+            for line in vocab_labels:
+                f.write(f"{line}\r\n")
+
+        labels, legend_names = pd.factorize(vocab_labels)
+        vectors = []
+        for word in model.wv.vocab:
+            vectors.append(model.wv.get_vector(word))
+
+        output = self.models.pca_2d(vectors)
+        no_unique_points = len(list(set(tuple(p) for p in output)))
+        self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
+        # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
+        self.graphs.create_scatter_plot(output, labels, f"item scatter plot", f"item_scatter", legend_names)

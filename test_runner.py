@@ -46,7 +46,7 @@ if __name__ == "__main__":
     proposal = 2
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
-    test_file_name = 'provider-patient-item_clusters'
+    test_file_name = 'simple_provider-patient-item_clusters'
     params = None
     notes = "Test Sebastiano's suggestion"
 
