@@ -62,7 +62,8 @@ class TestCase(ProposalTest):
                     
     def run_test(self):
         super().run_test()
-        (sentences, labels, patient_providers) = self.test_data
+        (sentences, row_labels, patient_providers) = self.test_data
+        labels, legend_names = pd.factorize(row_labels)
         max_sentence_length = max([len(x) for x in sentences])
         model = Word2Vec(sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
         groups = zip(patient_providers, sentences)
@@ -72,5 +73,4 @@ class TestCase(ProposalTest):
             no_unique_points = len(list(set(tuple(p) for p in output)))
             self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} {name} samples")
             # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
-            labels, legend_names = pd.factorize(labels)
             self.graphs.create_scatter_plot(output, labels, f"provider-patient vector {name} scatter plot", f"provider_patient_vector_{name}_scatter", legend_names)
