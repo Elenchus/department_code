@@ -49,7 +49,7 @@ class GraphUtils():
             legend = ax.legend(*scatter.legend_elements(), \
                         loc="upper left", title="Cluster no.", bbox_to_anchor=(1, 0.5))
         else:
-            handles, _ = scatter.legend_elements()
+            handles, _ = scatter.legend_elements(num=None)
             legend = ax.legend(handles, legend_names, loc="upper left", title="Legend", bbox_to_anchor=(1, 0.5))
 
         ttl = fig.suptitle(title)

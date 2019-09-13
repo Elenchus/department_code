@@ -66,8 +66,10 @@ class TestCase(ProposalTest):
         sentences = self.test_data
         max_sentence_length = max([len(x) for x in sentences]) # should change this to use unique_item_sentences
         unique_item_sentences = [list(set(x)) for x in sentences]
+        self.log("Creating model")
         model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
         vocab_labels = self.get_item_labels(model.wv.vocab)
+        self.log("Writing vocab labels")
         with open(self.logger.output_path / 'legend.txt', 'a') as f:
             for line in vocab_labels:
                 f.write(f"{line}\r\n")
@@ -77,6 +79,7 @@ class TestCase(ProposalTest):
         for word in model.wv.vocab:
             vectors.append(model.wv.get_vector(word))
 
+        self.log("Transforming")
         output = self.models.pca_2d(vectors)
         no_unique_points = len(list(set(tuple(p) for p in output)))
         self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
