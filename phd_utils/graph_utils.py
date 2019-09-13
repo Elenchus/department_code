@@ -8,6 +8,15 @@ class GraphUtils():
     def __init__(self, logger):
         self.logger = logger
 
+    def basic_histogram(self, data, filename):
+        self.logger.log("Plotting histogram")
+        n_bins = len(set(data))
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.hist(data, n_bins)
+        self.save_plt_fig(fig, filename)
+        
+
     def categorical_plot_group(self, x, y, legend_labels, title, filename):
         '''creates and saves a categorical plot'''
         self.logger.log(f"Plotting bar chart: {title}")

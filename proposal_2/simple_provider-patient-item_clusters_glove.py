@@ -1,6 +1,6 @@
 import itertools
+import glove
 import pandas as pd
-from gensim.models import Word2Vec
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
@@ -12,7 +12,6 @@ class TestCase(ProposalTest):
 
     def get_item_labels(self, vocab):
         labels = []
-        frequencies = []
         data = sorted(self.processed_data[["ITEM", "SPR_RSP"]].values.tolist())
         groups = itertools.groupby(data, key=lambda x: x[0])
         for item, group in groups:
@@ -20,10 +19,8 @@ class TestCase(ProposalTest):
                 group = [x[1] for x in group]
                 most_common = max(set(group), key=group.count)
                 labels.append(self.code_converter.convert_rsp_num(most_common))
-                ratio = round(group.count((most_common)) / len(group), 1)
-                frequencies.append(ratio)
 
-        return (labels, frequencies)
+        return labels
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
@@ -34,9 +31,8 @@ class TestCase(ProposalTest):
             for rsp in self.required_params['RSPs']:
                 rsps.append(self.code_converter.convert_rsp_str(rsp))
 
-        data = data[data['SPR_RSP'].isin(rsps)]
+            data = data[data['SPR_RSP'].isin(rsps)]
 
-        # data = data[~data["ITEM"].isin([104, 105])]
         data = data.drop(['NUMSERV', "INHOSPITAL"], axis = 1)
 
         return data
@@ -67,9 +63,8 @@ class TestCase(ProposalTest):
         unique_item_sentences = [list(set(x)) for x in sentences]
         max_sentence_length = max([len(x) for x in unique_item_sentences])
         self.log("Creating model")
-        model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
-        (vocab_labels, frequencies) = self.get_item_labels(model.wv.vocab)
-        self.graphs.basic_histogram(frequencies, 'hist_gram')
+        model = glove.Glove(unique_item_sentences)
+        vocab_labels = self.get_item_labels(model.wv.vocab)
         labels, legend_names = pd.factorize(vocab_labels)
         vectors = []
         for word in model.wv.vocab:
@@ -81,7 +76,3 @@ class TestCase(ProposalTest):
         self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
         # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
         self.graphs.create_scatter_plot(output, labels, f"item scatter plot", f"item_scatter", legend_names)
-
-        with open(self.logger.output_path / 'sentences.txt', 'w+') as f:
-            for sentence in self.test_data:
-                f.write(f"{sentence}\r\n")
