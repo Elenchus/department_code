@@ -19,7 +19,12 @@ class TestCase(ProposalTest):
             if str(item) in vocab:
                 group = [x[1] for x in group]
                 most_common = max(set(group), key=group.count)
-                labels.append(self.code_converter.convert_rsp_num(most_common))
+                # labels.append(self.code_converter.convert_rsp_num(most_common))
+                if len(set(group)) == 1:
+                    labels.append(self.code_converter.convert_rsp_num(group[0]))
+                else:
+                    labels.append("Mixed")
+
                 ratio = round(group.count((most_common)) / len(group), 1)
                 frequencies.append(ratio)
 
@@ -70,18 +75,18 @@ class TestCase(ProposalTest):
         model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
         (vocab_labels, frequencies) = self.get_item_labels(model.wv.vocab)
         self.graphs.basic_histogram(frequencies, 'hist_gram')
-        labels, legend_names = pd.factorize(vocab_labels)
-        vectors = []
-        for word in model.wv.vocab:
-            vectors.append(model.wv.get_vector(word))
+        # labels, legend_names = pd.factorize(vocab_labels)
+        # vectors = []
+        # for word in model.wv.vocab:
+        #     vectors.append(model.wv.get_vector(word))
 
-        self.log("Transforming")
-        output = self.models.pca_2d(vectors)
-        no_unique_points = len(list(set(tuple(p) for p in output)))
-        self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
-        # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
-        self.graphs.create_scatter_plot(output, labels, f"item scatter plot", f"item_scatter", legend_names)
+        # self.log("Transforming")
+        # output = self.models.pca_2d(vectors)
+        # no_unique_points = len(list(set(tuple(p) for p in output)))
+        # self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
+        # # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
+        # self.graphs.create_scatter_plot(output, labels, f"item scatter plot", f"item_scatter", legend_names)
 
-        with open(self.logger.output_path / 'sentences.txt', 'w+') as f:
-            for sentence in self.test_data:
-                f.write(f"{sentence}\r\n")
+        # with open(self.logger.output_path / 'sentences.txt', 'w+') as f:
+        #     for sentence in self.test_data:
+        #         f.write(f"{sentence}\r\n")
