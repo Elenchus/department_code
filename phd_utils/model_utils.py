@@ -45,6 +45,20 @@ class ModelUtils():
         probs_output = self.logger.output_path / f'BGMM_probs_{title}.txt'
         np.savetxt(probs_output, probs)
 
+    def cartesian_to_polar(self, data):
+        polars = []
+        for x, y in data:
+            r = math.sqrt(x**2 + y **2)
+            theta = math.atan(y / x)
+            if x < 0:
+                theta = theta + math.pi
+            elif y < 0:
+                theta = theta + (2 * math.pi)
+                
+            polars.append([r, theta])
+
+        return polars
+
     def get_best_cluster_size(self, X, clusters):
         '''measure silhouette scores for the given cluster sizes and return the best k and its score'''
         self.logger.log("Getting best k-means cluster size with average silhouette score")

@@ -1,4 +1,5 @@
 import itertools
+import numpy as np
 import pandas as pd
 from gensim.models import Word2Vec
 from phd_utils.base_proposal_test import ProposalTest
@@ -98,7 +99,10 @@ class TestCase(ProposalTest):
 
         self.log("Transforming")
         output = self.models.pca_2d(vectors)
+        output = self.models.cartesian_to_polar(output)
+        # output = vectors
         no_unique_points = len(list(set(tuple(p) for p in output)))
+        output = np.array(output)
         self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
         # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
         self.graphs.create_scatter_plot(output, labels, f"item scatter plot", f"item_scatter", legend_names)
