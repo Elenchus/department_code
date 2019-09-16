@@ -54,7 +54,9 @@ class ModelUtils():
                 theta = theta + math.pi
             elif y < 0:
                 theta = theta + (2 * math.pi)
-                
+
+            theta = math.degrees(theta)
+
             polars.append([r, theta])
 
         return polars
