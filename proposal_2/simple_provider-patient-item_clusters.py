@@ -19,7 +19,13 @@ class TestCase(ProposalTest):
             if str(item) in vocab:
                 group = [x[1] for x in group]
                 most_common = max(set(group), key=group.count)
-                labels.append(self.code_converter.convert_rsp_num(most_common))
+                # labels.append(self.code_converter.convert_rsp_num(most_common))
+                uses = list(set(group))
+                if len(uses) == 1:
+                    labels.append(uses[0])
+                else:
+                    labels.append("Mixed")
+
                 ratio = round(group.count((most_common)) / len(group), 1)
                 frequencies.append(ratio)
 
@@ -69,6 +75,12 @@ class TestCase(ProposalTest):
         self.log("Creating model")
         model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
         (vocab_labels, frequencies) = self.get_item_labels(model.wv.vocab)
+        with open(self.logger.output_path / 'labels', 'w+') as f:
+            assert len(model.wv.vocab) == len(vocab_labels)
+            words = list(model.wv.vocab.keys())
+            for i in range(len(vocab_labels)):
+                f.write(f'"{words[i]}":"{vocab_labels[i]}"\r\n')
+
         self.graphs.basic_histogram(frequencies, 'hist_gram')
         labels, legend_names = pd.factorize(vocab_labels)
         vectors = []
