@@ -52,26 +52,22 @@ class TestCase(ProposalTest):
     def get_test_data(self):
         super().get_test_data()
         self.log("Sorting data")
-        # patient_data = sorted(self.processed_data[["PIN", "SPR", "ITEM"]].values.tolist())
-        patient_data = sorted(self.processed_data.values.tolist())
+        patient_data = sorted(self.processed_data[["PIN", "SPR", "ITEM"]].values.tolist())
         self.log("Grouping data")
         patient_groups = itertools.groupby(patient_data, key=lambda x: x[0])
         sentences = []
-        rsps = []
         self.log("Creating sentence/label lists")
-        for pin, patient_group in patient_groups:
+        for _, patient_group in patient_groups:
             patient_group = list(patient_group)
             provider_data = sorted([x[1:] for x in patient_group])
             provider_groups = itertools.groupby(provider_data, key=lambda x: x[0])
-            for spr, provider_group in provider_groups:
+            for _, provider_group in provider_groups:
                 provider_group = list(provider_group)
                 sentence = list(set(str(x[1]) for x in provider_group))
-                rsp = list(set(str(x[2]) for x in provider_group))
                 if len(sentence) > 1:
                     sentences.append(sentence)
-                    rsps.append(rsp)
 
-        self.test_data = (sentences, rsps)
+        self.test_data = sentences
                     
     def run_test(self):
         super().run_test()

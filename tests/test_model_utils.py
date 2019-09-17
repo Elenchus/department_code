@@ -1,14 +1,7 @@
 import math
 import unittest
 import phd_utils.model_utils as model_utils
-from pathlib import Path
-
-class MockLogger():
-    output_path = Path('')
-    test_name = 'Mock'
-
-    def log(self, line, line_end):
-        pass
+from mock_logger import MockLogger
 
 class ModelUtilsTest(unittest.TestCase):
     def __init__(self):
