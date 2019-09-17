@@ -71,7 +71,7 @@ class TestCase(ProposalTest):
                     
     def run_test(self):
         super().run_test()
-        (sentences, rsps) = self.test_data
+        sentences = self.test_data
         unique_item_sentences = [list(set(x)) for x in sentences]
         max_sentence_length = max([len(x) for x in unique_item_sentences])
         self.log("Creating model")
@@ -111,7 +111,3 @@ class TestCase(ProposalTest):
                     rsp_list.append(label)
 
                 f.write(f"{rsp_list}\r\n")
-
-        with open(self.logger.output_path / 'rsps.txt', 'w+') as f:
-            for rsp in rsps:
-                f.write(f"{rsp}\r\n")
