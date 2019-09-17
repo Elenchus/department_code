@@ -1,14 +1,11 @@
 import math
 import unittest
 import phd_utils.model_utils as model_utils
-from mock_logger import MockLogger
+from tests.mock_logger import MockLogger
 
 class ModelUtilsTest(unittest.TestCase):
-    def __init__(self):
-        self.model = model_utils.ModelUtils(MockLogger())
-
     def setUp(self):
-        pass
+        self.model = model_utils.ModelUtils(MockLogger())
 
     def tearDown(self):
         pass
