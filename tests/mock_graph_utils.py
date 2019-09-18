@@ -1,3 +1,3 @@
 class MockGraphUtils():
-    def create_scatter_plot(*args, **kwargs):
+    def create_scatter_plot(self, *args, **kwargs):
         pass
