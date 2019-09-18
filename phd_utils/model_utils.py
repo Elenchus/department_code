@@ -101,7 +101,7 @@ class ModelUtils():
         iqr = q75 - q25
         list_of_outlier_indices = []
         for i in range(len(data)):
-            if data[i] > q75 + 1.5 * iqr:
+            if data[i] > q75 + 1.5 * iqr or data[i] < q25 - 1.5 * iqr:
                 list_of_outlier_indices.append(i)
 
         return list_of_outlier_indices
@@ -157,7 +157,7 @@ class ModelUtils():
 
         self.graph_utils.plot_tsne(new_values, labels, title)
 
-    def sum_and_average_vectors(self, model, groups):
+    def sum_and_average_vectors(self, model, groups, ignore_missing = False):
         self.logger.log("Summing and averaging vectors")
         item_dict = {}
         for key, group in groups:
@@ -167,7 +167,10 @@ class ModelUtils():
             for item in group:
                 item = str(item)
                 if item not in model.wv.vocab:
-                    continue
+                    if ignore_missing:
+                        continue
+                    else:
+                        raise KeyError(f"Item {item} is not in model vocab")
                     
                 keys = item_dict.keys()
                 if key not in keys:

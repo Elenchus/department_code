@@ -3,7 +3,7 @@ import pandas as pd
 import proposal_2
 from tests.mock_logger import MockLogger
 
-class GetTestDataTest(unittest.TestCase):
+class MiscFunctionsTest(unittest.TestCase):
     def setUp(self):
         self.mock_logger = MockLogger()
 
