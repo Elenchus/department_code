@@ -21,8 +21,11 @@ class CodeConverter:
 
     def convert_pbs_code(self, code):
         '''convert pbs code number to string'''
+        row = self.pbs_item_table.loc[self.pbs_item_table['ITEM_CODE'] == code].values.tolist()
+        if len(row) > 1:
+            raise KeyError("Duplicate PBS code")
 
-        return self.pbs_item_table.loc[self.pbs_item_table['ITEM_CODE'] == code]
+        return row[0]
 
     def convert_rsp_num(self, rsp):
         '''convert RSP number to string'''
