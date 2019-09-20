@@ -6,6 +6,7 @@ import pandas as pd
 class CodeConverter:
     '''Converter for PBS items and MBS RSP codes'''
     def __init__(self):
+        mbs_group_filename = 'phd_utils/mbs_groups.pkl'
         mbs_item_filename = 'phd_utils/MBS_2019.pkl'
         rsp_filename = 'phd_utils/SPR_RSP.csv'
         pbs_item_filename = 'phd_utils/pbs-item-drug-map.csv'
@@ -18,13 +19,36 @@ class CodeConverter:
 
         with open(mbs_item_filename, 'rb') as f:
             self.mbs_item_dict = pickle.load(f)
+        
+        with open(mbs_group_filename, 'rb') as f:
+            self.mbs_groups_dict = pickle.load(f)
 
         self.rsp_table = pd.read_csv(rsp_filename)
         self.pbs_item_table = pd.read_csv(pbs_item_filename, dtype=str, encoding="latin")
         self.valid_rsp_num_values = self.rsp_table['SPR_RSP'].unique()
         self.valid_rsp_str_values = self.rsp_table['Label'].unique()
 
-    def convert_mbs_code(self, code):
+    def convert_mbs_code_to_description(self, code):
+        item = self.mbs_item_dict[str(code)]
+
+        return f"{item['Description']}"
+
+    def convert_mbs_code_to_group_labels(self, code):
+        item = self.mbs_item_dict[str(code)]
+        cat = item['Category']
+        group = item['Group']
+        sub = item['SubGroup']
+
+        cat_desc = self.mbs_groups_dict[cat]["Label"]
+        group_desc = self.mbs_groups_dict[cat]["Groups"][group]["Label"] 
+        if sub is None:
+            return f"{cat_desc} - {group_desc}"
+        else:
+            sub_desc = self.mbs_groups_dict[cat]["Groups"][group]["SubGroups"][sub]
+
+            return f"{cat_desc} - {group_desc} - {sub_desc}"
+
+    def convert_mbs_code_to_group_numbers(self, code):
         '''convert mbs item code number to category definition'''
         item = self.mbs_item_dict[str(code)]
 
