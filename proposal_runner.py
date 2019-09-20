@@ -40,16 +40,16 @@ def run_test(combine_years, params):
 if __name__ == "__main__":
     # variables
     combine_years = False
-    years = ['2003']
+    years = ['2014']
     data_file = None
     test_data = mbs
-    proposal = 2
+    proposal = 0
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
-    test_file_name = 'simple_provider-patient-item_clusters'
-    # params = None
-    params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
-    notes = "Test Sebastiano's suggestion"
+    test_file_name = 'malign_benign_ratio'
+    params = None
+    # params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
+    notes = "Test Dave's suggestion"
 
     # for spec in ["Anaesthetics", "Clinical Psychologist"]:
     #     params['specialty'] = spec
