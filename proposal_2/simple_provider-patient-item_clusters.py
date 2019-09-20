@@ -11,25 +11,24 @@ class TestCase(ProposalTest):
     processed_data: pd.DataFrame = None
     test_data = None
 
-    def get_item_labels(self, vocab):
+    def get_item_labels(self):
         labels = {}
         frequencies = []
         data = sorted(self.processed_data[["ITEM", "SPR_RSP"]].values.tolist())
         groups = itertools.groupby(data, key=lambda x: x[0])
         for item, group in groups:
             item = str(item)
-            if item in vocab:
-                group = [x[1] for x in group]
-                most_common = max(set(group), key=group.count)
-                # labels.append(self.code_converter.convert_rsp_num(most_common))
-                uses = list(set(group))
-                if len(uses) == 1:
-                    labels[item] = self.code_converter.convert_rsp_num(uses[0])
-                else:
-                    labels[item] ="Mixed"
+            group = [x[1] for x in group]
+            most_common = max(set(group), key=group.count)
+            # labels.append(self.code_converter.convert_rsp_num(most_common))
+            uses = list(set(group))
+            if len(uses) == 1:
+                labels[item] = self.code_converter.convert_rsp_num(uses[0])
+            else:
+                labels[item] ="Mixed"
 
-                ratio = round(group.count((most_common)) / len(group), 1)
-                frequencies.append(ratio)
+            ratio = round(group.count((most_common)) / len(group), 1)
+            frequencies.append(ratio)
 
         return (labels, frequencies)
 
@@ -42,7 +41,7 @@ class TestCase(ProposalTest):
             for rsp in self.required_params['RSPs']:
                 rsps.append(self.code_converter.convert_rsp_str(rsp))
 
-        data = data[data['SPR_RSP'].isin(rsps)]
+            data = data[data['SPR_RSP'].isin(rsps)]
 
         # data = data[~data["ITEM"].isin([104, 105])]
         data = data.drop(['NUMSERV', "INHOSPITAL"], axis = 1)
@@ -53,6 +52,8 @@ class TestCase(ProposalTest):
         super().get_test_data()
         self.log("Sorting data")
         patient_data = sorted(self.processed_data[["PIN", "SPR", "ITEM"]].values.tolist())
+        (vocab_labels_dict, _) = self.get_item_labels()
+        mixed_items = set(x[0] for x in vocab_labels_dict.items() if x[1] == "Mixed")
         self.log("Grouping data")
         patient_groups = itertools.groupby(patient_data, key=lambda x: x[0])
         sentences = []
@@ -63,7 +64,8 @@ class TestCase(ProposalTest):
             provider_groups = itertools.groupby(provider_data, key=lambda x: x[0])
             for _, provider_group in provider_groups:
                 provider_group = list(provider_group)
-                sentence = list(set(str(x[1]) for x in provider_group))
+                sentence = set(str(x[1]) for x in provider_group)
+                sentence = list(sentence - mixed_items)
                 if len(sentence) > 1:
                     sentences.append(sentence)
 
@@ -77,7 +79,7 @@ class TestCase(ProposalTest):
         self.log("Creating model")
         model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
         word_list = list(model.wv.vocab.keys())
-        (vocab_labels_dict, frequencies) = self.get_item_labels(word_list)
+        (vocab_labels_dict, frequencies) = self.get_item_labels()
         vocab_labels = []
         for word in word_list:
             vocab_labels.append(vocab_labels_dict[word])
