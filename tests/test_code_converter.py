@@ -8,6 +8,10 @@ class TestCodeConverter(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_convert_mbs_code(self):
+        assert self.cdv.convert_mbs_code(113) == "1 - A3 - None"
+        assert self.cdv.convert_mbs_code("32046") == "3 - T8 - 2"
+
     def test_convert_pbs_code(self):
         row = self.cdv.convert_pbs_code("00043G")
         assert len(row) == 4
