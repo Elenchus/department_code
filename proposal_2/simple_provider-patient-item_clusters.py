@@ -79,10 +79,10 @@ class TestCase(ProposalTest):
         self.log("Creating model")
         model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
         word_list = list(model.wv.vocab.keys())
-        # (vocab_labels_dict, frequencies) = self.get_item_labels()
-        # vocab_labels = []
-        # for word in word_list:
-        #     vocab_labels.append(vocab_labels_dict[word])
+        (vocab_labels_dict, frequencies) = self.get_item_labels()
+        vocab_labels = []
+        for word in word_list:
+            vocab_labels.append(vocab_labels_dict[word])
 
         # with open(self.logger.output_path / 'labels.txt', 'w+') as f:
         #     assert len(word_list) == len(vocab_labels)
@@ -115,11 +115,20 @@ class TestCase(ProposalTest):
         #         f.write(f"{rsp_list}\r\n")
 
         self.log("Generating co-occurrence matrix")
-        mat = pd.DataFrame(0, columns=word_list, index=word_list)
+        mat = pd.DataFrame(0, columns=word_list + ["Label"], index=word_list + ["Label"])
         for sentence in unique_item_sentences:
             for i in sentence:
                 for j in sentence:
-                    mat.iloc[i, j] += 1
+                    if i == j:
+                        continue
 
+                    mat.loc[i, j] += 1
+
+        for word in word_list:
+            mat.loc[word, "Label"] = vocab_labels_dict[word]
+            mat.loc["Label", word] = vocab_labels_dict[word]
+        
+        mat.loc["Label", "Label"] = "Z"
+        mat.sort_values(by="Label", axis=0, inplace=True)
         mat.to_csv(self.logger.output_path / 'co_matrix.csv')
 
