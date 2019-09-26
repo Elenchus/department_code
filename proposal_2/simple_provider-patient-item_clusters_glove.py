@@ -75,7 +75,6 @@ class TestCase(ProposalTest):
         super().run_test()
         sentences = self.test_data
         unique_item_sentences = [list(set(x)) for x in sentences]
-        max_sentence_length = max([len(x) for x in unique_item_sentences])
         word_list = self.processed_data["ITEM"].unique().values.tolist()
 
         self.log("Generating co-occurrence matrix")
