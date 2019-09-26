@@ -49,7 +49,7 @@ if __name__ == "__main__":
     test_file_name = 'simple_provider-patient-item_clusters'
     # params = None
     params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
-    notes = "Test removing mixed items"
+    notes = "Trying co-occurrence matrix"
 
     # for spec in ["Anaesthetics", "Clinical Psychologist"]:
     #     params['specialty'] = spec

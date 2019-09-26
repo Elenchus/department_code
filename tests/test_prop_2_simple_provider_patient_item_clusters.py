@@ -38,8 +38,6 @@ class SimpleProviderPatientItemClusters(unittest.TestCase):
         assert '9' in test_data[0]
         assert '6' in test_data[0]
 
-    def test_run_test(self):
-        sentences = []
 
 if __name__ == "__main__":
     unittest.main()

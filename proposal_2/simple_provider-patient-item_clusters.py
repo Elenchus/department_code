@@ -79,37 +79,47 @@ class TestCase(ProposalTest):
         self.log("Creating model")
         model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
         word_list = list(model.wv.vocab.keys())
-        (vocab_labels_dict, frequencies) = self.get_item_labels()
-        vocab_labels = []
-        for word in word_list:
-            vocab_labels.append(vocab_labels_dict[word])
+        # (vocab_labels_dict, frequencies) = self.get_item_labels()
+        # vocab_labels = []
+        # for word in word_list:
+        #     vocab_labels.append(vocab_labels_dict[word])
 
-        with open(self.logger.output_path / 'labels.txt', 'w+') as f:
-            assert len(word_list) == len(vocab_labels)
-            for i in range(len(vocab_labels)):
-                f.write(f'"{word_list[i]}":"{vocab_labels[i]}"\r\n')
+        # with open(self.logger.output_path / 'labels.txt', 'w+') as f:
+        #     assert len(word_list) == len(vocab_labels)
+        #     for i in range(len(vocab_labels)):
+        #         f.write(f'"{word_list[i]}":"{vocab_labels[i]}"\r\n')
 
-        self.graphs.basic_histogram(frequencies, 'hist_gram')
-        labels, legend_names = pd.factorize(vocab_labels)
-        vectors = []
-        for word in word_list:
-            vectors.append(model.wv.get_vector(word))
+        # self.graphs.basic_histogram(frequencies, 'hist_gram')
+        # labels, legend_names = pd.factorize(vocab_labels)
+        # vectors = []
+        # for word in word_list:
+        #     vectors.append(model.wv.get_vector(word))
 
-        self.log("Transforming")
-        output = self.models.pca_2d(vectors)
-        output = self.models.cartesian_to_polar(output)
-        # output = vectors
-        no_unique_points = len(list(set(tuple(p) for p in output)))
-        output = np.array(output)
-        self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
-        # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
-        self.graphs.create_scatter_plot(output, labels, f"item scatter plot", f"item_scatter", legend_names)
+        # self.log("Transforming")
+        # output = self.models.pca_2d(vectors)
+        # output = self.models.cartesian_to_polar(output)
+        # # output = vectors
+        # no_unique_points = len(list(set(tuple(p) for p in output)))
+        # output = np.array(output)
+        # self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
+        # # self.models.k_means_cluster(output, 256, f"provider {name} k-means", f"provider_{name}_kmeans", labels)
+        # self.graphs.create_scatter_plot(output, labels, f"item scatter plot", f"item_scatter", legend_names)
 
-        with open(self.logger.output_path / 'sentence_rsps.txt', 'w+') as f:
-            for sentence in sentences:
-                rsp_list = []
-                for word in sentence:
-                    label = vocab_labels[word_list.index(word)]
-                    rsp_list.append(label)
+        # with open(self.logger.output_path / 'sentence_rsps.txt', 'w+') as f:
+        #     for sentence in sentences:
+        #         rsp_list = []
+        #         for word in sentence:
+        #             label = vocab_labels[word_list.index(word)]
+        #             rsp_list.append(label)
 
-                f.write(f"{rsp_list}\r\n")
+        #         f.write(f"{rsp_list}\r\n")
+
+        self.log("Generating co-occurrence matrix")
+        mat = pd.DataFrame(0, columns=word_list, index=word_list)
+        for sentence in unique_item_sentences:
+            for i in sentence:
+                for j in sentence:
+                    mat.iloc[i, j] += 1
+
+        mat.to_csv(self.logger.output_path / 'co_matrix.csv')
+
