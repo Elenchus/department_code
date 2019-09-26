@@ -7,7 +7,7 @@ from phd_utils.base_proposal_test import ProposalTest
 class TestCase(ProposalTest):
     INITIAL_COLS = ["PIN", "SPR", "ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
     FINAL_COLS = ["PIN", "SPR", "ITEM", "SPR_RSP"]
-    required_params: dict = {'size': 9, 'INHOSPITAL': 'Y', 'RSPs': None}
+    required_params: dict = {'INHOSPITAL': 'Y', 'RSPs': None}
     processed_data: pd.DataFrame = None
     test_data = None
 
@@ -76,29 +76,52 @@ class TestCase(ProposalTest):
         sentences = self.test_data
         unique_item_sentences = [list(set(x)) for x in sentences]
         max_sentence_length = max([len(x) for x in unique_item_sentences])
-        self.log("Creating model")
-        model = Word2Vec(unique_item_sentences, size = self.required_params['size'], window=max_sentence_length, min_count=1)
-        word_list = list(model.wv.vocab.keys())
-        (vocab_labels_dict, frequencies) = self.get_item_labels()
-        vocab_labels = []
-        for word in word_list:
-            vocab_labels.append(vocab_labels_dict[word])
+        word_list = self.processed_data["ITEM"].unique().values.tolist()
 
         self.log("Generating co-occurrence matrix")
-        mat = pd.DataFrame(0, columns=word_list + ["Label"], index=word_list + ["Label"])
+        co_occurence_frame = pd.DataFrame(0, columns=word_list, index=word_list)
         for sentence in unique_item_sentences:
             for i in sentence:
                 for j in sentence:
                     if i == j:
                         continue
 
-                    mat.loc[i, j] += 1
+                    co_occurence_frame.loc[i, j] += 1
 
+        co_occurence_frame.to_csv(self.logger.output_path / 'co_matrix.csv')
+
+        cooccur = {}
+        word_map = {}
+        for idx, word in enumerate(word_list):
+            word_map[word] = idx
+            cooccur[idx] = {}
+
+        for _, row in co_occurence_frame.iterrows():
+            key = word_map[row]
+            for word in word_list:
+                sub_key = word_map[word]
+                cooccur[key][sub_key] = row[word]
+
+        (vocab_labels_dict, frequencies) = self.get_item_labels()
+        vocab_labels = []
         for word in word_list:
-            mat.loc[word, "Label"] = vocab_labels_dict[word]
-            mat.loc["Label", word] = vocab_labels_dict[word]
-        
-        mat.loc["Label", "Label"] = "Z"
-        mat.sort_values(by="Label", axis=0, inplace=True)
-        mat.to_csv(self.logger.output_path / 'co_matrix.csv')
+            vocab_labels.append(vocab_labels_dict[word])
 
+        self.graphs.basic_histogram(frequencies, 'hist_gram')
+        labels, legend_names = pd.factorize(vocab_labels)
+
+        self.log("Creating model")
+        model = glove.Glove(cooccur)
+        vectors = []
+        for word in word_list:
+            vectors.append(model.W[word])
+
+        self.log("Transforming")
+        output = self.models.pca_2d(vectors)
+        output = self.models.cartesian_to_polar(output)
+        # output = vectors
+        no_unique_points = len(list(set(tuple(p) for p in output)))
+        output = np.array(output)
+        self.log(f"Set of 2d transformed provider vectors contains {no_unique_points} unique values from {output.shape[0]} samples")
+        self.models.k_means_cluster(output, 256, f"provider k-means", f"provider_kmeans", labels)
+        self.graphs.create_scatter_plot(output, labels, f"item scatter plot", f"item_scatter", legend_names)
