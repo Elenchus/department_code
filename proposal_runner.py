@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
     test_file_name = 'simple_provider-patient-item_clusters_glove'
     # params = None
-    params = {'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
+    params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
     notes = "Glove test"
 
     # for spec in ["Anaesthetics", "Clinical Psychologist"]:

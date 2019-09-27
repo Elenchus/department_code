@@ -86,7 +86,7 @@ class ModelUtils():
         (k, s) = self.get_best_cluster_size(data, list(2**i for i in range(1,max_binary_test)))
         kmeans = cluster.KMeans(n_clusters=k)
         kmeans.fit(data)
-        if labels == None:
+        if labels is None:
             labels = kmeans.labels_
             legend_names = None
         else:

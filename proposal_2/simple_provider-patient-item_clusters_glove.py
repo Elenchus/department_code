@@ -7,7 +7,7 @@ from phd_utils.base_proposal_test import ProposalTest
 class TestCase(ProposalTest):
     INITIAL_COLS = ["PIN", "SPR", "ITEM", "SPR_RSP", "NUMSERV", "INHOSPITAL"]
     FINAL_COLS = ["PIN", "SPR", "ITEM", "SPR_RSP"]
-    required_params: dict = {'INHOSPITAL': 'Y', 'RSPs': None}
+    required_params: dict = {'size': 9, 'INHOSPITAL': 'Y', 'RSPs': None}
     processed_data: pd.DataFrame = None
     test_data = None
 
@@ -112,7 +112,7 @@ class TestCase(ProposalTest):
         labels, legend_names = pd.factorize(vocab_labels)
 
         self.log("Creating model")
-        model = glove.Glove(cooccur)
+        model = glove.Glove(cooccur, d=self.required_params['size'])
         for epoch in range(25):
             err = model.train(batch_size=50, workers=9)
             self.log("epoch %d, error %.3f" % (epoch, err))
