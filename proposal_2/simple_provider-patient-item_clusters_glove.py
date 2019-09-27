@@ -75,31 +75,33 @@ class TestCase(ProposalTest):
         super().run_test()
         sentences = self.test_data
         unique_item_sentences = [list(set(x)) for x in sentences]
-        word_list = self.processed_data["ITEM"].unique().values.tolist()
+        word_list = [str(x) for x in list(self.processed_data["ITEM"].unique())]
 
         self.log("Generating co-occurrence matrix")
         co_occurence_frame = pd.DataFrame(0, columns=word_list, index=word_list)
         for sentence in unique_item_sentences:
             for i in sentence:
                 for j in sentence:
-                    if i == j:
-                        continue
+                    # if i == j:
+                    #     continue
 
-                    co_occurence_frame.loc[i, j] += 1
+                    co_occurence_frame.at[i, j] += 1
+                    co_occurence_frame.at[j, i] += 1
 
         co_occurence_frame.to_csv(self.logger.output_path / 'co_matrix.csv')
 
+        self.log("Creating co-occurrence dictionary")
         cooccur = {}
         word_map = {}
         for idx, word in enumerate(word_list):
             word_map[word] = idx
             cooccur[idx] = {}
 
-        for _, row in co_occurence_frame.iterrows():
+        for row in co_occurence_frame.index:
             key = word_map[row]
-            for word in word_list:
-                sub_key = word_map[word]
-                cooccur[key][sub_key] = row[word]
+            for col in word_list:
+                sub_key = word_map[col]
+                cooccur[key][sub_key] = co_occurence_frame.loc[row, col]
 
         (vocab_labels_dict, frequencies) = self.get_item_labels()
         vocab_labels = []
@@ -111,9 +113,14 @@ class TestCase(ProposalTest):
 
         self.log("Creating model")
         model = glove.Glove(cooccur)
+        for epoch in range(25):
+            err = model.train(batch_size=50, workers=9)
+            self.log("epoch %d, error %.3f" % (epoch, err))
+
         vectors = []
         for word in word_list:
-            vectors.append(model.W[word])
+            key = word_map[word]
+            vectors.append(model.W[key])
 
         self.log("Transforming")
         output = self.models.pca_2d(vectors)

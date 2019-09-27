@@ -1,5 +1,4 @@
 '''Run tests from proposals'''
-import gc
 import pandas as pd
 from functools import partial
 from phd_utils import file_utils
