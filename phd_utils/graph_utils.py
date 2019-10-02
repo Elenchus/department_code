@@ -22,6 +22,8 @@ class GraphUtils():
         self.logger.log(f"Plotting bar chart: {title}")
         fig = plt.figure()
         ax = fig.add_subplot(111)
+        assert len(x) == len(y)
+        assert len(x) == len(legend_labels)
         for i in range(len(y)):
             ax.scatter(x[i], y[i], label=legend_labels[i])
     

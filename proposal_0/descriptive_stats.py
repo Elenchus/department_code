@@ -34,17 +34,17 @@ class TestCase(ProposalTest):
         data = self.test_data
         col = self.required_params['col']
         years = self.required_params['years']
-        source = self.required_params['data_type']
-        labels = data[col].unique()
-        no_unique_values = len(labels)
-        frequencies = data[col].value_counts().tolist()
-    
-        if len(years) > 1:
-            year_string = f"{years[0]} - {years[-1]}"
-        else:
-            year_string = years[0]
+        source = self.required_params['data_type'].value
 
+        labels = []
+        frequencies = []
+        for _ in years:
+            unique_values = data[col].unique()
+            labels.append(unique_values)
+            no_unique_values = len(labels)
+            frequencies.append(data[col].value_counts().tolist())
+    
         if no_unique_values >= 15:
-            self.graphs.create_boxplot_group(frequencies, years, f"Frequency distribution of {source} {col} {year_string}", f"frequency_{col}")
+            self.graphs.create_boxplot_group(frequencies, years, f"Frequency distribution of {source} {col}", f"frequency_{col}")
         else:
-            self.graphs.categorical_plot_group(labels, frequencies, years, f"Occurences of categories in {source} {col} {year_string}", f"{source}_occurrence_{col}")
+            self.graphs.categorical_plot_group(labels, frequencies, years, f"Occurences of categories in {source} {col}", f"{source}_occurrence_{col}")

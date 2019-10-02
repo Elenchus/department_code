@@ -7,8 +7,12 @@ from phd_utils.logger import Logger
 mbs = file_utils.DataSource.MBS
 pbs = file_utils.DataSource.PBS
 
-def run_combined_test(years, data_file, test_data, proposal, test_file_name, params, notes):
-    test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}'
+def run_combined_test(years, data_file, test_data, proposal, test_file_name, params, notes, additional_folder_name_part=None):
+    if additional_folder_name_part is None:
+        test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}'
+    else:
+        test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}_{additional_folder_name_part}'
+
     with Logger(test_name, '/mnt/c/data') as logger:
     # with Logger(test_name) as logger:
         test_file = __import__(f"proposal_{proposal}.{test_file_name}", fromlist=['TestCase'])
@@ -39,13 +43,13 @@ def run_test(combine_years, params):
 if __name__ == "__main__":
     # variables
     combine_years = True
-    years = [str(x) for x in range(2012,2015)]
+    years = ["2012", "2013", "2014"]
     data_file = None
     test_data = mbs
+    test_file_name = f'descriptive_stats'
     proposal = 0
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
-    test_file_name = 'descriptive_stats'
     # params = None
     # params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
     notes = "Descriptive stats re-write"
@@ -55,8 +59,8 @@ if __name__ == "__main__":
     #     test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
     #     run_test(combine_years, test_details)
 
-    for (cols, data_type) in [(file_utils.MBS_HEADER, mbs), (file_utils.PBS_HEADER, pbs)]:
+    for (cols, test_data) in [(file_utils.MBS_HEADER, mbs), (file_utils.PBS_HEADER, pbs)]:
         for col in cols:
-            params = {"col": col, "years": years, "data_type": data_type}
-            test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
+            params = {"col": col, "years": years, "data_type": test_data}
+            test_details = [years, data_file, test_data, proposal, test_file_name, params, notes, col]
             run_test(combine_years, test_details)

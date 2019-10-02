@@ -5,8 +5,8 @@ from enum import Enum, auto
 import pandas as pd
 
 class DataSource(Enum):
-    MBS = auto()
-    PBS = auto()
+    MBS = "MBS"
+    PBS = "PBS"
 
 if sys.platform == "win32":
     PATH = 'C:\\Data\\'
