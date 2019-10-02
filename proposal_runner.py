@@ -38,22 +38,25 @@ def run_test(combine_years, params):
 
 if __name__ == "__main__":
     # variables
-    combine_years = False
-    years = ['2014']
+    combine_years = True
+    years = [str(x) for x in range(2012,2015)]
     data_file = None
     test_data = mbs
-    proposal = 2
+    proposal = 0
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
-    test_file_name = 'simple_provider-patient-item_clusters_glove'
+    test_file_name = 'descriptive_stats'
     # params = None
-    params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
-    notes = "Glove test"
+    # params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
+    notes = "Descriptive stats re-write"
 
     # for spec in ["Anaesthetics", "Clinical Psychologist"]:
     #     params['specialty'] = spec
     #     test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
     #     run_test(combine_years, test_details)
 
-    test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
-    run_test(combine_years, test_details)
+    for (cols, data_type) in [(file_utils.MBS_HEADER, mbs), (file_utils.PBS_HEADER, pbs)]:
+        for col in cols:
+            params = {"col": col, "years": years, "data_type": data_type}
+            test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
+            run_test(combine_years, test_details)

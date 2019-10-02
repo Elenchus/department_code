@@ -47,7 +47,7 @@ class GraphUtils():
         ax.boxplot(data)
         fig.suptitle(title)
         ax.set_xticklabels(labels)
-        self.save_plt_fig(self, fig, filename)
+        self.save_plt_fig(fig, filename)
 
     def create_scatter_plot(self, data, labels, title, filename, legend_names=None):
         '''creates and saves a scatter plot'''
