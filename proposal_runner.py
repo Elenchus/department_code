@@ -1,5 +1,6 @@
 '''Run tests from proposals'''
 import pandas as pd
+from enum import Enum, auto
 from functools import partial
 from phd_utils import file_utils
 from phd_utils.logger import Logger
@@ -7,12 +8,19 @@ from phd_utils.logger import Logger
 mbs = file_utils.DataSource.MBS
 pbs = file_utils.DataSource.PBS
 
-def run_combined_test(years, data_file, test_data, proposal, test_file_name, params, notes, additional_folder_name_part=None):
+class TestFormat(Enum):
+    CombineData = auto()
+    IterateWithinTest = auto()
+    IterateOverYears = auto()
+def set_test_name(years, test_data, proposal, test_file_name, params, notes, additional_folder_name_part=None):
     if additional_folder_name_part is None:
         test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}'
     else:
         test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}_{additional_folder_name_part}'
 
+    return test_name
+
+def run_combined_test(proposal, test_file_name, data_file, params, test_name):
     with Logger(test_name, '/mnt/c/data') as logger:
     # with Logger(test_name) as logger:
         test_file = __import__(f"proposal_{proposal}.{test_file_name}", fromlist=['TestCase'])
@@ -31,10 +39,10 @@ def run_combined_test(years, data_file, test_data, proposal, test_file_name, par
         test_case.get_test_data()
         test_case.run_test()
 
-def run_test(combine_years, params):
-    if combine_years:
+def run_test(test_format, params):
+    if test_format == TestFormat.CombineData:
         run_combined_test(*params)
-    else:
+    elif test_format == TestFormat.IterateOverYears:
         part_params = params[1:]
         for year in years:
             new_params = [[year]] + part_params
@@ -42,7 +50,7 @@ def run_test(combine_years, params):
 
 if __name__ == "__main__":
     # variables
-    combine_years = True
+    test_format = TestFormat.IterateWithinTest
     years = ["2012", "2013", "2014"]
     data_file = None
     test_data = mbs
@@ -63,4 +71,4 @@ if __name__ == "__main__":
         for col in cols:
             params = {"col": col, "years": years, "data_type": test_data}
             test_details = [years, data_file, test_data, proposal, test_file_name, params, notes, col]
-            run_test(combine_years, test_details)
+            run_test(test_format, test_details)
