@@ -25,7 +25,7 @@ class GraphUtils():
         ax = fig.add_subplot(111)
         assert len(x) == len(y)
         for i in range(len(y)):
-            ax.scatter(x[i], y[i], label=legend_labels[i])
+            ax.scatter([str(q) for q in x[i]], y[i], label=legend_labels[i])
     
         # plt.xticks(range(x[0]), (str(i) for i in x[0]))
         lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
