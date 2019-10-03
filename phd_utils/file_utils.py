@@ -8,10 +8,6 @@ class DataSource(Enum):
     MBS = "MBS"
     PBS = "PBS"
 
-class IterativeFileOperations(Enum):
-    YES = auto()
-    NO = auto()
-
 if sys.platform == "win32":
     PATH = 'C:\\Data\\'
 else:
