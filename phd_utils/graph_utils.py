@@ -9,6 +9,7 @@ class GraphUtils():
         self.logger = logger
 
     def basic_histogram(self, data, filename):
+        '''creates and saves a histogram'''
         self.logger.log("Plotting histogram")
         n_bins = len(set(data))
         fig = plt.figure()
@@ -17,19 +18,22 @@ class GraphUtils():
         self.save_plt_fig(fig, filename)
         
 
-    def categorical_plot_group(self, x, y, legend_labels, title, filename):
+    def categorical_plot_group(self, x, y, legend_labels, title, filename, axis_labels=None):
         '''creates and saves a categorical plot'''
         self.logger.log(f"Plotting bar chart: {title}")
         fig = plt.figure()
         ax = fig.add_subplot(111)
         assert len(x) == len(y)
-        assert len(x) == len(legend_labels)
         for i in range(len(y)):
             ax.scatter(x[i], y[i], label=legend_labels[i])
     
         # plt.xticks(range(x[0]), (str(i) for i in x[0]))
         lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         ttl = fig.suptitle(title)
+        if axis_labels is not None:
+            ax.set_xlabel(axis_labels[0])
+            ax.set_ylabel(axis_labels[1])
+
         self.save_plt_fig(fig, filename, (lgd, ttl, ))
 
     def create_boxplot(self, data, title, filename):
@@ -41,14 +45,18 @@ class GraphUtils():
         ax.suptitle(title)
         self.save_plt_fig(fig, filename)
 
-    def create_boxplot_group(self, data, labels, title, filename):
-        '''creates and saves a group of boxplot'''
+    def create_boxplot_group(self, data, labels, title, filename, axis_labels=None):
+        '''creates and saves a group of boxplots'''
         self.logger.log(f"Plotting boxplot group: {title}")
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.boxplot(data)
         fig.suptitle(title)
         ax.set_xticklabels(labels)
+        if axis_labels is not None:
+            ax.set_xlabel(axis_labels[0])
+            ax.set_ylabel(axis_labels[1])
+
         self.save_plt_fig(fig, filename)
 
     def create_scatter_plot(self, data, labels, title, filename, legend_names=None):
@@ -68,6 +76,7 @@ class GraphUtils():
         self.save_plt_fig(fig, filename, [ttl, legend])
 
     def plot_tsne(self, new_values, labels, title):
+        '''Create and save a t-SNE plot'''
         self.logger.log(f"Plotting TSNE figure")
         x = []
         y = []
@@ -110,6 +119,7 @@ class GraphUtils():
         plt.close(fig)
 
     def plot_umap(self, embedding, title):
+        '''Create and save a UMAP plot'''
         self.logger.log("Plotting UMAP")
         fig = plt.figure()
         ax = fig.add_subplot(111)

@@ -9,58 +9,104 @@ mbs = file_utils.DataSource.MBS
 pbs = file_utils.DataSource.PBS
 
 class TestFormat(Enum):
-    CombineData = auto()
-    IterateWithinTest = auto()
-    IterateOverYears = auto()
-def set_test_name(years, test_data, proposal, test_file_name, params, notes, additional_folder_name_part=None):
-    if additional_folder_name_part is None:
-        test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}'
-    else:
-        test_name = f'proposal_{proposal}_{test_file_name}_{test_data}_{years[0] if len(years) == 1 else f"{years[0]}-{years[-1]}"}_{additional_folder_name_part}'
+    CombineYears = auto()
+    IterateYearsWithinTest = auto()
+    IterateYearsOutsideTest = auto()
 
-    return test_name
+class TestDetails():
+    notes: str
+    params: dict
+    proposal: int
+    test_data: object
+    test_file_name: str
+    test_format: TestFormat
+    years: list
 
-def run_combined_test(proposal, test_file_name, data_file, params, test_name):
+    def __init__(self, notes="", params={}, proposal=0, test_data="", test_file_name="", test_format=TestFormat.CombineYears, years=[]):
+        self.notes=notes
+        self.params=params
+        self.proposal=proposal
+        self.test_data=test_data
+        self.test_file_name=test_file_name
+        self.test_format=test_format
+        self.years=[str(year) for year in years]
+
+def run_combined_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
-    # with Logger(test_name) as logger:
-        test_file = __import__(f"proposal_{proposal}.{test_file_name}", fromlist=['TestCase'])
-        test_case = test_file.TestCase(logger, params)
-        if params is None:
-            params = test_case.required_params
+        test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", fromlist=['TestCase'])
+        test_case = test_file.TestCase(logger, test_details.params)
+        if test_details.params is None:
+            test_details.params = test_case.required_params
     
-        logger.log(notes)
-        logger.log(params)
-        if data_file is None:
-            data = file_utils.combine_10p_data(logger, test_data, test_case.INITIAL_COLS, test_case.FINAL_COLS, years, test_case.process_dataframe)
+        logger.log(test_details.notes)
+        logger.log(test_details.params)
+        if isinstance(test_data, TestFormat):
+            data = file_utils.combine_10p_data(logger, test_data, test_case.INITIAL_COLS, test_case.FINAL_COLS, test_details.years, test_case.process_dataframe)
         else:
-            data = test_case.load_data(data_file)
+            data = test_case.load_data(test_data)
 
         test_case.processed_data = data
         test_case.get_test_data()
         test_case.run_test()
 
-def run_test(test_format, params):
-    if test_format == TestFormat.CombineData:
-        run_combined_test(*params)
-    elif test_format == TestFormat.IterateOverYears:
-        part_params = params[1:]
+def run_iterative_test(test_name, test_details):
+    with Logger(test_name, '/mnt/c/data') as logger:
+        test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", fromlist=['TestCase'])
+        test_case = test_file.TestCase(logger, test_details.params)
+        if test_details.params is None:
+            test_details.params = test_case.required_params
+    
+        logger.log(test_details.notes)
+        logger.log(test_details.params)
+        for year in test_details.years:
+            data = file_utils.combine_10p_data(logger, test_data, test_case.INITIAL_COLS, test_case.FINAL_COLS, [year], test_case.process_dataframe)
+
+            test_case.processed_data = data
+            test_case.get_test_data()
+            test_case.run_test()
+
+        test_case.finalise_test()
+
+def set_test_name(test_details, additional_folder_name_part):
+    if additional_folder_name_part is None:
+        test_name = f'proposal_{test_details.proposal}_{test_details.test_file_name}_{test_details.test_format.value}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}'
+    else:
+        test_name = f'proposal_{test_details.proposal}_{test_details.test_file_name}_{test_details.test_format.value}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}_{additional_folder_name_part}'
+
+    return test_name
+
+def start_test(test_details, additional_folder_name_part=None):
+    test_format = test_details.test_format
+    years = test_details.years
+
+    test_name = set_test_name(test_details, additional_folder_name_part)
+    if test_format == TestFormat.CombineYears:
+        run_combined_test(test_name, test_details)
+    elif test_format == TestFormat.IterateYearsOutsideTest:
+        years = test_details.years.copy()
         for year in years:
-            new_params = [[year]] + part_params
-            run_combined_test(*new_params)
+            test_details.years = [year] 
+            run_combined_test(test_name, test_details)
+    elif test_format == TestFormat.IterateYearsWithinTest:
+        run_iterative_test(test_name, test_details) 
+    else:
+        raise KeyError("Test format should be a TestFormat enum")
 
 if __name__ == "__main__":
     # variables
-    test_format = TestFormat.IterateWithinTest
-    years = ["2012", "2013", "2014"]
-    data_file = None
-    test_data = mbs
-    test_file_name = f'descriptive_stats'
-    proposal = 0
+    test_details = TestDetails(
+        notes = "Descriptive stats re-write",
+        params = {},
+        proposal = 0,
+        test_data = mbs,
+        test_file_name = f'descriptive_stats',
+        test_format = TestFormat.IterateYearsWithinTest,
+        years = [2012, 2013, 2014]
+    )
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
     # params = None
     # params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
-    notes = "Descriptive stats re-write"
 
     # for spec in ["Anaesthetics", "Clinical Psychologist"]:
     #     params['specialty'] = spec
@@ -69,6 +115,5 @@ if __name__ == "__main__":
 
     for (cols, test_data) in [(file_utils.MBS_HEADER, mbs), (file_utils.PBS_HEADER, pbs)]:
         for col in cols:
-            params = {"col": col, "years": years, "data_type": test_data}
-            test_details = [years, data_file, test_data, proposal, test_file_name, params, notes, col]
-            run_test(test_format, test_details)
+            test_details.params = {"col": col, "years": test_details.years, "data_type": test_data}
+            start_test(test_details, col)
