@@ -8,6 +8,11 @@ import re
 from phd_utils.base_proposal_test import ProposalTest
 from phd_utils.file_utils import DataSource
 
+class IterativeData():
+    labels = []
+    frequencies = []
+    no_unique_values = 0
+
 class TestCase(ProposalTest):
     INITIAL_COLS = []
     FINAL_COLS = []
@@ -19,6 +24,7 @@ class TestCase(ProposalTest):
         super().__init__(logger, params)
         self.INITIAL_COLS = [self.required_params["col"]]
         self.FINAL_COLS = self.INITIAL_COLS
+        self.iterative_data = IterativeData()
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
@@ -34,17 +40,18 @@ class TestCase(ProposalTest):
         data = self.test_data
         col = self.required_params['col']
         years = self.required_params['years']
-        source = self.required_params['data_type'].value
 
-        labels = []
-        frequencies = []
         for _ in years:
             unique_values = data[col].unique()
-            labels.append(unique_values)
-            no_unique_values = len(labels)
-            frequencies.append(data[col].value_counts().tolist())
+            self.iterative_data.labels.append(unique_values)
+            self.iterative_data.no_unique_values += len(unique_values)
+            self.iterative_data.frequencies.append(data[col].value_counts().tolist())
     
-        if no_unique_values >= 15:
-            self.graphs.create_boxplot_group(frequencies, years, f"Frequency distribution of {source} {col}", f"frequency_{col}")
+    def finalise_test(self):
+        source = self.required_params['data_type'].value
+        col = self.required_params['col']
+        years = self.required_params['years']
+        if self.iterative_data.no_unique_values >= 15:
+            self.graphs.create_boxplot_group(self.iterative_data.frequencies, years, f"Frequency distribution of {source} {col}", f"frequency_{col}")
         else:
-            self.graphs.categorical_plot_group(labels, frequencies, years, f"Occurences of categories in {source} {col}", f"{source}_occurrence_{col}")
+            self.graphs.categorical_plot_group(self.iterative_data.labels, self.iterative_data.frequencies, years, f"Occurences of categories in {source} {col}", f"{source}_occurrence_{col}")
