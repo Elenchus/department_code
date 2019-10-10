@@ -8,10 +8,14 @@ class TestCase(ProposalTest):
     required_params = {'code_type': 'knee', 'dimensions': 20, 'epochs': 100} 
 
     def process_dataframe(self, data):
-        raise AttributeError("Don't use this - use load data instead")
+        # super().process_dataframe()
+        # raise AttributeError("Don't use this - use load data instead")
+        return data
 
     def get_test_data(self):
-        raise AttributeError("Don't use this - use load data instead")
+        # raise AttributeError("Don't use this - use load data instead")
+        # super().get_test_data()
+        pass
 
     def run_test(self):
         super().run_test()
@@ -34,8 +38,9 @@ class TestCase(ProposalTest):
                     patient_dict[pid]['Average'] = ((patient_dict[pid]['Average'] * patient_dict[pid]['n']) + model[item]) / (patient_dict[pid]['n'] + 1)
                     patient_dict[pid]['n'] += 1
 
-        sums = [patient_dict[x]['Sum'] for x in patient_dict.keys()]
-        avgs = [patient_dict[x]['Average'] for x in patient_dict.keys()]
+        patient_ids = patient_dict.keys()
+        sums = [patient_dict[x]['Sum'] for x in patient_ids]
+        avgs = [patient_dict[x]['Average'] for x in patient_ids]
 
         for (matrix, name) in [(sums, "sum"), (avgs, "average")]:
             # perplex = math.ceil(math.sqrt(math.sqrt(len(model.wv.vocab))))
@@ -46,7 +51,7 @@ class TestCase(ProposalTest):
             # FileUtils.umap_plot(logger, matrix, f"UMAP plot of hip replacement patients {name}")
 
             Y = self.models.pca_2d(matrix)
-            kmeans = self.models.k_means_cluster(Y, f'MCE {self.required_params["code_type"]} replacement k-meanspatients {name} test.', f'mce_{self.required_params["code_type"]}_kmeans_{name}')
+            kmeans = self.models.k_means_cluster(Y, 16, f'MCE {self.required_params["code_type"]} replacement k-meanspatients {name} test.', f'mce_{self.required_params["code_type"]}_kmeans_{name}')
 
             self.log("Calculating distances from k-means clusters")
             all_distances = kmeans.transform(Y) 
@@ -61,15 +66,19 @@ class TestCase(ProposalTest):
 
                 outlier_count = 0
                 cluster_outlier_file = self.logger.output_path / f"{name}_kmeans_outliers.txt"
-                patient_ids = list(patient_dict.keys())
                 for idx, x in enumerate(cluster_distances):
                     if x >= q3 + (1.5 * iqr):
                         outlier_count = outlier_count + 1
                         with open(cluster_outlier_file, 'a') as f:
+                            pass
                             f.write(f'{patient_ids[cluster_indices[i][idx]]}: {x}, cluster: {i}\r\n') 
 
             self.log(f"{outlier_count} outliers detected")
             self.models.calculate_BGMM(Y, 3, f'{name} patient BGMM', f'mce_{name}_patient_BGMM')
+            # need to do some stuff
+            # -> get clusters from k-means
+            # -> for each cluster, calculate box plot for number of unique items, number of claims per patient
+            # -> also most common items, etc
 
             # self.log("Calculating unsupervised 1NN distance")
             # {i: Y[np.where(labels == i)] for i in range(kmeans.n_clusters)}
