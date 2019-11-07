@@ -33,7 +33,8 @@ class TestDetails():
 
 def run_combined_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
-        test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", fromlist=['TestCase'])
+        test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", 
+                                fromlist=['TestCase'])
         test_case = test_file.TestCase(logger, test_details.params)
         if test_details.params is None:
             test_details.params = test_case.required_params
@@ -41,7 +42,12 @@ def run_combined_test(test_name, test_details):
         logger.log(test_details.notes)
         logger.log(test_details.params)
         if isinstance(test_details.test_data, TestFormat):
-            data = file_utils.combine_10p_data(logger, test_details.test_data, test_case.INITIAL_COLS, test_case.FINAL_COLS, test_details.years, test_case.process_dataframe)
+            data = file_utils.combine_10p_data(logger, 
+                                                test_details.test_data, 
+                                                test_case.INITIAL_COLS, 
+                                                test_case.FINAL_COLS, 
+                                                test_details.years, 
+                                                test_case.process_dataframe)
         else:
             data = test_case.load_data(test_details.test_data)
 
@@ -51,7 +57,8 @@ def run_combined_test(test_name, test_details):
 
 def run_iterative_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
-        test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", fromlist=['TestCase'])
+        test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", 
+                                fromlist=['TestCase'])
         test_case = test_file.TestCase(logger, test_details.params)
         if test_details.params is None:
             test_details.params = test_case.required_params
@@ -59,7 +66,12 @@ def run_iterative_test(test_name, test_details):
         logger.log(test_details.notes)
         logger.log(test_details.params)
         for year in test_details.years:
-            data = file_utils.combine_10p_data(logger, test_details.test_data, test_case.INITIAL_COLS, test_case.FINAL_COLS, [year], test_case.process_dataframe)
+            data = file_utils.combine_10p_data(logger, 
+                                                test_details.test_data, 
+                                                test_case.INITIAL_COLS, 
+                                                test_case.FINAL_COLS,
+                                                [year],
+                                                test_case.process_dataframe)
 
             test_case.processed_data = data
             test_case.get_test_data()
@@ -100,14 +112,15 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     # variables
     test_details = TestDetails(
-        notes = "Descriptive stats re-write",
-        params = {},
-        proposal = 0,
+        notes = "Hip cluster descriptions",
+        params = {'code_type': 'hip', 'dimensions': 20, 'epochs': 100},
+        proposal = 1,
         test_data = mbs,
-        test_file_name = f'descriptive_stats',
-        test_format = TestFormat.IterateYearsWithinTest,
-        years = [2012, 2013, 2014]
+        test_file_name = f'model',
+        test_format = TestFormat.IterateYearsOutsideTest,
+        years = [2003]
     )
+    start_test(test_details)
     # test_file_name = 'cluster_providers_within_specialty'
     # params = {'specialty': "Dietitian", 'max_sentence_length': None}
     # params = None
@@ -118,8 +131,8 @@ if __name__ == "__main__":
     #     test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
     #     run_test(combine_years, test_details)
 
-    for (cols, data_type) in [(file_utils.PBS_HEADER, pbs)]:
-        for col in cols:
-            test_details.params = {"col": col, "years": test_details.years, "data_type": data_type}
-            test_details.test_data = data_type
-            start_test(test_details, col)
+    # for (cols, data_type) in [(file_utils.PBS_HEADER, pbs)]:
+    #     for col in cols:
+    #         test_details.params = {"col": col, "years": test_details.years, "data_type": data_type}
+    #         test_details.test_data = data_type
+    #         start_test(test_details, col)
