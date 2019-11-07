@@ -118,7 +118,7 @@ if __name__ == "__main__":
         test_data = mbs,
         test_file_name = f'model',
         test_format = TestFormat.IterateYearsOutsideTest,
-        years = [2003]
+        years = []
     )
     start_test(test_details)
     # test_file_name = 'cluster_providers_within_specialty'
