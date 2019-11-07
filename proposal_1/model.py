@@ -5,7 +5,7 @@ from gensim.models import KeyedVectors as w2v
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {'code_type': 'knee', 'dimensions': 20, 'epochs': 100} 
+    required_params = {'code_type': 'knee', 'year': 2003, 'dimensions': 20, 'epochs': 100} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
     processed_data: pd.DataFrame = None
@@ -23,8 +23,8 @@ class TestCase(ProposalTest):
 
     def run_test(self):
         super().run_test()
-        input_model = f'prop_1_{self.required_params["code_type"]}_2003_epoch_{self.required_params["epochs"]}_dim_{self.required_params["dimensions"]}_day.vec'
-        input_data = f'{self.required_params["code_type"]}_subset_2003.csv'
+        input_model = f'prop_1_{self.required_params["code_type"]}_{self.required_params["year"]}_epoch_{self.required_params["epochs"]}_dim_{self.required_params["dimensions"]}_day.vec'
+        input_data = f'{self.required_params["code_type"]}_subset_{self.required_params["year"]}.csv'
         model = w2v.load_word2vec_format(input_model, binary = False)
 
         self.log("Creating vectors for patients")
@@ -91,7 +91,7 @@ class TestCase(ProposalTest):
             for cluster_no in cluster_names:
                 cluster_patient_indices = cluster_indices[cluster_no]
                 cluster_patients = patient_ids[cluster_patient_indices]
-                df = self.test_data
+                df = input_data
                 cluster_items = {}
                 cluster_unique_items = {}
                 cluster_claims_per_patient = []

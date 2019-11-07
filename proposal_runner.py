@@ -113,7 +113,7 @@ if __name__ == "__main__":
     # variables
     test_details = TestDetails(
         notes = "Hip cluster descriptions",
-        params = {'code_type': 'hip', 'dimensions': 20, 'epochs': 100},
+        params = {'code_type': 'hip', 'year': 2003, 'dimensions': 20, 'epochs': 100},
         proposal = 1,
         test_data = mbs,
         test_file_name = f'model',
