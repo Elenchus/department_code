@@ -59,6 +59,25 @@ class GraphUtils():
 
         self.save_plt_fig(fig, filename)
 
+    def create_grouped_barchart(self, data, bar_labels, group_labels, title, filename, axis_labels):
+        bar_width = 0.25
+        r = []
+        r.append(np.arange(len(data[0])))
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        for i in range(0, len(data)):
+            ax.bar(r[-1], data[i], width=bar_width, label=bar_labels[i])
+            r.append([x + bar_width for x in r[-1]])
+        ax.set_xticks([r + bar_width for r in range(len(group_labels))])
+        ax.set_xticklabels(group_labels, rotation=45, ha="right")
+        if axis_labels is not None:
+            ax.set_xlabel(axis_labels[0])
+            ax.set_ylabel(axis_labels[1])
+
+        lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+        ttl = fig.suptitle(title)
+        self.save_plt_fig(fig, filename, (lgd, ttl, ))
+
     def create_scatter_plot(self, data, labels, title, filename, legend_names=None):
         '''creates and saves a scatter plot'''
         fig = plt.figure()

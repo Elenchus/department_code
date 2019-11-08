@@ -5,7 +5,7 @@ from gensim.models import KeyedVectors as w2v
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {'code_type': 'knee', 'year': 2003, 'dimensions': 20, 'epochs': 100} 
+    required_params = {'code_type': 'hip', 'year': 2003, 'dimensions': 20, 'epochs': 100, "codes_of_interest": ['49309','49312', '49315',' 49318','49319', '49321', '49324', '49327', '49330', '49333', '49336', '49339', '49342', '49345','49346', '49360', '49363', '49366']} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
     processed_data: pd.DataFrame = None
@@ -80,14 +80,10 @@ class TestCase(ProposalTest):
             # self.log(f"{outlier_count} outliers detected")
             # self.models.calculate_BGMM(Y, 3, f'{name} patient BGMM', f'mce_{name}_patient_BGMM')
             
-            # need to do some stuff
-            # -> get clusters from k-means
-            # -> for each cluster, calculate box plot for number of unique items, number of claims per patient
-            # -> also most common items, etc
-
             cluster_claim_counts = []
             cluster_item_counts = []
-            cluster_names = cluster_indices.keys()
+            cluster_items_for_interst = {}
+            cluster_names = sorted(list(cluster_indices.keys()))
             for cluster_no in cluster_names:
                 cluster_patient_indices = cluster_indices[cluster_no]
                 cluster_patients = []
@@ -111,6 +107,7 @@ class TestCase(ProposalTest):
                     for unique in uniques:
                         cluster_unique_items[unique] = cluster_unique_items.get(unique, 0) + 1
 
+                cluster_items_for_interst[cluster_no] = cluster_items
                 cluster_claim_counts.append(cluster_claims_per_patient)
                 cluster_item_counts.append(cluster_number_unique_items)
                 cluster_items_items = list(cluster_items.items())
@@ -130,12 +127,29 @@ class TestCase(ProposalTest):
             self.graphs.create_boxplot_group(cluster_claim_counts, 
                                                 cluster_names, 
                                                 f"Number of claims per patient per {name} cluster",
-                                                f"cluster_{name}_claim_counts")
+                                                f"cluster_{name}_claim_counts",
+                                                ("Cluster", "Count"))
             self.graphs.create_boxplot_group(cluster_item_counts,
                                                 cluster_names,
                                                 f"Number of unique items per patient per {name} cluster",
-                                                f"cluster_{name}_item_counts")
+                                                f"cluster_{name}_item_counts",
+                                                ("Cluster", "Count"))
 
+            interest_items_per_cluster = []
+            for cluster in cluster_names:
+                cluster_list = []
+                for item in self.required_params["codes_of_interest"]:
+                    cluster_list.append(cluster_items_for_interst[cluster].get(int(item), 0))
+
+                interest_items_per_cluster.append(cluster_list)
+
+            self.graphs.create_grouped_barchart(interest_items_per_cluster, 
+                                                cluster_names,
+                                                self.required_params["codes_of_interest"],
+                                                f"Procedure types per cluster for vector {name}",
+                                                f"{name}_procedure_types",
+                                                ("Procedure code", "Count"))
+            
             # self.log("Calculating unsupervised 1NN distance")
             # {i: Y[np.where(labels == i)] for i in range(kmeans.n_clusters)}
             # nn_calc = kNN(n_neighbors=1)
