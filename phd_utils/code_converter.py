@@ -29,12 +29,17 @@ class CodeConverter:
         self.valid_rsp_str_values = self.rsp_table['Label'].unique()
 
     def convert_mbs_code_to_description(self, code):
-        item = self.mbs_item_dict[str(code)]
+        item = self.mbs_item_dict.get(str(code), None)
+        if item is None:
+            return "Item code not in 2019 dictionary"
 
         return f"{item['Description']}"
 
     def convert_mbs_code_to_group_labels(self, code):
-        item = self.mbs_item_dict[str(code)]
+        item = self.mbs_item_dict.get(str(code), None)
+        if item is None:
+            return "Item code not in 2019 dictionary"
+
         cat = item['Category']
         group = item['Group']
         sub = item['SubGroup']
@@ -50,7 +55,9 @@ class CodeConverter:
 
     def convert_mbs_code_to_group_numbers(self, code):
         '''convert mbs item code number to category definition'''
-        item = self.mbs_item_dict[str(code)]
+        item = self.mbs_item_dict.get(str(code), None)
+        if item is None:
+            return "Item code not in 2019 dictionary"
 
         return f"{item['Category']} - {item['Group']} - {item['SubGroup']}"
 

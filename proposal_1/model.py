@@ -42,7 +42,7 @@ class TestCase(ProposalTest):
                     patient_dict[pid]['Average'] = ((patient_dict[pid]['Average'] * patient_dict[pid]['n']) + model[item]) / (patient_dict[pid]['n'] + 1)
                     patient_dict[pid]['n'] += 1
 
-        patient_ids = patient_dict.keys()
+        patient_ids = list(patient_dict.keys())
         sums = [patient_dict[x]['Sum'] for x in patient_ids]
         avgs = [patient_dict[x]['Average'] for x in patient_ids]
 
@@ -90,16 +90,19 @@ class TestCase(ProposalTest):
             cluster_names = cluster_indices.keys()
             for cluster_no in cluster_names:
                 cluster_patient_indices = cluster_indices[cluster_no]
-                cluster_patients = patient_ids[cluster_patient_indices]
-                df = input_data
+                cluster_patients = []
+                for i in cluster_patient_indices:
+                    cluster_patients.append(patient_ids[i])
+
+                df = pd.read_csv(input_data)
                 cluster_items = {}
                 cluster_unique_items = {}
                 cluster_claims_per_patient = []
                 cluster_number_unique_items = []
                 for pin in cluster_patients:
-                    patient = df[df["PIN" == pin]]
+                    patient = df.loc[df["PIN"] == int(pin)]
                     items = patient["ITEM"].values.tolist()
-                    uniques = patient["ITEM"].unique().values.tolist()
+                    uniques = patient["ITEM"].unique().tolist()
                     cluster_claims_per_patient.append(len(items))
                     cluster_number_unique_items.append(len(uniques))
                     for item in items:
@@ -110,27 +113,28 @@ class TestCase(ProposalTest):
 
                 cluster_claim_counts.append(cluster_claims_per_patient)
                 cluster_item_counts.append(cluster_number_unique_items)
-                cluster_items_items = cluster_items.items()
-                cluster_unique_items_items = cluster_unique_items.items()
-                cluster_unique_items_items.sort(key=lambda  x: x[1])
-                cluster_items_items.sort(key=lambda  x: x[1])
+                cluster_items_items = list(cluster_items.items())
+                cluster_unique_items_items = list(cluster_unique_items.items())
+                cluster_unique_items_items.sort(key=lambda  x: x[1], reverse=True)
+                cluster_items_items.sort(key=lambda  x: x[1], reverse=True)
                 self.log(f"Most common items in cluster {cluster_no} for patient vector {name}")
                 for i in range(10):
+                    self.log(self.code_converter.convert_mbs_code_to_group_labels(cluster_items_items[i][0]))
                     self.log(cluster_items_items[i])
-                    self.log(self.code_converter.convert_mbs_code_to_group_labels(cluster_items_items[i]))
 
                 self.log(f"Most common unique items in cluster {cluster_no} for patient vector {name}")
                 for i in range(10):
+                    self.log(self.code_converter.convert_mbs_code_to_group_labels(cluster_unique_items_items[i][0]))
                     self.log(cluster_unique_items_items[i])
-                    self.log(self.code_converter.convert_mbs_code_to_group_labels(cluster_unique_items_items[i]))
 
             self.graphs.create_boxplot_group(cluster_claim_counts, 
                                                 cluster_names, 
-                                                "Number of claims per patient per cluster", "cluster_claim_counts.png")
+                                                f"Number of claims per patient per {name} cluster",
+                                                f"cluster_{name}_claim_counts")
             self.graphs.create_boxplot_group(cluster_item_counts,
                                                 cluster_names,
-                                                "Number of unique items per patient per cluster",
-                                                "cluster_item_counts.png")
+                                                f"Number of unique items per patient per {name} cluster",
+                                                f"cluster_{name}_item_counts")
 
             # self.log("Calculating unsupervised 1NN distance")
             # {i: Y[np.where(labels == i)] for i in range(kmeans.n_clusters)}

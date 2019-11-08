@@ -41,7 +41,7 @@ def run_combined_test(test_name, test_details):
     
         logger.log(test_details.notes)
         logger.log(test_details.params)
-        if isinstance(test_details.test_data, TestFormat):
+        if isinstance(test_details.test_data, file_utils.DataSource):
             data = file_utils.combine_10p_data(logger, 
                                                 test_details.test_data, 
                                                 test_case.INITIAL_COLS, 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
         test_data = mbs,
         test_file_name = f'model',
         test_format = TestFormat.IterateYearsOutsideTest,
-        years = []
+        years = [2003]
     )
     start_test(test_details)
     # test_file_name = 'cluster_providers_within_specialty'
