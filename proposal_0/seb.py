@@ -18,35 +18,13 @@ if __name__ == '__main__':
 
   relevant_spr_rsp = [51, 52, 53, 54, 102]
   print('Loading MBS')
-  dtype = {'PIN': 'int64',
-           'SPR': 'int64',
-           'SPR_RSP': 'int64',
-           'ITEM': 'int64'}
-  # Reduce mbs table
-  chunksize = 1000000
-  i = 0
   df = pd.read_parquet('/home/elm/data/MBS_Patient_10/MBS_SAMPLE_10PCT_2014.parquet', columns=["PIN", "SPR", "SPR_RSP", "ITEM"])
   df = df[df['SPR_RSP'].isin(relevant_spr_rsp)]
-    # save
-    # if i == 0:
-    #   df.to_csv('mbs_2014_reduced.csv', index=False)
-    # else:
-    #   df.to_csv('mbs_2014_reduced.csv', mode='a', header=False, index=False)
-    # i += 1    
-  
-  # Load mbs table  
-#   df = pd.read_csv('mbs_2014_reduced.csv', usecols=dtype.keys(), dtype=dtype)
-#   df = df.drop_duplicates()
   
   print('Filter items')
   df = df.groupby('ITEM').filter(lambda x : len(x)>100)
   print('Filter patients')
   df = df.groupby('PIN').filter(lambda x : len(x)>2)
-  
-  df.to_pickle('filtered.pkl')
-  
-  # word2vec
-  df = pd.read_pickle('filtered.pkl')
   
   df['ITEM'] = df['ITEM'].astype(str)
   color_df = df.groupby('ITEM')['SPR_RSP'].agg(pd.Series.mode)
@@ -83,8 +61,3 @@ if __name__ == '__main__':
   legend_names = ["Anaesthetics", "Dermatology", "Obstetrics and Gynaecology", "Opthalmology", 'Dentist (Approved) (OMS)']
   legend = ax.legend(handles, legend_names, loc="upper left", title="Legend", bbox_to_anchor=(1, 0.5))
   fig.savefig("out.png")
-#   plt.show()
-    
-
-
-
