@@ -43,12 +43,12 @@ class Logger:
 
                 if self.copy_path is not None:
                     if not isinstance(self.copy_path, str):
-                        raise "Copy path must be a string directory"
+                        raise TypeError("Copy path must be a string directory")
 
                     path = Path(self.copy_path)
 
                     if not path.exists():
-                        raise f"Cannot find {self.copy_path}"
+                        raise OSError(f"Cannot find {self.copy_path}")
 
                     # self.log("Copying data folder")
                     current = datetime.now().strftime("%Y%m%dT%H%M%S")
