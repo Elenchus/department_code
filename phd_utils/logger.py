@@ -48,7 +48,10 @@ class Logger:
                     path = Path(self.copy_path)
 
                     if not path.exists():
-                        raise OSError(f"Cannot find {self.copy_path}")
+                        # raise OSError(f"Cannot find {self.copy_path}")
+                        print(f"Cannot find {self.copy_path}")
+
+                        return
 
                     # self.log("Copying data folder")
                     current = datetime.now().strftime("%Y%m%dT%H%M%S")
