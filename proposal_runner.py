@@ -112,18 +112,19 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     # variables
     test_details = TestDetails(
-        notes = "Hip cluster descriptions",
-        params = {'code_type': 'hip',
-                    'year': 2003,
-                    'dimensions': 13,
-                    'epochs': 100, 
-                    "codes_of_interest": ['49318']},
+        notes = "knee replacement extraction",
+        # params = {'code_type': 'knee',
+        #             'year': 2014,
+        #             'dimensions': 7,
+        #             'epochs': 100, 
+        #             "codes_of_interest": ['21402']},
         # params = None,
+        params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': ['21402']},
         proposal = 1,
         test_data = mbs,
-        test_file_name = f'model',
+        test_file_name = f'data_extraction',
         test_format = TestFormat.IterateYearsOutsideTest,
-        years = [2003]
+        years = [2014]
     )
     start_test(test_details)
     # test_file_name = 'cluster_providers_within_specialty'
