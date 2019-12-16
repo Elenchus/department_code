@@ -1,5 +1,4 @@
 '''Run tests from proposals'''
-import ray
 import pandas as pd
 from enum import Enum, auto
 from functools import partial

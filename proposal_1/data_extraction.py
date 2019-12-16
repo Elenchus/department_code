@@ -1,13 +1,9 @@
 import itertools
-import dask.dataframe as pd
-import ray
+import modin.pandas as pd
 from datetime import datetime as dt
 from datetime import timedelta
 from phd_utils.base_proposal_test import ProposalTest
 from tqdm import tqdm
-
-ray.shutdown()
-ray.init()
 
 class TestCase(ProposalTest):
     # hip_replacement_codes_of_interest = ['49309','49312', '49315',' 49318','49319', '49321', '49324', '49327', '49330', '49333', '49336', '49339', '49342', '49345','49346', '49360', '49363', '49366']
@@ -23,10 +19,7 @@ class TestCase(ProposalTest):
         with open(file, 'a') as f:
             data.to_csv(f, header=f.tell()==0)
 
-    @staticmethod
-    @ray.remote
-    def extract_relevant_claims(claims, code_list):
-        # claims = pd.DataFrame(list(group), columns=header)
+    def extract_relevant_claims(self, claims, code_list):
         dates_of_interest = claims.loc[claims['ITEM'].isin(code_list), 'DOS'].values.tolist()
         if len(dates_of_interest) == 0:
             return None
@@ -47,8 +40,7 @@ class TestCase(ProposalTest):
 
     def get_test_data(self):
         super().get_test_data()
-        data = pd.from_pandas(self.processed_data, npartitions = 6)
-        patients = data.groupby("PIN")
+        patients = self.processed_data.groupby("PIN")
         self.test_data = patients
 
     def run_test(self):
@@ -56,13 +48,7 @@ class TestCase(ProposalTest):
         output_file = self.logger.output_path / name
 
         self.log("Extracting claims")
-        relevant_claims = []
-        for pin in tqdm(self.test_data["PIN"].unique()):
-            group = self.test_data.get_group(pin)
-            relevant_claims.append(self.extract_relevant_claims.remote(group, self.required_params['codes_of_interest']))
-
-        self.log("Writing output file")
-        for claims in tqdm(relevant_claims):
-            claim = ray.get(claims)
-            if claim is not None:
-                self.append_to_file(output_file, claim)
+        for name, group in tqdm(self.test_data):
+            claims = self.extract_relevant_claims(group, self.required_params['codes_of_interest'])
+            if claims is not None:
+                self.append_to_file(output_file, claims)
