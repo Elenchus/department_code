@@ -1,5 +1,6 @@
 import itertools
-import modin.pandas as pd
+import pandas as pd
+import ray
 from datetime import datetime as dt
 from datetime import timedelta
 from phd_utils.base_proposal_test import ProposalTest
@@ -19,7 +20,9 @@ class TestCase(ProposalTest):
         with open(file, 'a') as f:
             data.to_csv(f, header=f.tell()==0)
 
-    def extract_relevant_claims(self, claims, code_list):
+    @staticmethod
+    @ray.remote
+    def extract_relevant_claims(claims, code_list):
         dates_of_interest = claims.loc[claims['ITEM'].isin(code_list), 'DOS'].values.tolist()
         if len(dates_of_interest) == 0:
             return None
@@ -31,7 +34,9 @@ class TestCase(ProposalTest):
         for i in range(1, len(mask_list)):
             mask = mask | mask_list[i]
 
-        return claims.loc[mask]
+        x = claims.loc[mask]
+
+        return x
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
@@ -48,7 +53,15 @@ class TestCase(ProposalTest):
         output_file = self.logger.output_path / name
 
         self.log("Extracting claims")
+        ray.init()
+        claims = []
         for name, group in tqdm(self.test_data):
-            claims = self.extract_relevant_claims(group, self.required_params['codes_of_interest'])
-            if claims is not None:
+            claims.append(self.extract_relevant_claims.remote(group, self.required_params['codes_of_interest']))
+
+        self.log("Writing to file")
+        for claim in tqdm(claims):
+            claim = ray.get(claim)
+            if claim is not None:
                 self.append_to_file(output_file, claims)
+        # claims = self.test_data.apply(self.extract_relevant_claims, self.required_params['codes_of_interest'])
+        # self.append_to_file(output_file, claims)

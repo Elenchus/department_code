@@ -119,12 +119,12 @@ if __name__ == "__main__":
         #             'epochs': 100, 
         #             "codes_of_interest": ['21402']},
         # params = None,
-        params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': ['21402']},
+        params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': [21402]},
         proposal = 1,
         test_data = mbs,
         test_file_name = f'data_extraction',
         test_format = TestFormat.IterateYearsOutsideTest,
-        years = [2014]
+        years = [2003]
     )
     start_test(test_details)
     # test_file_name = 'cluster_providers_within_specialty'
