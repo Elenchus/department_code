@@ -53,7 +53,7 @@ class TestCase(ProposalTest):
         output_file = self.logger.output_path / name
 
         self.log("Extracting claims")
-        ray.init()
+        ray.init(object_store_memory=1000000000)
         claims = []
         for name, group in tqdm(self.test_data):
             claims.append(self.extract_relevant_claims.remote(group, self.required_params['codes_of_interest']))
@@ -63,5 +63,7 @@ class TestCase(ProposalTest):
             claim = ray.get(claim)
             if claim is not None:
                 self.append_to_file(output_file, claims)
+
+        ray.shutdown()
         # claims = self.test_data.apply(self.extract_relevant_claims, self.required_params['codes_of_interest'])
         # self.append_to_file(output_file, claims)
