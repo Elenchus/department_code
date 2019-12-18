@@ -53,14 +53,14 @@ class TestCase(ProposalTest):
         output_file = self.logger.output_path / name
 
         self.log("Extracting claims")
-        ray.init(object_store_memory=1000000000)
-        claims = []
-        for name, group in tqdm(self.test_data):
-            claims.append(self.extract_relevant_claims.remote(group, self.required_params['codes_of_interest']))
+        ray.init(object_store_memory=1000000000, redis_max_memory=1000000000, redis_max_clients=2)
+        interest_codes = ray.put(self.required_params['codes_of_interest'])
+        claims = [self.extract_relevant_claims.remote(group, interest_codes) for _, group in self.test_data]
 
         self.log("Writing to file")
-        for claim in tqdm(claims):
-            claim = ray.get(claim)
+        while len(claims):
+            done_id, claims = ray.wait(claims)
+            claim = ray.get(done_id[0])
             if claim is not None:
                 self.append_to_file(output_file, claims)
 
