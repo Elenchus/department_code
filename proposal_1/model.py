@@ -1,11 +1,12 @@
 import math
 import numpy as np
 import pandas as pd
+from enum import Enum
 from gensim.models import KeyedVectors as w2v
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {"input_model": 'knee_21402_dim_10_epoch_60_day.vec', 'input_data': 'knee_21402_subset.csv', "codes_of_interest": ['21402'], "code_type": 'knee'} 
+    required_params = {"input_model": 'knee_21402_fasttext_cbow_2003_dim_10_epoch_60.vec', 'input_data': 'knee_21402_subset.csv', "codes_of_interest": ['21402'], "project_name": "fasttext cbow knee replacement from anaesthetic 21402"} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
     processed_data: pd.DataFrame = None
@@ -55,11 +56,12 @@ class TestCase(ProposalTest):
             # FileUtils.umap_plot(logger, matrix, f"UMAP plot of hip replacement patients {name}")
 
             Y = self.models.pca_2d(matrix)
-            kmeans = self.models.k_means_cluster(Y, 16, f'MCE {self.required_params["code_type"]} replacement k-meanspatients {name} test.', f'mce_{self.required_params["code_type"]}_kmeans_{name}')
+            kmeans = self.models.k_means_cluster(Y, 16, f"{self.required_params['project_name']} {name} test.", f'{self.required_params["project_name"]}_kmeans_{name}')
 
             self.log("Calculating distances from k-means clusters")
             all_distances = kmeans.transform(Y) 
             assert len(all_distances) == len(kmeans.labels_)
+            num_clusters = kmeans.n_clusters
             cluster_indices = {i: np.where(kmeans.labels_ == i)[0] for i in range(kmeans.n_clusters)}
             # for i in cluster_indices.keys():
             #     cluster_distances = pd.Series([all_distances[x][i] for x in cluster_indices[i]])
@@ -78,7 +80,7 @@ class TestCase(ProposalTest):
             #                 f.write(f'{patient_ids[cluster_indices[i][idx]]}: {x}, cluster: {i}\r\n') 
 
             # self.log(f"{outlier_count} outliers detected")
-            # self.models.calculate_BGMM(Y, 3, f'{name} patient BGMM', f'mce_{name}_patient_BGMM')
+            self.models.calculate_BGMM(Y, num_clusters, f'{self.required_params["project_name"]} {name} patient BGMM', f'{name}_patient_BGMM')
             
             cluster_claim_counts = []
             cluster_item_counts = []
