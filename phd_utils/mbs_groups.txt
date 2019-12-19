@@ -1,0 +1,287 @@
+CATEGORY 1: PROFESSIONAL ATTENDANCES 
+Group A1. General Practitioner Attendances To Which No Other Item Applies 
+Group A2. Other Non-Referred Attendances To Which No Other Item Applies 
+Subgroup 1. Other Medical Practitioner Attendances 
+Group A3. Specialist Attendances To Which No Other Item Applies 
+Group A4. Consultant Physician Attendances To Which No Other Item Applies 
+Group A5. Prolonged Attendances To Which No Other Item Applies 
+Group A6. Group Therapy 
+Group A7. Acupuncture and Non-Specialist Practitioner Items 
+Subgroup 1. Acupuncture 
+Subgroup 2. Non-Specialist Practitioner attendances to which no other item applies 
+Subgroup 3. Non-Specialist Practitioner prolonged attendances to which no other item applies 
+Subgroup 4. Non-Specialist Practitioner group therapy 
+Subgroup 5. Non-Specialist Practitioner health assessments 
+Subgroup 6. Non-Specialist Practitioner management plans, team care arrangements and multidisciplinary care plans and case conferences 
+Subgroup 7. Non-Specialist Practitioner domiciliary and residential medication management review 
+Subgroup 8. Non-Specialist Practitioner attendances associated with Practice Incentive Program payments 
+Subgroup 9. Non-Specialist Practitioner mental health care 
+Subgroup 10. Non-Specialist Practitioner after-hours attendances to which no other item applies 
+Subgroup 11. Non-Specialist Practitioner pregnancy support counselling 
+Subgroup 12. Non-Specialist Practitioner video conferencing consultation 
+Group A8. Consultant Psychiatrist Attendances To Which No Other Item Applies 
+Group A9. Contact Lenses - Attendances 
+Group A10. Optometrical Services 
+Subgroup 1. General 
+Subgroup 2. Telehealth Attendance 
+Group A11. Urgent Attendance After Hours 
+Subgroup 1. Urgent Attendance - After Hours 
+Subgroup 2. Urgent Attendance Unsociable After Hours 
+Group A12. Consultant Occupational Physician Attendances To Which No Other Item Applies 
+Group A13. Public Health Physician Attendances To Which No Other Item Applies 
+Group A14. Health Assessments 
+Group A15. GP Management Plans, Team Care Arrangements, Multidisciplinary Care Plans 
+Subgroup 1. GP Management Plans, Team Care Arrangements And Multidisciplinary Care Plans 
+Subgroup 2. Case Conferences 
+Group A17. Domiciliary And Residential Management Reviews 
+Group A18. General Practitioner Attendance Associated With Pip Incentive Payments 
+Subgroup 1. Taking Of A Cervical Smear From An Unscreened Or Significantly Underscreened Person 
+Subgroup 2. Completion Of A Cycle Of Care For Patients With Established Diabetes Mellitus 
+Subgroup 3. Completion Of The Asthma Cycle Of Care 
+Group A19. Other Non-Referred Attendances Associated With Pip Incentive Payments To Which No Other Item Applies 
+Subgroup 1. Taking Of A Cervical Smear From An Unscreened Or Significantly Underscreened Person 
+Subgroup 2. Completion Of An Annual Cycle Of Care For Patients With Established Diabetes Mellitus 
+Subgroup 3. Completion Of The Asthma Cycle Of Care 
+Group A20. GP Mental Health Treatment 
+Subgroup 1. GP Mental Health Treatment Plans 
+Subgroup 2. Focussed Psychological Strategies 
+Group A21. Medical Practitioner (Emergency Physician) Attendances To Which No Other Item Applies 
+Subgroup 1. Consultations 
+Subgroup 2. Prolonged Professional Attendances To Which No Other Group Applies 
+Group A22. General Practitioner After-Hours Attendances To Which No Other Item Applies 
+Group A23. Other Non-Referred After-Hours Attendances To Which No Other Item Applies 
+Group A24. Pain And Palliative Medicine 
+Subgroup 1. Pain Medicine Attendances 
+Subgroup 2. Pain Medicine Case Conferences 
+Subgroup 3. Palliative Medicine Attendances 
+Subgroup 4. Palliative Medicine Case Conferences 
+Group A26. Neurosurgery Attendances To Which No Other Item Applies 
+Group A27. Pregnancy Support Counselling 
+Group A28. Geriatric Medicine 
+Group A29. Early Intervention Services For Children With Autism, Pervasive Developmental Disorder Or Disability 
+Group A30. Medical Practitioner (Including A General Practitioner, Specialist Or Consultant Physician) Telehealth Attendances 
+Subgroup 1. Telehealth Attendance At Consulting Rooms, Home Visits Or Other Institutions 
+Subgroup 2. Telehealth Attendance At A Residential Aged Care Facility 
+Subgroup 3. Mental Health and Well-being Video Conferencing Consultation 
+Group A31. Addiction Medicine 
+Subgroup 1. Addiction Medicine Attendances 
+Subgroup 2. Group Therapy 
+Subgroup 3. Addiction Medicine Case Conferences 
+Group A32. Sexual Health Medicine 
+Subgroup 1. Sexual Health Medicine Attendances 
+Subgroup 2. Home Visits 
+Subgroup 3. Sexual Health Medicine Case Conferences
+Group A33. Transcatheter Aortic Valve Implantation Case Conference 
+Group A34. Health Care Homes 
+Group A35. Services For Patients in Residential Aged Care Facilities 
+Subgroup 1. Flag Fall Amount For Residential Aged Care Facilities 
+Subgroup 2. General Practitioner Non-Referred Attendance At A Residential Aged Care Facility 
+Subgroup 3. Other Medical Practitioner Non-Referred Attendance At A Residential Aged Care Facility 
+Subgroup 4. Non-Specialist Practitioner Non-Referred Attendance At A Residential Aged Care Facility 
+CATEGORY 2: DIAGNOSTIC PROCEDURES AND INVESTIGATIONS 
+Group D1. Miscellaneous Diagnostic Procedures And Investigations 
+Subgroup 1. Neurology 
+Subgroup 2. Ophthalmology 
+Subgroup 3. Otolaryngology 
+Subgroup 4. Respiratory 
+Subgroup 5. Vascular 
+Subgroup 6. Cardiovascular 
+Subgroup 7. Gastroenterology & Colorectal 
+Subgroup 8. Genito/Urinary Physiological Investigations 
+Subgroup 9. Allergy Testing 
+Subgroup 10. Other Diagnostic Procedures And Investigations 
+Group D2. Nuclear Medicine (Non-Imaging) 
+CATEGORY 3: THERAPEUTIC PROCEDURES 
+Group T1. Miscellaneous Therapeutic Procedures 
+Subgroup 1. Hyperbaric Oxygen Therapy 
+Subgroup 2. Dialysis 
+Subgroup 3. Assisted Reproductive Services 
+Subgroup 4. Paediatric & Neonatal 
+Subgroup 5. Cardiovascular 
+Subgroup 6. Gastroenterology
+Subgroup 8. Haematology 
+Subgroup 9. Procedures Associated With Intensive Care And Cardiopulmonary Support 
+Subgroup 10. Management And Procedures Undertaken In An Intensive Care Unit 
+Subgroup 11. Chemotherapeutic Procedures 
+Subgroup 12. Dermatology 
+Subgroup 13. Other Therapeutic Procedures 
+Group T2. Radiation Oncology 
+Subgroup 1. Superficial 
+Subgroup 2. Orthovoltage 
+Subgroup 3. Megavoltage 
+Subgroup 4. Brachytherapy 
+Subgroup 5. Computerised Planning 
+Subgroup 6. Stereotactic Radiosurgery 
+Subgroup 7. Radiation Oncology Treatment Verification 
+Subgroup 8. Brachytherapy Planning And Verification 
+Subgroup 10. Targetted Intraoperative Radiotherapy 
+Group T3. Therapeutic Nuclear Medicine 
+Group T4. Obstetrics 
+Group T6. Anaesthetics 
+Subgroup 1. Anaesthesia Consultations 
+Group T7. Regional Or Field Nerve Blocks 
+Group T8. Surgical Operations 
+Subgroup 1. General 
+Subgroup 2. Colorectal 
+Subgroup 3. Vascular 
+Subgroup 4. Gynaecological 
+Subgroup 5. Urological 
+Subgroup 6. Cardio-Thoracic 
+Subgroup 7. Neurosurgical 
+Subgroup 8. Ear, Nose And Throat 
+Subgroup 9. Ophthalmology 
+Subgroup 10. Operations For Osteomyelitis
+Subgroup 11. Paediatric 
+Subgroup 12. Amputations 
+Subgroup 13. Plastic And Reconstructive Surgery 
+Subgroup 14. Hand Surgery 
+Subgroup 15. Orthopaedic 
+Subgroup 16. Radiofrequency And Microwave Tissue Ablation 
+Subgroup 17. Spinal Surgery 
+Group T9. Assistance At Operations
+Group T10. Relative Value Guide For Anaesthesia - Medicare Benefits Are Only Payable For Anaesthesia Performed In Association With An Eligible Service 
+Subgroup 1. Head 
+Subgroup 2. Neck 
+Subgroup 3. Thorax
+Subgroup 4. Intrathoracic 
+Subgroup 5. Spine And Spinal Cord 
+Subgroup 6. Upper Abdomen 
+Subgroup 7. Lower Abdomen 
+Subgroup 8. Perineum 
+Subgroup 9. Pelvis (Except Hip) 
+Subgroup 10. Upper Leg (Except Knee) 
+Subgroup 11. Knee And Popliteal Area 
+Subgroup 12. Lower Leg (Below Knee) 
+Subgroup 13. Shoulder And Axilla 
+Subgroup 14. Upper Arm And Elbow 
+Subgroup 15. Forearm Wrist And Hand 
+Subgroup 16. Anaesthesia For Burns 
+Subgroup 17. Anaesthesia For Radiological Or Other Diagnostic Or Therapeutic Procedures 
+Subgroup 18. Miscellaneous 
+Subgroup 19. Therapeutic And Diagnostic Services 
+Subgroup 20. Administration Of Anaesthesia In Connection With A Dental Service 
+Subgroup 21. Anaesthesia/Perfusion Time Units 
+Subgroup 22. Anaesthesia/Perfusion Modifying Units - Physical Status
+Subgroup 23. Anaesthesia/Perfusion Modifying Units - Other 
+Subgroup 24. Anaesthesia After Hours Emergency Modifier 
+Subgroup 25. Perfusion After Hours Emergency Modifier 
+Subgroup 26. Assistance At Anaesthesia 
+Group T11. Botulinum Toxin Injections 
+CATEGORY 4: ORAL AND MAXILLOFACIAL SERVICES 
+Group O1. Consultations 
+Group O2. Assistance At Operation 
+Group O3. General Surgery 
+Group O4. Plastic & Reconstructive 
+Group O5. Preprosthetic 
+Group O6. Neurosurgical 
+Group O7. Ear, Nose & Throat 
+Group O8. Temporomandibular Joint 
+Group O9. Treatment Of Fractures 
+Group O11. Regional Or Field Nerve Blocks 
+CATEGORY 5: DIAGNOSTIC IMAGING SERVICES 
+Group I1. Ultrasound 
+Subgroup 1. General 
+Subgroup 2. Cardiac 
+Subgroup 3. Vascular 
+Subgroup 4. Urological 
+Subgroup 5. Obstetric And Gynaecological 
+Subgroup 6. Musculoskeletal 
+Group I2. Computed Tomography 
+Subgroup 1. Head 
+Subgroup 2. Neck 
+Subgroup 3. Spine 
+Subgroup 4. Chest and upper abdomen 
+Subgroup 5. Upper abdomen only 
+Subgroup 6. Upper abdomen and pelvis 
+Subgroup 7. Extremities 
+Subgroup 8. Chest, abdomen, pelvis and neck 
+Subgroup 9. Brain, chest and upper abdomen 
+Subgroup 10. Pelvimetry 
+Subgroup 11. Interventional techniques 
+Subgroup 12. Spiral angiography 
+Subgroup 13. Cone beam computed tomography 
+Group I3. Diagnostic Radiology 
+Subgroup 1. Radiographic Examination Of Extremities 
+Subgroup 2. Radiographic Examination Of Shoulder Or Pelvis 
+Subgroup 3. Radiographic Examination Of Head 
+Subgroup 4. Radiographic Examination Of Spine 
+Subgroup 5. Bone Age Study And Skeletal Surveys 
+Subgroup 6. Radiographic Examination Of Thoracic Region 
+Subgroup 7. Radiographic Examination Of Urinary Tract
+Subgroup 8. Radiographic Examination Of Alimentary Tract And Biliary System 
+Subgroup 9. Radiographic Examination For Localisation Of Foreign Bodies 
+Subgroup 10. Radiographic Examination Of Breasts 
+Subgroup 12. Radiographic Examination With Opaque Or Contrast Media 
+Subgroup 13. Angiography 
+Subgroup 15. Fluoroscopic Examination 
+Subgroup 16. Preparation For Radiological Procedure 
+Subgroup 17. Interventional Techniques 
+Group I4. Nuclear Medicine Imaging 
+Subgroup 1. Nuclear medicine - non PET 
+Subgroup 2. PET 
+Group I5. Magnetic Resonance Imaging 
+Subgroup 1. Scan Of Head - For Specified Conditions
+Subgroup 2. Scan Of Head - For Specified Conditions
+Subgroup 3. Scan Of Head And Neck Vessels - For Specified Conditions 
+Subgroup 4. Scan Of Head And Cervical Spine - For Specified Conditions 
+Subgroup 5. Scan Of Head And Cervical Spine - For Specified Conditions 
+Subgroup 6. Scan Of Spine - One Region Or Two Contiguous Regions - For Specified Conditions
+Subgroup 7. Scan Of Spine - One Region Or Two Contiguous Regions - For Specified Conditions
+Subgroup 8. Scan Of Spine - Three Contiguous Regions Or Two Non-Contiguous Regions - For Specified Conditions 
+Subgroup 9. Scan Of Spine - Three Contiguous Regions Or Two Non-Contiguous Regions - For Specified Conditions 
+Subgroup 10. Scan Of Cervical Spine And Brachial Plexus - For Specified Conditions 
+Subgroup 11. Scan Of Musculoskeletal System - For Specified Conditions 
+Subgroup 12. Scan Of Musculoskeletal System - For Specified Conditions 
+Subgroup 13. Scan Of Musculoskeletal System - For Specified Conditions 
+Subgroup 14. Scan Of Cardiovascular System - For Specified Conditions 
+Subgroup 15. Magnetic Resonance Angiography - Scan Of Cardiovascular System - For Specified Conditions 
+Subgroup 16. Magnetic Resonance Angiography - For Specified Conditions - Person Under The Age Of 16 Years 
+Subgroup 17. Magnetic Resonance Imaging - For Specified Conditions - Person Under The Age Of 16 Years 
+Subgroup 18. Magnetic Resonance Imaging - For Specified Conditions - Person Under The Age Of 16 Years 
+Subgroup 19. Scan Of Body - For Specified Conditions 
+Subgroup 20. Scan Of Pelvis And Upper Abdomen - For Specified Conditions 
+Subgroup 21. Scan Of Body - For Specified Conditions 
+Subgroup 22. Modifying Items 
+Subgroup 32. Magnetic Resonance Imaging - Pip Breast Implant 
+Subgroup 33. Magnetic Resonance Imaging - For Specified Conditions - Person Under The Age Of 16yrs 
+Subgroup 34. Magnetic Resonance Imaging - For Specified Conditions 
+Group I6. Management Of Bulk-Billed Services 
+CATEGORY 6: PATHOLOGY SERVICES 
+Group P1. Haematology 
+Group P2. Chemical 
+Group P3. Microbiology 
+Group P4. Immunology 
+Group P5. Tissue Pathology 
+Group P6. Cytology 
+Group P7. Genetics 
+Group P8. Infertility And Pregnancy Tests 
+Group P9. Simple Basic Pathology Tests 
+Group P10. Patient Episode Initiation 
+Group P11. Specimen Referred 
+Group P12. Management Of Bulk-Billed Services 
+Group P13. Bulk-Billing Incentive 
+CATEGORY 7: CLEFT LIP AND CLEFT PALATE SERVICES 
+Group C1. Orthodontic Services 
+Group C2. Oral And Maxillofacial Services 
+Group C3. General And Prosthodontic Services 
+CATEGORY 8: MISCELLANEOUS SERVICES 
+Group M1. Management Of Bulk-Billed Services 
+Group M3. Allied Health Services
+Group M6. Psychological Therapy Services 
+Group M7. Focussed Psychological Strategies (Allied Mental Health) 
+Group M8. Pregnancy Support Counselling 
+Group M9. Allied Health Group Services 
+Group M10. Autism, Pervasive Developmental Disorder And Disability Services 
+Group M11. Allied Health Services For Indigenous Australians Who Have Had A Health Check 
+Group M12. Services Provided By A Practice Nurse Or Aboriginal And Torres Strait Islander Health Practitioner On Behalf Of A Medical Practitioner 
+Subgroup 1. Telehealth Support Service On Behalf Of A Medical Practitioner 
+Subgroup 2. Telehealth Support Service On Behalf Of A Medical Practitioner At A Residential Aged Care Facility 
+Subgroup 3. Services Provided By A Practice Nurse Or Aboriginal And Torres Strait Islander Health Practitioner On Behalf Of A Medical Practitioner 
+Group M13. Midwifery Services 
+Subgroup 1. MBS Items For Participating Midwives 
+Subgroup 2. Telehealth Attendances 
+Group M14. Nurse Practitioners 
+Subgroup 1. Nurse Practitioners 
+Subgroup 2. Telehealth Attendance 
+Subgroup 3. Telehealth Attendance At A Residential Aged Care Facility 
+Group M15. Diagnostic Audiology Services
