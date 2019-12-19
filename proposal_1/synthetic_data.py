@@ -1,12 +1,11 @@
 import numpy as np
 import pandas as pd
-import scipy.stats as ss
 
 output_file = "syntetic_proposal_1.csv"
 data = []
 num_patients = 1300
-claims_per_patient_mean = 40
-claims_per_patient_sd = 10
+claims_per_patient_mean = 90
+claims_per_patient_sd = 20
 claims_per_patient = [int(x) for x in np.random.normal(claims_per_patient_mean, claims_per_patient_sd, num_patients)]
 
 items_mean = 220
@@ -23,4 +22,8 @@ for patient in range(num_patients):
         i += 1
 
 data = pd.DataFrame(data, columns=["PIN", "ITEM", "DOS"])
+for i in range(int(num_patients * 0.1)):
+    row = data.index[data["PIN"] == i][0]
+    data["ITEM"][row] = 600
+
 data.to_csv(output_file)
