@@ -2,9 +2,9 @@ import itertools
 import pandas as pd
 from datetime import datetime as dt
 
-code_type = 'hip'
-input_file = f'{code_type}_subset.csv'
-output_file = f'{code_type}_replacement__only_mce_2003.txt'
+code_type = 'knee'
+input_file = f'knee_21402_subset.csv'
+output_file = f'{code_type}_21402_mce_2003.txt'
 
 data = pd.read_csv(input_file, usecols=['PIN', 'ITEM', 'DOS']).values.tolist()
 pid, item, dos = zip(*data)

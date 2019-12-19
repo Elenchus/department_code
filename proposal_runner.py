@@ -118,11 +118,11 @@ if __name__ == "__main__":
         #             'dimensions': 7,
         #             'epochs': 100, 
         #             "codes_of_interest": ['21402']},
-        # params = None,
-        params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': [21402]},
+        params = None,
+        # params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': [21402]},
         proposal = 1,
         test_data = mbs,
-        test_file_name = f'data_extraction',
+        test_file_name = f'model',
         test_format = TestFormat.IterateYearsOutsideTest,
         years = [2003]
     )

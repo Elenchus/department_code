@@ -5,7 +5,7 @@ from gensim.models import KeyedVectors as w2v
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {'code_type': 'hip', 'year': 2003, 'dimensions': 20, 'epochs': 100, "codes_of_interest": ['49309','49312', '49315',' 49318','49319', '49321', '49324', '49327', '49330', '49333', '49336', '49339', '49342', '49345','49346', '49360', '49363', '49366']} 
+    required_params = {"input_model": 'knee_21402_dim_10_epoch_60_day.vec', 'input_data': 'knee_21402_subset.csv', "codes_of_interest": ['21402'], "code_type": 'knee'} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
     processed_data: pd.DataFrame = None
@@ -23,13 +23,13 @@ class TestCase(ProposalTest):
 
     def run_test(self):
         super().run_test()
-        input_model = f'prop_1_{self.required_params["code_type"]}_{self.required_params["year"]}_epoch_{self.required_params["epochs"]}_dim_{self.required_params["dimensions"]}_day.vec'
-        input_data = f'{self.required_params["code_type"]}_subset_{self.required_params["year"]}.csv'
-        model = w2v.load_word2vec_format(input_model, binary = False)
+        # input_model = f'prop_1_{self.required_params["code_type"]}_{self.required_params["year"]}_epoch_{self.required_params["epochs"]}_dim_{self.required_params["dimensions"]}_day.vec'
+        # input_data = f'{self.required_params["code_type"]}_subset_{self.required_params["year"]}.csv'
+        model = w2v.load_word2vec_format(self.required_params['input_model'], binary = False)
 
         self.log("Creating vectors for patients")
         patient_dict = {}
-        with open(input_data, 'r') as f:
+        with open(self.required_params['input_data'], 'r') as f:
             f.readline()
             for line in f:
                 row = line.split(',')
@@ -90,7 +90,7 @@ class TestCase(ProposalTest):
                 for i in cluster_patient_indices:
                     cluster_patients.append(patient_ids[i])
 
-                df = pd.read_csv(input_data)
+                df = pd.read_csv(self.required_params['input_data'])
                 cluster_items = {}
                 cluster_unique_items = {}
                 cluster_claims_per_patient = []
