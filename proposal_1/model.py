@@ -6,7 +6,8 @@ from gensim.models import KeyedVectors as w2v
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {"input_model": 'knee_21402_fasttext_cbow_2003_dim_10_epoch_60.vec', 'input_data': 'knee_21402_subset.csv', "codes_of_interest": ['21402'], "project_name": "fasttext cbow knee replacement from anaesthetic 21402"} 
+    required_params = {"input_model": 'synthetic.vec', 'input_data': 'syntetic_proposal_1.csv', "codes_of_interest": ['220'], "project_name": "synthetic data test 1"} 
+    # required_params = {"input_model": 'knee_21402_fasttext_cbow_2003_dim_10_epoch_60.vec', 'input_data': 'knee_21402_subset.csv', "codes_of_interest": ['21402'], "project_name": "fasttext cbow knee replacement from anaesthetic 21402"} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
     processed_data: pd.DataFrame = None
