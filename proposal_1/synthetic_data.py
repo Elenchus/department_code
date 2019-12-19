@@ -23,7 +23,7 @@ for patient in range(num_patients):
 
 data = pd.DataFrame(data, columns=["PIN", "ITEM", "DOS"])
 for i in range(int(num_patients * 0.1)):
-    row = data.index[data["PIN"] == i][0]
+    row = data.index[data["PIN"] == i][0].value
     data["ITEM"][row] = 600
 
 data.to_csv(output_file)
