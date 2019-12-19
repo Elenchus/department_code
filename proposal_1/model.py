@@ -6,7 +6,7 @@ from gensim.models import KeyedVectors as w2v
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {"input_model": 'simple_synthetic.vec', 'input_data': 'simple_syntetic_proposal_1.csv', "codes_of_interest": ['220'], "project_name": "synthetic data test 2"} 
+    required_params = {"input_model": 'synthetic_proposal_1.vec', 'input_data': 'synthetic_proposal_1.csv', "codes_of_interest": ['220'], "project_name": "synthetic data test 2"} 
     # required_params = {"input_model": 'knee_21402_fasttext_cbow_2003_dim_10_epoch_60.vec', 'input_data': 'knee_21402_subset.csv', "codes_of_interest": ['21402'], "project_name": "fasttext cbow knee replacement from anaesthetic 21402"} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
@@ -81,7 +81,7 @@ class TestCase(ProposalTest):
             #                 f.write(f'{patient_ids[cluster_indices[i][idx]]}: {x}, cluster: {i}\r\n') 
 
             # self.log(f"{outlier_count} outliers detected")
-            self.models.calculate_BGMM(Y, num_clusters, f'{self.required_params["project_name"]} {name} patient BGMM', f'{name}_patient_BGMM')
+            # self.models.calculate_BGMM(Y, num_clusters, f'{self.required_params["project_name"]} {name} patient BGMM', f'{name}_patient_BGMM')
             
             cluster_claim_counts = []
             cluster_item_counts = []

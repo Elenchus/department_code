@@ -5,8 +5,9 @@ import pandas as pd
 code_type = 'knee'
 # input_file = f'knee_21402_subset.csv'
 # output_file = f'{code_type}_21402_w2v_2003.txt'
-input_file = "simple_syntetic_proposal_1.csv"
-output_file = 'simple_synthetic.vec'
+name = "synthetic_proposal_1"
+input_file = f"{name}.csv"
+output_file = f"{name}.vec"
 
 data = pd.read_csv(input_file, usecols=['PIN', 'ITEM', 'DOS'])
 groups = data.groupby("PIN")
