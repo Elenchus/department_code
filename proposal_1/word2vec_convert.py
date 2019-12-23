@@ -16,5 +16,5 @@ for name, group in groups:
     group = group.sort_values("DOS")
     word_list.append([str(x) for x in group["ITEM"].values.tolist()])
 
-model = Word2Vec(word_list, min_count = 20, size = 10, iter = 60, window=11)
+model = Word2Vec(word_list, min_count = 1, size = 10, iter = 60)
 model.wv.save_word2vec_format(output_file, binary = False)
