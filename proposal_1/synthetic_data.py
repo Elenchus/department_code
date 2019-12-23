@@ -27,6 +27,8 @@ for patient in range(num_patients):
     pin = patient
     dos = 1
 
+    data.append([pin, 1, dos])
+
     for claim in range(uncommon_data_iterations):
         item = items_group_1[i] if patient <= num_patients / 2 else items_group_2[i]
         data.append([pin, item, dos])

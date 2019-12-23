@@ -6,8 +6,8 @@ from gensim.models import KeyedVectors as w2v
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {"input_model": 'synthetic_proposal_1.vec', 'input_data': 'synthetic_proposal_1.csv', "codes_of_interest": ['220'], "project_name": "synthetic data test 2"} 
-    # required_params = {"input_model": 'knee_21402_fasttext_cbow_2003_dim_10_epoch_60.vec', 'input_data': 'knee_21402_subset.csv', "codes_of_interest": ['21402'], "project_name": "fasttext cbow knee replacement from anaesthetic 21402"} 
+    # required_params = {"input_model": 'synthetic_proposal_1.vec', 'input_data': 'synthetic_proposal_1.csv', "codes_of_interest": ['1'], "project_name": "synthetic data test 2", "cull_below_similarity": None} 
+    required_params = {"input_model": 'knee_21402_fasttext_cbow_2003_dim_10_epoch_60.vec', 'input_data': 'knee_21402_subset.csv', "codes_of_interest": ['21402'], "project_name": "fasttext cbow knee replacement from anaesthetic 21402", "cull_similarity": 0.6, "cull": None} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
     processed_data: pd.DataFrame = None
@@ -37,6 +37,20 @@ class TestCase(ProposalTest):
                 row = line.split(',')
                 pid, item = row[1], row[2]
                 keys = patient_dict.keys()
+                if item not in model.vocab:
+                    continue
+                
+                if self.required_params["cull"] is not None:
+                    cull_similarity = self.required_params["cull_similarity"]
+                    most_similar_code_of_interest = 0
+                    for code in self.required_params["codes_of_interest"]:
+                        simil = model.similarity(code, item)
+                        if simil > most_similar_code_of_interest:
+                            most_similar_code_of_interest = simil
+
+                    if most_similar_code_of_interest > cull_similarity:
+                        continue
+
                 if pid not in keys:
                     patient_dict[pid] = {'Sum': model[item].copy(), 'Average': model[item].copy(), 'n': 1}
                 else:
