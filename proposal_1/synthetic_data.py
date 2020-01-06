@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 
 output_file = "synthetic_proposal_1.csv"
-uncommon_data_iterations = 1
-common_data_iterations = 9
+uncommon_data_iterations = 3
+common_data_iterations = 15
 
 num_patients = 1300
 items_group_1_mean = 220

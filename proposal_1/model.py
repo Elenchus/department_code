@@ -81,7 +81,7 @@ class TestCase(ProposalTest):
             #                 f.write(f'{patient_ids[cluster_indices[i][idx]]}: {x}, cluster: {i}\r\n') 
 
             # self.log(f"{outlier_count} outliers detected")
-            # self.models.calculate_BGMM(Y, num_clusters, f'{self.required_params["project_name"]} {name} patient BGMM', f'{name}_patient_BGMM')
+            self.models.calculate_BGMM(Y, num_clusters, f'{self.required_params["project_name"]} {name} patient BGMM', f'{name}_patient_BGMM')
             
             cluster_claim_counts = []
             cluster_item_counts = []
