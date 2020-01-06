@@ -122,7 +122,7 @@ if __name__ == "__main__":
         # params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': [21402]},
         proposal = 1,
         test_data = mbs,
-        test_file_name = f'model',
+        test_file_name = f'lda',
         test_format = TestFormat.IterateYearsOutsideTest,
         years = [2003]
     )
