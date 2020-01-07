@@ -8,7 +8,7 @@ common_data_iterations = 16
 
 num_patients = 1300
 items_group_1_mean = 220
-items_sd = 30
+items_sd = 10
 items_group_1 = [int(x) for x in np.random.normal(items_group_1_mean, items_sd, int(num_patients * uncommon_data_iterations / 2))]
 
 common_items_mean = 330

@@ -4,7 +4,7 @@ from gensim.models import LdaModel, TfidfModel
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {'input_data': 'knee_21402_subset.csv', 'no_above': 0.8, 'use_uniques': True} 
+    required_params = {'input_data': 'knee_21402_subset.csv', 'no_above': 0.5, 'use_uniques': False, 'eta': 4} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
     processed_data: pd.DataFrame = None
@@ -64,7 +64,7 @@ class TestCase(ProposalTest):
         bow_corpus = [dictionary.doc2bow(doc) for doc in documents]
 
         self.log("Creating model")
-        lda_model = LdaModel(bow_corpus, num_topics=3, id2word=dictionary, passes=2)
+        lda_model = LdaModel(bow_corpus, num_topics=3, id2word=dictionary, passes=2, eta=self.required_params['eta'])
         topics = lda_model.show_topics()
         self.log(topics)
         topics = self.get_topic_words(topics)

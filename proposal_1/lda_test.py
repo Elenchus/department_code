@@ -18,4 +18,4 @@ dictionary = Dictionary(documents)
 dictionary.filter_extremes(no_above=0.1)
 bow_corpus = [dictionary.doc2bow(doc) for doc in documents]
 lda_model = LdaModel(bow_corpus, num_topics=3, id2word=dictionary, passes=2)
-lda_model.show_topics()
+print(lda_model.show_topics())
