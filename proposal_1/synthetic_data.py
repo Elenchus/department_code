@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 
 output_file = "synthetic_proposal_1.csv"
-uncommon_data_iterations = 3
-common_data_iterations = 15
+uncommon_data_iterations = 8
+common_data_iterations = 16
 
 num_patients = 1300
 items_group_1_mean = 220
@@ -27,7 +27,7 @@ for patient in range(num_patients):
     pin = patient
     dos = 1
 
-    data.append([pin, 1, dos])
+    # data.append([pin, 1, dos])
 
     for claim in range(uncommon_data_iterations):
         item = items_group_1[i] if patient <= num_patients / 2 else items_group_2[i]

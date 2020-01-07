@@ -1,14 +1,37 @@
 import pandas as pd
 from gensim.corpora import Dictionary
-from gensim.models import LdaMulticore, TfidfModel
+from gensim.models import LdaModel, TfidfModel
 from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    required_params = {'input_data': 'knee_21402_subset.csv', 'no_above': 0.8} 
+    required_params = {'input_data': 'knee_21402_subset.csv', 'no_above': 0.8, 'use_uniques': True} 
     INITIAL_COLS = ["PIN", "ITEM"]
     FINAL_COLS = INITIAL_COLS
     processed_data: pd.DataFrame = None
     test_data = None
+
+    @staticmethod
+    def get_topic_words(topics):
+        converted_topics = []
+        for topic in topics:
+            converted_topic = []
+            for x in topic:
+                if isinstance(x, int):
+                    continue
+
+                words = x.split(' ')
+                for word in words:
+                    left = word.find('"') + 1
+                    if left == 0:
+                        continue
+
+                    right = word.rindex('"')
+                    converted_topic.append(word[left:right])
+
+            converted_topics.append(converted_topic)
+
+        return converted_topics
+
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
@@ -27,7 +50,11 @@ class TestCase(ProposalTest):
         self.log("Creating documents")
         documents = []
         for name, group in patients:
-            items = group["ITEM"].values.tolist()
+            if self.required_params['use_uniques']:
+                items = group["ITEM"].unique().tolist()
+            else:
+                items = group["ITEM"].values.tolist()
+
             items = [str(item) for item in items]
             documents.append(items)
 
@@ -37,5 +64,13 @@ class TestCase(ProposalTest):
         bow_corpus = [dictionary.doc2bow(doc) for doc in documents]
 
         self.log("Creating model")
-        lda_model = LdaMulticore(bow_corpus, num_topics=3, id2word=dictionary, passes=2, workers=3)
-        lda_model.show_topics()
+        lda_model = LdaModel(bow_corpus, num_topics=3, id2word=dictionary, passes=2)
+        topics = lda_model.show_topics()
+        self.log(topics)
+        topics = self.get_topic_words(topics)
+        x = 0
+        self.log(topics)
+        for topic in topics:
+            self.log(f"Topic {x}:")
+            self.log([self.code_converter.convert_mbs_code_to_description(word) for word in topic])
+            x += 1
