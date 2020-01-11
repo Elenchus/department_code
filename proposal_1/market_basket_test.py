@@ -1,7 +1,8 @@
 import pandas as pd
 from apyori import apriori
 
-input_file = 'synthetic_sentences_prop_1.csv'
+input_file = 'synthetic_proposal_1.csv'
+# input_file = 'synthetic_sentences_prop_1.csv'
 data = pd.read_csv(input_file)
 patients = data.groupby("PIN")
 

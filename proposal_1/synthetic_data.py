@@ -66,4 +66,5 @@ def split_sentences(output_file = "synthetic_sentences_prop_1.csv"):
     data.to_csv(output_file)
 
 if __name__ == "__main__":
-    split_sentences() 
+    # split_sentences() 
+    two_distributions(3,9)
