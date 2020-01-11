@@ -12,5 +12,5 @@ for name, group in patients:
     items = [str(item) for item in items]
     documents.append(items)
 
-rules = apriori(documents, min_support = 0.003, min_confidence = 0.2, min_lift = 3, min_length = 2)
+rules = apriori(documents, min_support = 0.003, min_confidence = 0.2, min_lift = 3, max_length = 2)
 print(list(rules))
