@@ -3,18 +3,22 @@ import pygraphviz as pgv
 from apyori import apriori
 
 input_file = 'knee_21402_subset.csv'
+group_header = 'PIN'
+basket_header = 'SPR'
+# group_header = 'PIN'
+# basket_header = 'ITEM'
 # input_file = 'synthetic_proposal_1.csv'
 # input_file = 'synthetic_sentences_prop_1.csv'
 data = pd.read_csv(input_file)
-patients = data.groupby("PIN")
+patients = data.groupby(group_header)
 
 documents = []
 for name, group in patients:
-    items = group["ITEM"].values.tolist()
+    items = group[basket_header].values.tolist()
     items = [str(item) for item in items]
     documents.append(items)
 
-items = [str(x) for x in data['ITEM'].unique()]
+items = [str(x) for x in data[basket_header].unique()]
 d = {}
 for item in items:
     d[item] = {}
