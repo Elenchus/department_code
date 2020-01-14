@@ -9,6 +9,7 @@ class RequiredParams(Params):
                     convert_rsp_codes=True,
                     min_support=0.01,
                     remove_empty=True):        
+        # pass
         self.group_header=group_header
         self.basket_header=basket_header
         self.convert_rsp_codes=convert_rsp_codes

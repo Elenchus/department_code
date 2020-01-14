@@ -1,10 +1,30 @@
 import pandas as pd
 from abc import ABC, abstractmethod
+from inspect import getargspec
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.model_utils import ModelUtils
 from phd_utils.code_converter import CodeConverter
 
+# def autoInitDecorator(toDecoreFun):
+#     def wrapper(*args):
+#         argsnames = getargspec(toDecoreFun)[0]
+#         argsvalues = [x for x in args[1:]]
+#         objref = args[0]
+#         for x in argsnames[1:]:
+#             objref.__setattr__(x,argsvalues.pop(0))
+        
+#     return wrapper
+
+# class AutoInit(type):
+#     def __new__(meta, classname, supers, classdict):
+#         classdict['__init__'] = autoInitDecorator(classdict['__init__'])
+
+#         return type.__new__(meta, classname, supers, classdict)
+# see https://www.codementor.io/@predo/self-initializing-classes-gro3q9svt
+
+    
 class Params():
+# class Params(metaclass=AutoInit):
     def __repr__(self):
         return str(self.__dict__)
 
