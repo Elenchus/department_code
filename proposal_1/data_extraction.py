@@ -12,7 +12,7 @@ class TestCase(ProposalTest):
     # cut_down_hip_replacement = ['49315']
     FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP']
     INITIAL_COLS = FINAL_COLS
-    required_params = {'code_type': 'hip', 'output_name': 'subset', 'codes_of_interest': cut_down_hip_replacement}
+    required_params = {'code_type': 'hip', 'output_name': 'provider_subset', 'codes_of_interest': cut_down_hip_replacement}
     processed_data: pd.DataFrame = None
     test_data = None
 
@@ -43,6 +43,7 @@ class TestCase(ProposalTest):
 
     def get_test_data(self):
         super().get_test_data()
+        self.processed_data['ITEM'] = self.processed_data['ITEM'].astype(str)
         patients = self.processed_data.groupby("PIN")
         self.test_data = patients
 
@@ -55,6 +56,3 @@ class TestCase(ProposalTest):
             claims = self.extract_relevant_claims(group, self.required_params['codes_of_interest'])
             if claims is not None:
                 self.append_to_file(output_file, claims)
-
-        # claims = self.test_data.apply(self.extract_relevant_claims, self.required_params['codes_of_interest'])
-        # self.append_to_file(output_file, claims)

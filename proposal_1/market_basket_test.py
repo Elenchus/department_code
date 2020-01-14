@@ -1,21 +1,35 @@
 import pandas as pd
 import pygraphviz as pgv
 from apyori import apriori
+# from phd_utils.code_converter import CodeConverter
 
-input_file = 'knee_21402_subset.csv'
-group_header = 'PIN'
-basket_header = 'SPR'
-# group_header = 'PIN'
-# basket_header = 'ITEM'
 # input_file = 'synthetic_proposal_1.csv'
 # input_file = 'synthetic_sentences_prop_1.csv'
+input_file = 'hip_21214_provider_subset.csv'
+output_file = 'hip_specialty_graph.png'
+
+group_header = 'PIN'
+basket_header = 'SPR_RSP'
+remove_empty = False
+# group_header = 'PIN'
+# basket_header = 'ITEM'
+
 data = pd.read_csv(input_file)
 patients = data.groupby(group_header)
+
+code_converter = None
+# if basket_header == 'SPR_RSP':
+#     cc = CodeConverter()
+#     code_converter = cc.convert_rsp_num
 
 documents = []
 for name, group in patients:
     items = group[basket_header].values.tolist()
-    items = [str(item) for item in items]
+    if code_converter is None:
+        items = [str(item) for item in items]
+    # else:
+    #     items = [code_converter(item) for item in items]
+
     documents.append(items)
 
 items = [str(x) for x in data[basket_header].unique()]
@@ -35,9 +49,18 @@ for record in rules:
         item_1 = next(iter(stat[1]))
         d[item_0][item_1] = None
 
+if remove_empty:
+    empty_keys = []
+    for key in d.keys():
+        if not d[key]:
+            empty_keys.append(key)
+    
+    for key in empty_keys:
+        d.pop(key, None)
+    
 A = pgv.AGraph(data=d, directed=True)
 A.node_attr['style']='filled'
 A.node_attr['shape'] = 'circle'
 A.node_attr['fixedsize']='true'
 A.node_attr['fontcolor']='#FFFFFF'
-A.draw('mba_test.png', prog='fdp')
+A.draw(output_file, prog='fdp')

@@ -112,7 +112,7 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     # variables
     test_details = TestDetails(
-        notes = "knee replacement extraction",
+        notes = "hip replacement extraction",
         # params = {'code_type': 'knee',
         #             'year': 2014,
         #             'dimensions': 7,
@@ -122,9 +122,9 @@ if __name__ == "__main__":
         # params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': [21402]},
         proposal = 1,
         test_data = mbs,
-        test_file_name = f'lda',
+        test_file_name = f'data_extraction',
         test_format = TestFormat.IterateYearsOutsideTest,
-        years = [2003]
+        years = [2014]
     )
     start_test(test_details)
     # test_file_name = 'cluster_providers_within_specialty'
