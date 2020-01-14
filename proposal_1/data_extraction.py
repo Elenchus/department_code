@@ -48,6 +48,7 @@ class TestCase(ProposalTest):
         self.test_data = patients
 
     def run_test(self):
+        super().run_test()
         name = f"{self.required_params['code_type']}_{self.required_params['output_name']}.csv"
         output_file = self.logger.output_path / name
 

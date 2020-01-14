@@ -6,13 +6,15 @@ from apyori import apriori
 # input_file = 'synthetic_proposal_1.csv'
 # input_file = 'synthetic_sentences_prop_1.csv'
 input_file = 'hip_21214_provider_subset.csv'
-output_file = 'hip_specialty_graph.png'
+output_file = 'hip_item_graph.png'
 
-group_header = 'PIN'
-basket_header = 'SPR_RSP'
-remove_empty = False
 # group_header = 'PIN'
-# basket_header = 'ITEM'
+# basket_header = 'SPR'
+remove_empty = True
+group_header = 'PIN'
+basket_header = 'ITEM'
+# group_header = 'ITEM'
+# basket_header = 'SPR'
 
 data = pd.read_csv(input_file)
 patients = data.groupby(group_header)

@@ -3,13 +3,16 @@ import itertools
 from datetime import datetime
 import keras
 import pandas as pd
+import pygraphviz as pgv
 import numpy as np
 import umap
+from apyori import apriori
 from matplotlib import markers
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.code_converter import CodeConverter
+from tqdm import tqdm
 from sklearn import cluster, metrics
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -96,6 +99,17 @@ class ModelUtils():
 
         return kmeans
 
+    def generate_sentences_from_group(self, data, column, convert_to_string=True):
+        documents = []
+        for name, group in data:
+            items = group[column].values.tolist()
+            if convert_to_string:
+                items = [str(item) for item in items]
+
+            documents.append(items)
+
+        return documents
+
     def get_outlier_indices(self, data):
         q75, q25 = np.percentile(data, [75 ,25])
         iqr = q75 - q25
@@ -105,6 +119,38 @@ class ModelUtils():
                 list_of_outlier_indices.append(i)
 
         return list_of_outlier_indices
+
+    def market_basket_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
+        max_length=2
+        rules = apriori(documents, min_support = min_support, min_confidence = min_confidence, min_lift = min_lift, max_length = max_length)
+        d = {}
+        if item_list is not None:
+            for item in item_list:
+                d[item] = {}
+
+        for record in tqdm(rules):
+            for stat in record[2]: # this will need to change if max_length is not 2
+                assert len(stat[0]) == 1 #item numbers appear in frozensets -> can't be indexed
+                assert len(stat[1]) == 1
+
+                item_0 = next(iter(stat[0]))
+                item_1 = next(iter(stat[1]))
+                if item_list is None and item_0 not in d:
+                    d[item_0] = {}
+
+                d[item_0][item_1] = None
+
+
+
+        if output_file is not None:
+            A = pgv.AGraph(data=d, directed=directed)
+            A.node_attr['style']='filled'
+            A.node_attr['shape'] = 'circle'
+            A.node_attr['fixedsize']='true'
+            A.node_attr['fontcolor']='#FFFFFF'
+            A.draw(str(output_file), prog='fdp')
+
+        return d
 
     def multiprocess_generator(self, function, generator, threads=6):
         pool = Pool(processes=threads)
