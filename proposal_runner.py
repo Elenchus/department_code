@@ -48,11 +48,12 @@ def run_combined_test(test_name, test_details):
                                                 test_case.FINAL_COLS, 
                                                 test_details.years, 
                                                 test_case.process_dataframe)
+            test_case.processed_data = data
+            test_case.get_test_data()
         else:
+            logger.log(test_details.test_data)
             data = test_case.load_data(test_details.test_data)
 
-        test_case.processed_data = data
-        test_case.get_test_data()
         test_case.run_test()
 
 def run_iterative_test(test_name, test_details):
@@ -83,7 +84,8 @@ def set_test_name(test_details, additional_folder_name_part):
     if isinstance(test_details.test_data, file_utils.DataSource):
         data_source = test_details.test_data.value
     else:
-        raise NotImplementedError
+        data_source = test_details.test_data
+
 
     if additional_folder_name_part is None:
         test_name = f'proposal_{test_details.proposal}_{test_details.test_file_name}_{data_source}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}'
@@ -112,7 +114,7 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     # variables
     test_details = TestDetails(
-        notes = "Testing MBA for RSP clustering",
+        notes = "Testing MBA proposal format",
         # params = {'code_type': 'knee',
         #             'year': 2014,
         #             'dimensions': 7,
@@ -121,9 +123,10 @@ if __name__ == "__main__":
         params = None,
         # params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': [21402]},
         proposal = 1,
-        test_data = mbs,
-        test_file_name = f'mba_rsp_cluster',
-        test_format = TestFormat.IterateYearsOutsideTest,
+        # test_data = mbs,
+        test_data = 'hip_21214_provider_subset.csv',
+        test_file_name = f'market_basket',
+        test_format = TestFormat.CombineYears,
         years = [2014]
     )
     start_test(test_details)

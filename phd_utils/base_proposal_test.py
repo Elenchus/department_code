@@ -60,5 +60,8 @@ class ProposalTest(ABC):
         if self.test_data is None:
             raise KeyError("No test data specified")
 
+    def load_data(self):
+        self.log("Loading data")
+
     def finalise_test(self):
         raise NotImplementedError

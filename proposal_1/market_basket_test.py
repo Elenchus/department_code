@@ -6,13 +6,15 @@ from apyori import apriori
 # input_file = 'synthetic_proposal_1.csv'
 # input_file = 'synthetic_sentences_prop_1.csv'
 input_file = 'hip_21214_provider_subset.csv'
-output_file = 'hip_item_graph.png'
+output_file = 'hip_spr_graph.png'
 
+group_header = 'PIN'
+basket_header = 'SPR_RSP'
 # group_header = 'PIN'
 # basket_header = 'SPR'
 remove_empty = True
-group_header = 'PIN'
-basket_header = 'ITEM'
+# group_header = 'PIN'
+# basket_header = 'ITEM'
 # group_header = 'ITEM'
 # basket_header = 'SPR'
 
