@@ -22,7 +22,7 @@ class TestDetails():
     test_format: TestFormat
     years: list
 
-    def __init__(self, notes="", params={}, proposal=0, test_data="", test_file_name="", test_format=TestFormat.CombineYears, years=[]):
+    def __init__(self, notes="", params=None, proposal=0, test_data="", test_file_name="", test_format=TestFormat.CombineYears, years=[]):
         self.notes=notes
         self.params=params
         self.proposal=proposal
@@ -40,7 +40,7 @@ def run_combined_test(test_name, test_details):
             test_details.params = test_case.required_params
     
         logger.log(test_details.notes)
-        logger.log(test_details.params)
+        logger.log(str(test_details.params))
         if isinstance(test_details.test_data, file_utils.DataSource):
             data = file_utils.combine_10p_data(logger, 
                                                 test_details.test_data, 
@@ -65,7 +65,7 @@ def run_iterative_test(test_name, test_details):
             test_details.params = test_case.required_params
     
         logger.log(test_details.notes)
-        logger.log(test_details.params)
+        logger.log(str(test_details.params))
         for year in test_details.years:
             data = file_utils.combine_10p_data(logger, 
                                                 test_details.test_data, 

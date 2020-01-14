@@ -4,6 +4,10 @@ from phd_utils.graph_utils import GraphUtils
 from phd_utils.model_utils import ModelUtils
 from phd_utils.code_converter import CodeConverter
 
+class Params():
+    def __repr__(self):
+        return str(self.__dict__)
+
 class ProposalTest(ABC):
     @property
     @classmethod
