@@ -1,6 +1,6 @@
 '''Run tests from proposals'''
 import pandas as pd
-# from dataclasses import dataclass
+from dataclasses import dataclass
 from enum import Enum, auto
 from functools import partial
 from phd_utils import file_utils
@@ -14,6 +14,7 @@ class TestFormat(Enum):
     IterateYearsWithinTest = auto()
     IterateYearsOutsideTest = auto()
 
+@dataclass
 class TestDetails():
     notes:str
     params:dict
@@ -22,15 +23,6 @@ class TestDetails():
     test_file_name:str
     test_format:TestFormat
     years:list
-
-    def __init__(self, notes="", params=None, proposal=0, test_data="", test_file_name="", test_format=TestFormat.CombineYears, years=[]):
-        self.notes=notes
-        self.params=params
-        self.proposal=proposal
-        self.test_data=test_data
-        self.test_file_name=test_file_name
-        self.test_format=test_format
-        self.years=[str(year) for year in years]
 
 def run_combined_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
@@ -52,7 +44,7 @@ def run_combined_test(test_name, test_details):
             test_case.processed_data = data
             test_case.get_test_data()
         else:
-            logger.log(test_details.test_data)
+            logger.log(f"Data file: {test_details.test_data}")
             data = test_case.load_data(test_details.test_data)
 
         test_case.run_test()
@@ -113,36 +105,14 @@ def start_test(test_details, additional_folder_name_part=None):
         raise KeyError("Test format should be a TestFormat enum")
 
 if __name__ == "__main__":
-    # variables
     test_details = TestDetails(
-        notes = "Testing MBA proposal format",
-        # params = {'code_type': 'knee',
-        #             'year': 2014,
-        #             'dimensions': 7,
-        #             'epochs': 100, 
-        #             "codes_of_interest": ['21402']},
+        notes = "Getting hip data with all categories",
         params = None,
-        # params= {'code_type': 'knee', 'output_name': '21402_subset', 'codes_of_interest': [21402]},
         proposal = 1,
         # test_data = mbs,
         test_data = 'hip_21214_provider_subset.csv',
         test_file_name = f'market_basket',
         test_format = TestFormat.CombineYears,
-        years = [2014]
+        years = [str(x) for x in [2014]]
     )
     start_test(test_details)
-    # test_file_name = 'cluster_providers_within_specialty'
-    # params = {'specialty': "Dietitian", 'max_sentence_length': None}
-    # params = None
-    # params = {'size': 9, 'INHOSPITAL': 'N', 'RSPs': ['Ophthalmology', 'Anaesthetics', 'Obstetrics and Gynaecology', 'Dermatology', 'Dentist (Approved) (OMS)']}
-
-    # for spec in ["Anaesthetics", "Clinical Psychologist"]:
-    #     params['specialty'] = spec
-    #     test_details = [years, data_file, test_data, proposal, test_file_name, params, notes]
-    #     run_test(combine_years, test_details)
-
-    # for (cols, data_type) in [(file_utils.PBS_HEADER, pbs)]:
-    #     for col in cols:
-    #         test_details.params = {"col": col, "years": test_details.years, "data_type": data_type}
-    #         test_details.test_data = data_type
-    #         start_test(test_details, col)

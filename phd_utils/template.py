@@ -1,11 +1,12 @@
 import pandas as pd
-from phd_utils.base_proposal_test import Params, ProposalTest
-
-class RequiredParams(Params):
-    def __init__(self):
-        pass
+from dataclasses import dataclass
+from phd_utils.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
+    @dataclass
+    class RequiredParams:
+        pass
+
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
     required_params = {}

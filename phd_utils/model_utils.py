@@ -148,6 +148,9 @@ class ModelUtils():
             A.node_attr['shape'] = 'circle'
             A.node_attr['fixedsize']='true'
             A.node_attr['fontcolor']='#FFFFFF'
+            A.node_attr['height']=4
+            A.node_attr['width']=4
+
             A.draw(str(output_file), prog='fdp')
 
         return d

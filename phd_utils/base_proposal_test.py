@@ -2,17 +2,20 @@ import functools
 import inspect
 import pandas as pd
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.model_utils import ModelUtils
 from phd_utils.code_converter import CodeConverter
 
-@dataclass
-class Params():
-    def __repr__(self):
-        return str(self.__dict__)
-        
+class Params:
+    pass
+
 class ProposalTest(ABC):
+    @property
+    @classmethod
+    @abstractmethod
+    class RequiredParams(Params):
+        pass
+
     @property
     @classmethod
     @abstractmethod
@@ -43,7 +46,10 @@ class ProposalTest(ABC):
         self.models = ModelUtils(logger)
         self.code_converter = CodeConverter()
         self.processed_data = pd.DataFrame()
-        if params is not None:
+
+        if params is None:
+            self.required_params = self.RequiredParams()
+        else:
             self.required_params = params
 
     def log(self, text):
