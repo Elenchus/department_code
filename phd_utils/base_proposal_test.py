@@ -2,18 +2,16 @@ import functools
 import inspect
 import pandas as pd
 from abc import ABC, abstractmethod
+from dataclasses import is_dataclass
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.model_utils import ModelUtils
 from phd_utils.code_converter import CodeConverter
-
-class Params:
-    pass
 
 class ProposalTest(ABC):
     @property
     @classmethod
     @abstractmethod
-    class RequiredParams(Params):
+    class RequiredParams:
         pass
 
     @property
@@ -49,8 +47,10 @@ class ProposalTest(ABC):
 
         if params is None:
             self.required_params = self.RequiredParams()
-        else:
+        elif is_dataclass(params) and not isinstance(params, type):
             self.required_params = params
+        else:
+            raise AttributeError(f"Required params must be of type None or dataclass, not {type(params)}")
 
     def log(self, text):
         if self.logger is None:
