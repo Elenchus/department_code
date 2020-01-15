@@ -120,7 +120,7 @@ class ModelUtils():
 
         return list_of_outlier_indices
 
-    def market_basket_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
+    def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
         max_length=2
         rules = apriori(documents, min_support = min_support, min_confidence = min_confidence, min_lift = min_lift, max_length = max_length)
         d = {}
@@ -130,6 +130,11 @@ class ModelUtils():
 
         for record in tqdm(rules):
             for stat in record[2]: # this will need to change if max_length is not 2
+                if not stat[0]:
+                    continue
+                if not stat[1]:
+                    continue
+                
                 assert len(stat[0]) == 1 #item numbers appear in frozensets -> can't be indexed
                 assert len(stat[1]) == 1
 
