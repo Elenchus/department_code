@@ -3,19 +3,11 @@ from phd_utils.base_proposal_test import Params, ProposalTest
 from tqdm import tqdm
 
 class RequiredParams(Params):
-    def __init__(self,
-                    group_header='PIN',
-                    basket_header='SPR_RSP',
-                    convert_rsp_codes=True,
-                    min_support=0.01,
-                    remove_empty=True):        
-        # pass
-        self.group_header=group_header
-        self.basket_header=basket_header
-        self.convert_rsp_codes=convert_rsp_codes
-        self.min_support=min_support
-        self.remove_empty=remove_empty
-
+    group_header:str = 'PIN'
+    basket_header:str = 'SPR_RSP'
+    convert_rsp_codes:bool = True
+    min_support:float = 0.01
+    remove_empty:bool = True
 
 class TestCase(ProposalTest):
     FINAL_COLS = []

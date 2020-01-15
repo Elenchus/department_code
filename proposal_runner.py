@@ -1,5 +1,6 @@
 '''Run tests from proposals'''
 import pandas as pd
+# from dataclasses import dataclass
 from enum import Enum, auto
 from functools import partial
 from phd_utils import file_utils
@@ -14,13 +15,13 @@ class TestFormat(Enum):
     IterateYearsOutsideTest = auto()
 
 class TestDetails():
-    notes: str
-    params: dict
-    proposal: int
-    test_data: object
-    test_file_name: str
-    test_format: TestFormat
-    years: list
+    notes:str
+    params:dict
+    proposal:int
+    test_data:object
+    test_file_name:str
+    test_format:TestFormat
+    years:list
 
     def __init__(self, notes="", params=None, proposal=0, test_data="", test_file_name="", test_format=TestFormat.CombineYears, years=[]):
         self.notes=notes

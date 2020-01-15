@@ -1,5 +1,9 @@
 import pandas as pd
-from phd_utils.base_proposal_test import ProposalTest
+from phd_utils.base_proposal_test import Params, ProposalTest
+
+class RequiredParams(Params):
+    def __init__(self):
+        pass
 
 class TestCase(ProposalTest):
     FINAL_COLS = []
