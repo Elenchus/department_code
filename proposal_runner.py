@@ -9,6 +9,12 @@ from phd_utils.logger import Logger
 mbs = file_utils.DataSource.MBS
 pbs = file_utils.DataSource.PBS
 
+@dataclass # maybe instead of this have some param adjustment method in RequiredParams that is passed into the test  case. takes dict and sets property values
+class RequiredParams:
+    def __init__(self, d):
+        for k, v in d.items():
+            setattr(self, k, v)
+
 class TestFormat(Enum):
     CombineYears = auto()
     IterateYearsWithinTest = auto()
