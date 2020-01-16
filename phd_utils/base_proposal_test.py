@@ -2,15 +2,25 @@ import functools
 import inspect
 import pandas as pd
 from abc import ABC, abstractmethod
-from dataclasses import is_dataclass
+from dataclasses import dataclass, is_dataclass
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.model_utils import ModelUtils
 from phd_utils.code_converter import CodeConverter
 
+@dataclass
+class ParamsFromDict:
+    def __init__(self, d, rp):
+        for k, v in d.items():
+            setattr(self, k, v)
+
+        for k, v in rp.__dict__.items():
+            if not hasattr(self, k):
+                setattr(self, k, v)
+
 class ProposalTest(ABC):
     @property
     @classmethod
-    @abstractmethod
+    # @abstractmethod
     class RequiredParams:
         pass
 
@@ -46,11 +56,17 @@ class ProposalTest(ABC):
         self.processed_data = pd.DataFrame()
 
         if params is None:
-            self.required_params = self.RequiredParams()
-        elif is_dataclass(params) and not isinstance(params, type):
-            self.required_params = params
+            if not isinstance(self.required_params, dict): # deprecate this later
+                self.required_params = self.RequiredParams()
+        elif isinstance(params, dict):
+            if isinstance(self.required_params, dict): # deprecate this later
+                self.required_params = params
+            else:
+                rp = self.RequiredParams().__dict__
+                param_class = ParamsFromDict(params, rp)
+                self.required_params = param_class
         else:
-            raise AttributeError(f"Required params must be of type None or dataclass, not {type(params)}")
+            raise AttributeError(f"params must be of type None or dict, not {type(params)}")
 
     def log(self, text):
         if self.logger is None:
