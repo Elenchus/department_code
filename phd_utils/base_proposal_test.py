@@ -8,9 +8,12 @@ from phd_utils.model_utils import ModelUtils
 from phd_utils.code_converter import CodeConverter
 
 @dataclass
-class ParamsFromDict:
+class RequiredParams:
     def __init__(self, d, rp):
         for k, v in d.items():
+            if not hasattr(rp, k):
+                raise KeyError(f'Invalid key {k} in params. Required keys are {rp.__dict__.keys()}')
+
             setattr(self, k, v)
 
         for k, v in rp.__dict__.items():
@@ -60,10 +63,14 @@ class ProposalTest(ABC):
                 self.required_params = self.RequiredParams()
         elif isinstance(params, dict):
             if isinstance(self.required_params, dict): # deprecate this later
-                self.required_params = params
+                for k, v in params.items():
+                    if k not in self.required_params:
+                        raise KeyError(f'Invalid key {k} in params. Required keys are {self.required_params.keys()}')
+
+                    self.required_params[k] = v
             else:
                 rp = self.RequiredParams().__dict__
-                param_class = ParamsFromDict(params, rp)
+                param_class = RequiredParams(params, rp)
                 self.required_params = param_class
         else:
             raise AttributeError(f"params must be of type None or dict, not {type(params)}")
