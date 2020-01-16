@@ -6,7 +6,7 @@ import pandas as pd
 import pygraphviz as pgv
 import numpy as np
 import umap
-# from apyori import apriori
+from apyori import apriori as apyori
 from mlxtend.frequent_patterns import apriori, association_rules, fpgrowth
 from mlxtend.preprocessing import TransactionEncoder
 from matplotlib import markers
@@ -25,43 +25,43 @@ class ModelUtils():
         self.logger = logger
         self.graph_utils = GraphUtils(logger)
 
-    # def _apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
-    #     max_length=2
-    #     rules = apriori(documents, min_support = min_support, min_confidence = min_confidence, min_lift = min_lift, max_length = max_length)
-    #     d = {}
-    #     if item_list is not None:
-    #         for item in item_list:
-    #             d[item] = {}
+    def _apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
+        max_length=2
+        rules = apyori(documents, min_support = min_support, min_confidence = min_confidence, min_lift = min_lift, max_length = max_length)
+        d = {}
+        if item_list is not None:
+            for item in item_list:
+                d[item] = {}
 
-    #     for record in tqdm(rules):
-    #         for stat in record[2]: # this will need to change if max_length is not 2
-    #             if not stat[0]:
-    #                 continue
-    #             if not stat[1]:
-    #                 continue
+        for record in tqdm(rules):
+            for stat in record[2]: # this will need to change if max_length is not 2
+                if not stat[0]:
+                    continue
+                if not stat[1]:
+                    continue
                 
-    #             assert len(stat[0]) == 1 #item numbers appear in frozensets -> can't be indexed
-    #             assert len(stat[1]) == 1
+                assert len(stat[0]) == 1 #item numbers appear in frozensets -> can't be indexed
+                assert len(stat[1]) == 1
 
-    #             item_0 = next(iter(stat[0]))
-    #             item_1 = next(iter(stat[1]))
-    #             if item_list is None and item_0 not in d:
-    #                 d[item_0] = {}
+                item_0 = next(iter(stat[0]))
+                item_1 = next(iter(stat[1]))
+                if item_list is None and item_0 not in d:
+                    d[item_0] = {}
 
-    #             d[item_0][item_1] = None
+                d[item_0][item_1] = None
 
-    #     if output_file is not None:
-    #         A = pgv.AGraph(data=d, directed=directed)
-    #         A.node_attr['style']='filled'
-    #         A.node_attr['shape'] = 'circle'
-    #         A.node_attr['fixedsize']='true'
-    #         A.node_attr['fontcolor']='#FFFFFF'
-    #         A.node_attr['height']=4
-    #         A.node_attr['width']=4
+        if output_file is not None:
+            A = pgv.AGraph(data=d, directed=directed)
+            A.node_attr['style']='filled'
+            A.node_attr['shape'] = 'circle'
+            A.node_attr['fixedsize']='true'
+            A.node_attr['fontcolor']='#FFFFFF'
+            A.node_attr['height']=4
+            A.node_attr['width']=4
 
-    #         A.draw(str(output_file), prog='fdp')
+            A.draw(str(output_file), prog='fdp')
 
-    #     return d
+        return d
 
     def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
         te = TransactionEncoder()

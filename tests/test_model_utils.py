@@ -47,6 +47,60 @@ class ModelUtilsTest(unittest.TestCase):
         assert 101 in x
         assert 100 in x
 
+    def test_market_basket(self):
+        test_function = self.model._apriori_analysis
+        documents = []
+        for i in range(1000):
+            doc = []
+            doc.append('0')
+            if i < 999:
+                doc.append('1')
+            if i < 900:
+                doc.append('2')
+            if i < 899:
+                doc.append('3')
+            if i < 700:
+                doc.append('4')
+            if i < 10:
+                doc.append('5')
+            if i < 9:
+                doc.append('6')
+            if i < 1:
+                doc.append('7')
+
+            documents.append(doc)
+
+        # test min_support
+        d = test_function(documents, min_support=0.01, min_confidence= 0, min_lift=0)
+        assert len(d) == 6
+        for i in d:
+            assert len(d[i]) == 5
+
+        # test min_confidence
+        d = test_function(documents, min_support=0.01, min_confidence=0.9, min_lift=0)
+        assert d['0']['1'] == None
+        assert d['0']['2'] == None
+        assert len(d['0']) == 2 
+
+        # test min_lift
+        d = test_function(documents, min_support=0.01, min_confidence= 0, min_lift=1.1)
+        cat = [1000,999,900,899,700,10,9,1]
+
+        for i in range(len(cat)):
+            for j in range(len(cat)):
+                a = cat[i]
+                b = cat[j]
+                if a == b:
+                    continue
+                lift = (min(a,b)/max(cat))/((a/max(cat))*(b/max(cat)))
+                supp = min(a,b) / max(cat)
+                if supp >= 0.01:
+                    if lift < 1.1:
+                        if str(a) in d:
+                            assert str(j) not in d[str(i)]
+                    else:
+                        assert str(j) in d[str(i)]
+
     def test_sum_and_average_vecors(self):
         vocab = {}
         for n in range(1, 5):
