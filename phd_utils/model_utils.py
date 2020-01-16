@@ -6,7 +6,9 @@ import pandas as pd
 import pygraphviz as pgv
 import numpy as np
 import umap
-from apyori import apriori
+# from apyori import apriori
+from mlxtend.frequent_patterns import apriori, association_rules, fpgrowth
+from mlxtend.preprocessing import TransactionEncoder
 from matplotlib import markers
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
@@ -23,22 +25,76 @@ class ModelUtils():
         self.logger = logger
         self.graph_utils = GraphUtils(logger)
 
-    # def calculate_cosine_similarity(self, model):
-    #     self.logger.log("Calculating cosine similarities")
-    #     cdv = CodeConverter()
-    #     output_file = self.logger.output_path / "Most_similar.csv"
-    #     with open(output_file, 'w+') as f:
-    #         f.write("provider,Most similar to,Cosine similarity\r\n")
-    #         for rsp in list(cdv.valid_rsp_num_values): 
-    #             try: 
-    #                 y = model.most_similar(str(rsp)) 
-    #                 z = y[0][0] 
-    #                 f.write(f"{cdv.convert_rsp_num(rsp),cdv.convert_rsp_num(z)},{round(y[0][1], 2)}\r\n") 
-    #             except KeyError as err: 
+    # def _apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
+    #     max_length=2
+    #     rules = apriori(documents, min_support = min_support, min_confidence = min_confidence, min_lift = min_lift, max_length = max_length)
+    #     d = {}
+    #     if item_list is not None:
+    #         for item in item_list:
+    #             d[item] = {}
+
+    #     for record in tqdm(rules):
+    #         for stat in record[2]: # this will need to change if max_length is not 2
+    #             if not stat[0]:
     #                 continue
-    #             except Exception:
-    #
-    
+    #             if not stat[1]:
+    #                 continue
+                
+    #             assert len(stat[0]) == 1 #item numbers appear in frozensets -> can't be indexed
+    #             assert len(stat[1]) == 1
+
+    #             item_0 = next(iter(stat[0]))
+    #             item_1 = next(iter(stat[1]))
+    #             if item_list is None and item_0 not in d:
+    #                 d[item_0] = {}
+
+    #             d[item_0][item_1] = None
+
+    #     if output_file is not None:
+    #         A = pgv.AGraph(data=d, directed=directed)
+    #         A.node_attr['style']='filled'
+    #         A.node_attr['shape'] = 'circle'
+    #         A.node_attr['fixedsize']='true'
+    #         A.node_attr['fontcolor']='#FFFFFF'
+    #         A.node_attr['height']=4
+    #         A.node_attr['width']=4
+
+    #         A.draw(str(output_file), prog='fdp')
+
+    #     return d
+
+    def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
+        te = TransactionEncoder()
+        te_ary = te.fit(documents).transform(documents)
+        df = pd.DataFrame(te_ary, columns=te.columns_)
+        freq_items = apriori(df, min_support=min_support, use_colnames=True)
+
+        rules = association_rules(freq_items, metric='confidence', min_threshold=min_confidence)
+        rules["antecedent_len"] = rules["antecedents"].apply(lambda x: len(x))
+        rules["consequent_len"] = rules["consequents"].apply(lambda x: len(x))
+        rules = rules[(rules['lift'] >= min_lift) & (rules['antecedent_len'] == 1) & (rules['consequent_len'] == 1)]
+
+        rules = rules[['antecedents', 'consequents']].values.tolist()
+        d={}
+        for rule in rules:
+            if rule[0] not in d:
+                d[rule[0]] = {}
+
+                d[rule[0]][rule[1]] = None
+
+        if output_file is not None:
+            A = pgv.AGraph(data=d, directed=directed)
+            A.node_attr['style']='filled'
+            A.node_attr['shape'] = 'circle'
+            A.node_attr['fixedsize']='true'
+            A.node_attr['fontcolor']='#FFFFFF'
+            A.node_attr['height']=4
+            A.node_attr['width']=4
+
+            A.draw(str(output_file), prog='fdp')
+
+        return d
+
     def calculate_BGMM(self, data, n_components, title, filename):
         self.logger.log(f"Calculating GMM with {n_components} components")
         bgmm = BGMM(n_components=n_components).fit(data)
@@ -63,6 +119,38 @@ class ModelUtils():
             polars.append([r, theta])
 
         return polars
+
+    def fp_growth_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
+        te = TransactionEncoder()
+        te_ary = te.fit(documents).transform(documents)
+        df = pd.DataFrame(te_ary, columns=te.columns_)
+        freq_items = fpgrowth(df, min_support=min_support, use_colnames=True)
+
+        rules = association_rules(freq_items, metric='confidence', min_threshold=min_confidence)
+        rules["antecedent_len"] = rules["antecedents"].apply(lambda x: len(x))
+        rules["consequent_len"] = rules["consequents"].apply(lambda x: len(x))
+        rules = rules[(rules['lift'] >= min_lift) & (rules['antecedent_len'] == 1) & (rules['consequent_len'] == 1)]
+
+        rules = rules[['antecedents', 'consequents']].values.tolist()
+        d={}
+        for rule in rules:
+            if rule[0] not in d:
+                d[rule[0]] = {}
+
+                d[rule[0]][rule[1]] = None
+
+        if output_file is not None:
+            A = pgv.AGraph(data=d, directed=directed)
+            A.node_attr['style']='filled'
+            A.node_attr['shape'] = 'circle'
+            A.node_attr['fixedsize']='true'
+            A.node_attr['fontcolor']='#FFFFFF'
+            A.node_attr['height']=4
+            A.node_attr['width']=4
+
+            A.draw(str(output_file), prog='fdp')
+
+        return d
 
     def get_best_cluster_size(self, X, clusters):
         '''measure silhouette scores for the given cluster sizes and return the best k and its score'''
@@ -119,46 +207,6 @@ class ModelUtils():
                 list_of_outlier_indices.append(i)
 
         return list_of_outlier_indices
-
-    def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
-        max_length=2
-        rules = apriori(documents, min_support = min_support, min_confidence = min_confidence, min_lift = min_lift, max_length = max_length)
-        d = {}
-        if item_list is not None:
-            for item in item_list:
-                d[item] = {}
-
-        for record in tqdm(rules):
-            for stat in record[2]: # this will need to change if max_length is not 2
-                if not stat[0]:
-                    continue
-                if not stat[1]:
-                    continue
-                
-                assert len(stat[0]) == 1 #item numbers appear in frozensets -> can't be indexed
-                assert len(stat[1]) == 1
-
-                item_0 = next(iter(stat[0]))
-                item_1 = next(iter(stat[1]))
-                if item_list is None and item_0 not in d:
-                    d[item_0] = {}
-
-                d[item_0][item_1] = None
-
-
-
-        if output_file is not None:
-            A = pgv.AGraph(data=d, directed=directed)
-            A.node_attr['style']='filled'
-            A.node_attr['shape'] = 'circle'
-            A.node_attr['fixedsize']='true'
-            A.node_attr['fontcolor']='#FFFFFF'
-            A.node_attr['height']=4
-            A.node_attr['width']=4
-
-            A.draw(str(output_file), prog='fdp')
-
-        return d
 
     def multiprocess_generator(self, function, generator, threads=6):
         pool = Pool(processes=threads)
