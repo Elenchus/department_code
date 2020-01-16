@@ -48,7 +48,7 @@ class ModelUtilsTest(unittest.TestCase):
         assert 100 in x
 
     def test_market_basket(self):
-        test_function = self.model._apriori_analysis
+        test_function = self.model.fp_growth_analysis
         documents = []
         for i in range(1000):
             doc = []

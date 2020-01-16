@@ -9,7 +9,7 @@ class TestCase(ProposalTest):
 
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
-    required_params = {}
+    required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
     test_data = None
 

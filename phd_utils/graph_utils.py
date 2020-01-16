@@ -2,6 +2,7 @@
 from datetime import datetime
 # from cuml import UMAP as umap
 import numpy as np
+import pygraphviz as pgv
 from matplotlib import pyplot as plt
 
 class GraphUtils():
@@ -149,3 +150,14 @@ class GraphUtils():
         name = "UMAP_" + datetime.now().strftime("%Y%m%dT%H%M%S")
         path = self.logger.output_path / name
         fig.savefig(path)
+
+    def visual_graph(self, data_dict, output_file, directed=True):
+        A = pgv.AGraph(data=data_dict, directed=directed)
+        A.node_attr['style']='filled'
+        A.node_attr['shape'] = 'circle'
+        A.node_attr['fixedsize']='true'
+        A.node_attr['fontcolor']='#FFFFFF'
+        A.node_attr['height']=4
+        A.node_attr['width']=4
+
+        A.draw(str(output_file), prog='fdp')

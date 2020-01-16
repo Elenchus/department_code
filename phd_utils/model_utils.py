@@ -3,7 +3,6 @@ import itertools
 from datetime import datetime
 import keras
 import pandas as pd
-import pygraphviz as pgv
 import numpy as np
 import umap
 from apyori import apriori as apyori
@@ -51,15 +50,7 @@ class ModelUtils():
                 d[item_0][item_1] = None
 
         if output_file is not None:
-            A = pgv.AGraph(data=d, directed=directed)
-            A.node_attr['style']='filled'
-            A.node_attr['shape'] = 'circle'
-            A.node_attr['fixedsize']='true'
-            A.node_attr['fontcolor']='#FFFFFF'
-            A.node_attr['height']=4
-            A.node_attr['width']=4
-
-            A.draw(str(output_file), prog='fdp')
+            self.graph_utils.visual_graph(d, output_file, directed=directed)
 
         return d
 
@@ -83,15 +74,7 @@ class ModelUtils():
                 d[rule[0]][rule[1]] = None
 
         if output_file is not None:
-            A = pgv.AGraph(data=d, directed=directed)
-            A.node_attr['style']='filled'
-            A.node_attr['shape'] = 'circle'
-            A.node_attr['fixedsize']='true'
-            A.node_attr['fontcolor']='#FFFFFF'
-            A.node_attr['height']=4
-            A.node_attr['width']=4
-
-            A.draw(str(output_file), prog='fdp')
+            self.graph_utils.visual_graph(d, output_file, directed=directed)
 
         return d
 
@@ -127,28 +110,24 @@ class ModelUtils():
         freq_items = fpgrowth(df, min_support=min_support, use_colnames=True)
 
         rules = association_rules(freq_items, metric='confidence', min_threshold=min_confidence)
-        rules["antecedent_len"] = rules["antecedents"].apply(lambda x: len(x))
-        rules["consequent_len"] = rules["consequents"].apply(lambda x: len(x))
-        rules = rules[(rules['lift'] >= min_lift) & (rules['antecedent_len'] == 1) & (rules['consequent_len'] == 1)]
+        rules = rules[(rules['lift'] >= min_lift)]
 
-        rules = rules[['antecedents', 'consequents']].values.tolist()
+        antecedents = rules['antecedents'].values.tolist()
+        consequents = rules['consequents'].values.tolist()
         d={}
-        for rule in rules:
-            if rule[0] not in d:
-                d[rule[0]] = {}
+        for idx, ante in enumerate(antecedents):
+            if len(ante) > 1 or len(consequents[idx]) > 1:
+                continue
 
-                d[rule[0]][rule[1]] = None
+            for i in ante:
+                for j in consequents[idx]:
+                    if i not in d:
+                        d[i] = {}
+
+                    d[i][j] = None
 
         if output_file is not None:
-            A = pgv.AGraph(data=d, directed=directed)
-            A.node_attr['style']='filled'
-            A.node_attr['shape'] = 'circle'
-            A.node_attr['fixedsize']='true'
-            A.node_attr['fontcolor']='#FFFFFF'
-            A.node_attr['height']=4
-            A.node_attr['width']=4
-
-            A.draw(str(output_file), prog='fdp')
+            self.graph_utils.visual_graph(d, output_file, directed=directed)
 
         return d
 
