@@ -89,6 +89,8 @@ class ModelUtils():
 
         antecedents = rules['antecedents'].values.tolist()
         consequents = rules['consequents'].values.tolist()
+        conviction = rules['conviciton'].values.tolist()
+        min_conviction = rules['conviction'].min
         d={}
         for idx, ante in enumerate(antecedents):
             if len(ante) > 1 or len(consequents[idx]) > 1:
@@ -99,7 +101,10 @@ class ModelUtils():
                     if i not in d:
                         d[i] = {}
 
-                    d[i][j] = None
+                    blue = 'ff'
+                    green = '00'
+                    red = 
+                    d[i][j] = {'color': "#ff0000",'style': 'tapered'}
 
         if output_file is not None:
             self.graph_utils.visual_graph(d, output_file, directed=directed)

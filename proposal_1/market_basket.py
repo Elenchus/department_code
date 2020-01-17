@@ -8,7 +8,7 @@ class TestCase(ProposalTest):
     class RequiredParams:
         group_header:str = 'PIN'
         basket_header:str = 'SPR_RSP'
-        convert_rsp_codes:bool = True
+        convert_rsp_codes:bool = False
         min_support:float = 0.01
         min_conviction:float = 0.8
     

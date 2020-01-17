@@ -159,5 +159,12 @@ class GraphUtils():
         A.node_attr['fontcolor']='#FFFFFF'
         A.node_attr['height']=4
         A.node_attr['width']=4
+        for k, v in data_dict.items():
+            for node, d in v.items():
+                if d is not None:
+                    edge = A.get_edge(k, node)
+                    for att, val in d.items():
+                        edge.attr[att] = val
+                        True
 
         A.draw(str(output_file), prog='fdp')
