@@ -18,6 +18,22 @@ class TestCase(ProposalTest):
     processed_data: pd.DataFrame = None
     test_data = None
 
+    def convert_rsp_keys(self, d):
+        lookup = {}
+        for k in d.keys():
+            lookup[k] = self.code_converter.convert_rsp_num(k)
+
+        new_data = {}
+        for k, v in d.items():
+            if lookup[k] not in new_data:
+                new_data[lookup[k]] = {}
+            for key, val in v.items():
+                if key not in lookup:
+                    lookup[key] = self.code_converter.convert_rsp_num(key)
+                new_data[lookup[k]][lookup[key]] = val
+
+        return new_data
+
     def process_dataframe(self, data):
         raise NotImplementedError("Use load data")
         # super().process_dataframe(data)
@@ -28,9 +44,10 @@ class TestCase(ProposalTest):
 
     def load_data(self, data):
         super().load_data()
+        if self.required_params.convert_rsp_codes and self.required_params.basket_header != 'SPR_RSP':
+            raise NotImplementedError("Can only convert RSP codes in basket")
+
         data = pd.read_csv(data)
-        if self.required_params.convert_rsp_codes:
-           data['SPR_RSP'] = data['SPR_RSP'].apply(lambda x: self.code_converter.convert_rsp_num(x))
 
         self.test_data = data
 
@@ -46,6 +63,12 @@ class TestCase(ProposalTest):
             items = [str(item) for item in items]
             documents.append(items)
 
+        self.log("Creating model")
         name = f"{rp.group_header}_{rp.basket_header}_graph.png"
         filename = self.logger.output_path / name
-        self.models.fp_growth_analysis(documents, output_file=filename, min_support=rp.min_support, min_conviction=rp.min_conviction)
+        d = self.models.fp_growth_analysis(documents, min_support=rp.min_support, min_conviction=rp.min_conviction)
+        if self.required_params.convert_rsp_codes:
+            d = self.convert_rsp_keys(d)
+
+        self.log("Graphing")
+        self.graphs.visual_graph(d, filename)

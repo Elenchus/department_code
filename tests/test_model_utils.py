@@ -7,6 +7,30 @@ import phd_utils.model_utils as model_utils
 from tests.mock_logger import MockLogger
 from tests.mock_w2v import MockW2V
 
+def create_mba_test_data():
+    documents = []
+    for i in range(1000):
+        doc = []
+        doc.append('0')
+        if i < 999:
+            doc.append('1')
+        if i < 900:
+            doc.append('2')
+        if i < 899:
+            doc.append('3')
+        if i < 700:
+            doc.append('4')
+        if i < 10:
+            doc.append('5')
+        if i < 9:
+            doc.append('6')
+        if i < 1:
+            doc.append('7')
+
+        documents.append(doc)
+
+    return documents
+
 class ModelUtilsTest(unittest.TestCase):
     def setUp(self):
         self.model = model_utils.ModelUtils(MockLogger())
@@ -47,29 +71,41 @@ class ModelUtilsTest(unittest.TestCase):
         assert 101 in x
         assert 100 in x
 
-    def test_market_basket(self):
+    def test_fpgrowth(self):
+        test_function = self.model.fp_growth_analysis
+        documents = create_mba_test_data()
+
+        # test min support
+        d = test_function(documents, min_support=0.01, min_conviction=0)
+        assert len(d) == 6
+        for i in d:
+            assert len(d[i]) == 5
+
+        # test min conviction
+        d = test_function(documents, min_support=0.01, min_conviction=1.1)
+        cat = [1000,999,900,899,700,10,9,1]
+        for i in range(len(cat)):
+            for j in range(len(cat)):
+                a = cat[i]
+                b = cat[j]
+                if a == b:
+                    continue
+                
+                supp = min(a,b) / max(cat)
+                supp_x = a / max(cat)
+                supp_y = b / max(cat)
+                conf = supp / supp_x
+                conviction = (1 - supp_y) / (1 - conf) if conf != 1 else (9999 if supp_y != 1 else 0)
+                if supp >= 0.01:
+                    if conviction < 1.1:
+                        if str(a) in d:
+                            assert str(b) not in d[str(a)]
+                    else:
+                        assert str(b) in d[str(a)]
+
+    def test_apriori(self):
         test_function = self.model.apriori_analysis
-        documents = []
-        for i in range(1000):
-            doc = []
-            doc.append('0')
-            if i < 999:
-                doc.append('1')
-            if i < 900:
-                doc.append('2')
-            if i < 899:
-                doc.append('3')
-            if i < 700:
-                doc.append('4')
-            if i < 10:
-                doc.append('5')
-            if i < 9:
-                doc.append('6')
-            if i < 1:
-                doc.append('7')
-
-            documents.append(doc)
-
+        documents = create_mba_test_data()
         # test min_support
         d = test_function(documents, min_support=0.01, min_confidence= 0, min_lift=0)
         assert len(d) == 6

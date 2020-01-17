@@ -113,7 +113,7 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     test_details = TestDetails(
         notes = "Getting hip data with all categories",
-        params = {'min_conviction': 1.1},
+        params = {'min_conviction': 1.1, 'convert_rsp_codes': True, 'basket_header': 'SPR_RSP'},
         proposal = 1,
         # test_data = mbs,
         test_data = 'hip_21214_provider_subset.csv',

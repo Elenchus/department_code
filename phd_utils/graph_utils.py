@@ -155,10 +155,12 @@ class GraphUtils():
         A = pgv.AGraph(data=data_dict, directed=directed)
         A.node_attr['style']='filled'
         A.node_attr['shape'] = 'circle'
-        A.node_attr['fixedsize']='true'
+        A.node_attr['fixedsize']='false'
         A.node_attr['fontcolor']='#FFFFFF'
-        A.node_attr['height']=4
-        A.node_attr['width']=4
+        # A.node_attr['height']=4
+        # A.node_attr['width']=4
+        A.edge_attr['penwidth']=0.7
+        A.edge_attr['style']='tapered'
         for k, v in data_dict.items():
             for node, d in v.items():
                 if d is not None:
