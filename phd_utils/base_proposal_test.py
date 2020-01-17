@@ -11,12 +11,12 @@ from phd_utils.code_converter import CodeConverter
 class RequiredParams:
     def __init__(self, d, rp):
         for k, v in d.items():
-            if not hasattr(rp, k):
-                raise KeyError(f'Invalid key {k} in params. Required keys are {rp.__dict__.keys()}')
+            if k not in rp:
+                raise KeyError(f'Invalid key {k} in params. Required keys are {rp.keys()}')
 
             setattr(self, k, v)
 
-        for k, v in rp.__dict__.items():
+        for k, v in rp.items():
             if not hasattr(self, k):
                 setattr(self, k, v)
 

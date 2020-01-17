@@ -10,9 +10,7 @@ class TestCase(ProposalTest):
         basket_header:str = 'SPR_RSP'
         convert_rsp_codes:bool = True
         min_support:float = 0.01
-        min_confidence:float = 0.8
-        min_lift:float = 1.01
-        remove_empty:bool = True
+        min_conviction:float = 0.8
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -50,8 +48,4 @@ class TestCase(ProposalTest):
 
         name = f"{rp.group_header}_{rp.basket_header}_graph.png"
         filename = self.logger.output_path / name
-        if rp.remove_empty:
-            self.models._apriori_analysis(documents, output_file=filename, min_support=rp.min_support, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
-        else:
-            items = [str(x) for x in self.test_data[rp.basket_header].unique()]
-            self.models._apriori_analysis(documents, output_file=filename, item_list=items, min_support=rp.min_support, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
+        self.models.fp_growth_analysis(documents, output_file=filename, min_support=rp.min_support, min_conviction=rp.min_conviction)

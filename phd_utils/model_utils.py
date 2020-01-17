@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 import umap
 from apyori import apriori as apyori
-from mlxtend.frequent_patterns import apriori, association_rules, fpgrowth
+from mlxtend.frequent_patterns import association_rules, fpgrowth
 from mlxtend.preprocessing import TransactionEncoder
 from matplotlib import markers
 from matplotlib import pyplot as plt
@@ -24,7 +24,7 @@ class ModelUtils():
         self.logger = logger
         self.graph_utils = GraphUtils(logger)
 
-    def _apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
+    def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
         max_length=2
         rules = apyori(documents, min_support = min_support, min_confidence = min_confidence, min_lift = min_lift, max_length = max_length)
         d = {}
@@ -48,30 +48,6 @@ class ModelUtils():
                     d[item_0] = {}
 
                 d[item_0][item_1] = None
-
-        if output_file is not None:
-            self.graph_utils.visual_graph(d, output_file, directed=directed)
-
-        return d
-
-    def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
-        te = TransactionEncoder()
-        te_ary = te.fit(documents).transform(documents)
-        df = pd.DataFrame(te_ary, columns=te.columns_)
-        freq_items = apriori(df, min_support=min_support, use_colnames=True)
-
-        rules = association_rules(freq_items, metric='confidence', min_threshold=min_confidence)
-        rules["antecedent_len"] = rules["antecedents"].apply(lambda x: len(x))
-        rules["consequent_len"] = rules["consequents"].apply(lambda x: len(x))
-        rules = rules[(rules['lift'] >= min_lift) & (rules['antecedent_len'] == 1) & (rules['consequent_len'] == 1)]
-
-        rules = rules[['antecedents', 'consequents']].values.tolist()
-        d={}
-        for rule in rules:
-            if rule[0] not in d:
-                d[rule[0]] = {}
-
-                d[rule[0]][rule[1]] = None
 
         if output_file is not None:
             self.graph_utils.visual_graph(d, output_file, directed=directed)
@@ -103,14 +79,13 @@ class ModelUtils():
 
         return polars
 
-    def fp_growth_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
+    def fp_growth_analysis(self, documents, output_file=None, min_support=0.01, min_conviction=1.1, directed=True):
         te = TransactionEncoder()
         te_ary = te.fit(documents).transform(documents)
         df = pd.DataFrame(te_ary, columns=te.columns_)
         freq_items = fpgrowth(df, min_support=min_support, use_colnames=True)
 
-        rules = association_rules(freq_items, metric='confidence', min_threshold=min_confidence)
-        rules = rules[(rules['lift'] >= min_lift)]
+        rules = association_rules(freq_items, metric='conviction', min_threshold=min_conviction)
 
         antecedents = rules['antecedents'].values.tolist()
         consequents = rules['consequents'].values.tolist()
