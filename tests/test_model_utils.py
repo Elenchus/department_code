@@ -95,13 +95,13 @@ class ModelUtilsTest(unittest.TestCase):
                 supp_x = a / max(cat)
                 supp_y = b / max(cat)
                 conf = supp / supp_x
-                conviction = (1 - supp_y) / (1 - conf) if conf != 1 else (9999 if supp_y != 1 else 0)
+                conviction = (1 - supp_y) / (1 - conf) if conf != 1 else 9999
                 if supp >= 0.01:
                     if conviction < 1.1:
-                        if str(a) in d:
-                            assert str(b) not in d[str(a)]
+                        if str(i) in d:
+                            assert str(j) not in d[str(i)]
                     else:
-                        assert str(b) in d[str(a)]
+                        assert str(j) in d[str(i)]
 
     def test_apriori(self):
         test_function = self.model.apriori_analysis

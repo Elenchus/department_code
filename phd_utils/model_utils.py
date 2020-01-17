@@ -94,7 +94,7 @@ class ModelUtils():
         consequents = [x for x, *_ in rules['consequents'].values.tolist()]
         
         max_conviction = rules.loc[rules['conviction'] != np.inf, 'conviction'].max()
-        conviction = rules['conviction'].replace(np.inf, max_conviction).values.tolist() # this has potential problems if max_conviction is < 1
+        conviction = rules['conviction'].replace(np.inf, (max_conviction if max_conviction > 1 else 9999)).values.tolist()
         min_conviction = rules['conviction'].min()
 
         d={}
@@ -107,7 +107,6 @@ class ModelUtils():
                 continue
 
             d[a][b] = None
-
 
             green = '00'
             red_amount = int(255 * ((conviction[i] - min_conviction) / (max_conviction - min_conviction)))
