@@ -113,7 +113,7 @@ class ModelUtils():
             red = '{:02x}'.format(red_amount)
             blue_amount = 255 - red_amount
             blue = '{:02x}'.format(blue_amount)
-            d[a][b] = {'color': f"#{red}{green}{blue}"}
+            d[a][b] = {'color': f"#{red}{green}{blue}"} #, 'label': str(conviction[i])
 
         if output_file is not None:
             self.graph_utils.visual_graph(d, output_file, directed=directed)
