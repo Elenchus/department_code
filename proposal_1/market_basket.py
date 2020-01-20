@@ -59,7 +59,7 @@ class TestCase(ProposalTest):
         self.log("Creating documents")
         documents = []
         for _, group in tqdm(data): # update this to use models generate_string
-            items = group[rp.basket_header].values.tolist()
+            items = group[rp.basket_header].unique().tolist()
             items = [str(item) for item in items]
             documents.append(items)
 
@@ -67,6 +67,7 @@ class TestCase(ProposalTest):
         name = f"{rp.group_header}_{rp.basket_header}_graph.png"
         filename = self.logger.output_path / name
         d = self.models.fp_growth_analysis(documents, min_support=rp.min_support, min_conviction=rp.min_conviction)
+        # d = self.models.apriori_analysis(documents, min_support=rp.min_support, min_confidence=0, min_lift=1.1)
         if self.required_params.convert_rsp_codes:
             d = self.convert_rsp_keys(d)
 

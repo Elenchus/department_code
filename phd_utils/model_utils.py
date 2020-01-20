@@ -202,6 +202,18 @@ class ModelUtils():
 
         return Y
 
+    def pairwise_conviction(self, items, groups):
+        output = pd.DataFrame(columns=['ITEM', 'COUNT', 'SUPPORT', 'CONFIDENCE', 'CONVICTION'])
+        for item in items:
+            for b in items:
+                if a == b:
+                    continue
+
+                for _, group in groups:
+                    itemset=group['ITEM'].uniques().tolist()
+                    if a in itemset and b in itemset:
+                        pass
+
     def pca_2d(self, data):
         self.logger.log("Performing PCA")
         pca2d = PCA(n_components=2)
