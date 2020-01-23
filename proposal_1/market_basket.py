@@ -57,10 +57,10 @@ class TestCase(ProposalTest):
         super().run_test()
         rp = self.required_params
 
+        unique_items = [str(x) for x in self.test_data[rp.basket_header].unique().tolist()]
         data = self.test_data.groupby(rp.group_header)
         self.log("Creating documents")
         documents = []
-        unique_items = data['ITEM'].unique().tolist()
         for _, group in tqdm(data): # update this to use models generate_string
             items = group[rp.basket_header].unique().tolist()
             items = [str(item) for item in items]

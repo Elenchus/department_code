@@ -218,10 +218,10 @@ class ModelUtils():
 
         reduced_items = {}
         for item in items:
-            reduced_items[str(item)] = 0
+            reduced_items[item] = 0
         for doc in documents:
             for item in doc:
-                reduced_items[str(item)] += 1
+                reduced_items[item] += 1
 
         keys = list(reduced_items.keys())
         for item in keys:
@@ -256,7 +256,7 @@ class ModelUtils():
                     if confidence < min_confidence:
                         continue
 
-                    conviction = (1 - support_b) / (1 - confidence)
+                    conviction = (1 - support_b) / (1 - confidence) if confidence != 1 else 9999
                     if conviction < min_conviction:
                         continue
 

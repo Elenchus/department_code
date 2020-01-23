@@ -141,7 +141,7 @@ class ModelUtilsTest(unittest.TestCase):
         test_function = self.model.pairwise_market_basket
         documents = create_mba_test_data()
         cat = [1000,999,900,899,700,10,9,1]
-        names = list(range(8))
+        names = [str(x) for x in range(8)]
         # test min_support
         d = test_function(names, documents, min_support=0.01, min_confidence= 0, min_lift=0, min_conviction=0)
         assert len(d) == 6
