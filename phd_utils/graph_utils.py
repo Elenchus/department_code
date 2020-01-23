@@ -151,7 +151,7 @@ class GraphUtils():
         path = self.logger.output_path / name
         fig.savefig(path)
 
-    def visual_graph(self, data_dict, output_file, directed=True):
+    def visual_graph(self, data_dict, output_file, title=None, directed=True):
         max_len = 0
         sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
         full_list = set(list(data_dict.keys()) + list(item for elem in sub_list_of_lists for item in elem))
@@ -165,6 +165,10 @@ class GraphUtils():
             width = 5
 
         A = pgv.AGraph(data=data_dict, directed=directed)
+        if title is not None:
+            A.graph_attr['label'] = title
+            A.graph_attr['labelloc'] = 't'
+
         A.node_attr['style']='filled'
         A.node_attr['shape'] = 'circle'
         A.node_attr['fixedsize']='true'

@@ -114,8 +114,8 @@ class ModelUtilsTest(unittest.TestCase):
 
         # test min_confidence
         d = test_function(documents, min_support=0.01, min_confidence=0.9, min_lift=0)
-        assert d['0']['1'] == None
-        assert d['0']['2'] == None
+        assert d['0']['1'] == {'color': '#0200fd'}
+        assert d['0']['2'] == {'color': '#0200fd'}
         assert len(d['0']) == 2 
 
         # test min_lift
@@ -133,6 +133,62 @@ class ModelUtilsTest(unittest.TestCase):
                 if supp >= 0.01:
                     if lift < 1.1:
                         if str(a) in d:
+                            assert str(j) not in d[str(i)]
+                    else:
+                        assert str(j) in d[str(i)]
+
+    def test_pairwise_market_basket(self):
+        test_function = self.model.pairwise_market_basket
+        documents = create_mba_test_data()
+        cat = [1000,999,900,899,700,10,9,1]
+        names = list(range(8))
+        # test min_support
+        d = test_function(names, documents, min_support=0.01, min_confidence= 0, min_lift=0, min_conviction=0)
+        assert len(d) == 6
+        for i in d:
+            assert len(d[i]) == 5
+
+        # test min_confidence
+        d = test_function(names, documents, min_support=0.01, min_confidence=0.9, min_lift=0, min_conviction=0)
+        assert d['0']['1'] == None # {'color': '#0200fd'}
+        assert d['0']['2'] == None # {'color': '#0200fd'}
+        assert len(d['0']) == 2 
+
+        # test min_lift
+        d = test_function(names, documents, min_support=0.01, min_confidence= 0, min_lift=1.1, min_conviction=0)
+
+        for i in range(len(cat)):
+            for j in range(len(cat)):
+                a = cat[i]
+                b = cat[j]
+                if a == b:
+                    continue
+                lift = (min(a,b)/max(cat))/((a/max(cat))*(b/max(cat)))
+                supp = min(a,b) / max(cat)
+                if supp >= 0.01:
+                    if lift < 1.1:
+                        if str(a) in d:
+                            assert str(j) not in d[str(i)]
+                    else:
+                        assert str(j) in d[str(i)]
+
+        # test min conviction
+        d = test_function(names, documents, min_support=0.01, min_conviction=1.1, min_confidence=0, min_lift=0)
+        for i in range(len(cat)):
+            for j in range(len(cat)):
+                a = cat[i]
+                b = cat[j]
+                if a == b:
+                    continue
+                
+                supp = min(a,b) / max(cat)
+                supp_x = a / max(cat)
+                supp_y = b / max(cat)
+                conf = supp / supp_x
+                conviction = (1 - supp_y) / (1 - conf) if conf != 1 else 9999
+                if supp >= 0.01:
+                    if conviction < 1.1:
+                        if str(i) in d:
                             assert str(j) not in d[str(i)]
                     else:
                         assert str(j) in d[str(i)]

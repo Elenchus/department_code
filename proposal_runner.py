@@ -35,8 +35,7 @@ def run_combined_test(test_name, test_details):
         test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", 
                                 fromlist=['TestCase'])
         test_case = test_file.TestCase(logger, test_details.params)
-        if test_details.params is None:
-            test_details.params = test_case.required_params
+        test_details.params = test_case.required_params
     
         logger.log(test_details.notes)
         logger.log(str(test_details.params))
@@ -60,8 +59,7 @@ def run_iterative_test(test_name, test_details):
         test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", 
                                 fromlist=['TestCase'])
         test_case = test_file.TestCase(logger, test_details.params)
-        if test_details.params is None:
-            test_details.params = test_case.required_params
+        test_details.params = test_case.required_params
     
         logger.log(test_details.notes)
         logger.log(str(test_details.params))
@@ -113,7 +111,7 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     test_details = TestDetails(
         notes = "Getting hip data with all categories",
-        params = {'min_conviction': 1.1, 'convert_rsp_codes': False, 'basket_header': 'ITEM'},
+        params = {'convert_rsp_codes':False, 'basket_header': 'SPR_RSP', 'group_header':'PIN', 'min_confidence':0, 'min_lift':0},
         proposal = 1,
         # test_data = mbs,
         test_data = 'hip_21214_provider_subset.csv',

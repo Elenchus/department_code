@@ -44,10 +44,17 @@ class ModelUtils():
 
                 item_0 = next(iter(stat[0]))
                 item_1 = next(iter(stat[1]))
+                lift=stat[3]
                 if item_list is None and item_0 not in d:
                     d[item_0] = {}
 
-                d[item_0][item_1] = None
+                green = '00'
+                red_amount = min(int(255 * ((lift - min_lift) / 100)), 255)
+                red = '{:02x}'.format(red_amount)
+                blue_amount = 255 - red_amount
+                blue = '{:02x}'.format(blue_amount)
+                
+                d[item_0][item_1] = {'color': f"#{red}{green}{blue}"}
 
         if output_file is not None:
             self.graph_utils.visual_graph(d, output_file, directed=directed)
@@ -202,17 +209,72 @@ class ModelUtils():
 
         return Y
 
-    def pairwise_conviction(self, items, groups):
-        output = pd.DataFrame(columns=['ITEM', 'COUNT', 'SUPPORT', 'CONFIDENCE', 'CONVICTION'])
+    def pairwise_market_basket(self, items, documents, min_support=0.01, min_confidence=0.8, min_conviction=1.1, min_lift=1.1):
+        group_len = len(documents)
+        if min_support < 1:
+            min_occurrence = min_support * group_len
+        else:
+            min_occurrence = min_support
+
+        reduced_items = {}
         for item in items:
-            for b in items:
-                if a == b:
+            reduced_items[str(item)] = 0
+        for doc in documents:
+            for item in doc:
+                reduced_items[str(item)] += 1
+
+        keys = list(reduced_items.keys())
+        for item in keys:
+            if reduced_items[item] < min_occurrence:
+                reduced_items.pop(item)
+
+        reduced_item_list = reduced_items.keys()
+        counts = pd.DataFrame(0, index=reduced_item_list, columns=reduced_item_list)
+        for doc in documents:
+            for item in doc:
+                if item not in reduced_item_list:
                     continue
 
-                for _, group in groups:
-                    itemset=group['ITEM'].uniques().tolist()
-                    if a in itemset and b in itemset:
-                        pass
+                for item_2 in doc:
+                    if item_2 not in reduced_item_list:
+                        continue
+
+                    counts.at[item, item_2] += 1
+
+        # row_list = []
+        d = {}
+        for a in reduced_item_list:
+            for b in reduced_item_list:
+                if a == b:
+                    continue
+                count = counts.at[a, b] 
+                if  count >= min_occurrence:
+                    support = count / group_len
+                    support_a = reduced_items[a] / group_len
+                    support_b = reduced_items[b] / group_len
+                    confidence = support / support_a
+                    if confidence < min_confidence:
+                        continue
+
+                    conviction = (1 - support_b) / (1 - confidence)
+                    if conviction < min_conviction:
+                        continue
+
+                    lift = support / (support_a * support_b)
+                    if lift < min_lift:
+                        continue
+
+                    if a not in d:
+                        d[a] = {}
+
+                    d[a][b] = None
+
+                # new_row = {"Antecedent": a, "Consequent": b, "Count": count, "Support": support, "Confidence": confidence, "Conviction": conviction, "Lift": lift}
+                # row_list.append(new_row)
+
+        # output = pd.DataFrame(row_list)
+
+        return d
 
     def pca_2d(self, data):
         self.logger.log("Performing PCA")

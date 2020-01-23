@@ -10,7 +10,9 @@ class TestCase(ProposalTest):
         basket_header:str = 'SPR_RSP'
         convert_rsp_codes:bool = False
         min_support:float = 0.01
-        min_conviction:float = 0.8
+        min_conviction:float = 1.1
+        min_confidence:float = 0.8
+        min_lift:float = 1.01
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -58,6 +60,7 @@ class TestCase(ProposalTest):
         data = self.test_data.groupby(rp.group_header)
         self.log("Creating documents")
         documents = []
+        unique_items = data['ITEM'].unique().tolist()
         for _, group in tqdm(data): # update this to use models generate_string
             items = group[rp.basket_header].unique().tolist()
             items = [str(item) for item in items]
@@ -66,10 +69,12 @@ class TestCase(ProposalTest):
         self.log("Creating model")
         name = f"{rp.group_header}_{rp.basket_header}_graph.png"
         filename = self.logger.output_path / name
-        d = self.models.fp_growth_analysis(documents, min_support=rp.min_support, min_conviction=rp.min_conviction)
-        # d = self.models.apriori_analysis(documents, min_support=rp.min_support, min_confidence=0, min_lift=1.1)
+        d = self.models.pairwise_market_basket(unique_items, documents, min_support=rp.min_support, min_conviction=rp.min_conviction, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
+        # d = self.models.fp_growth_analysis(documents, min_support=rp.min_support, min_conviction=rp.min_conviction)
+        # d = self.models.apriori_analysis(documents, min_support=rp.min_support, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
         if self.required_params.convert_rsp_codes:
             d = self.convert_rsp_keys(d)
 
         self.log("Graphing")
-        self.graphs.visual_graph(d, filename)
+        title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
+        self.graphs.visual_graph(d, filename, title=title)

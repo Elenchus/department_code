@@ -7,7 +7,6 @@ from phd_utils.graph_utils import GraphUtils
 from phd_utils.model_utils import ModelUtils
 from phd_utils.code_converter import CodeConverter
 
-@dataclass
 class RequiredParams:
     def __init__(self, d, rp):
         for k, v in d.items():
@@ -15,10 +14,15 @@ class RequiredParams:
                 raise KeyError(f'Invalid key {k} in params. Required keys are {rp.keys()}')
 
             setattr(self, k, v)
+            self.__dict__[k] = v
 
         for k, v in rp.items():
             if not hasattr(self, k):
                 setattr(self, k, v)
+                self.__dict__[k] = v
+
+    def __repr__(self):
+        return f"RequiredParams({str(self.__dict__)})"
 
 class ProposalTest(ABC):
     @property
