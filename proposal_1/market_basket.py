@@ -14,6 +14,7 @@ class TestCase(ProposalTest):
         min_confidence:float = 0
         min_lift:float = 0
         min_odds_ratio:float = 0
+        p_value:float = 0.05
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -70,12 +71,23 @@ class TestCase(ProposalTest):
         self.log("Creating model")
         name = f"{rp.group_header}_{rp.basket_header}_graph.png"
         filename = self.logger.output_path / name
-        d = self.models.pairwise_market_basket(unique_items, documents, min_support=rp.min_support, min_conviction=rp.min_conviction, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
+        d = self.models.pairwise_market_basket(unique_items,
+                                                documents,
+                                                min_support=rp.min_support,
+                                                min_conviction=rp.min_conviction,
+                                                min_confidence=rp.min_confidence,
+                                                min_lift=rp.min_lift,
+                                                p_value=rp.p_value)
         # d = self.models.fp_growth_analysis(documents, min_support=rp.min_support, min_conviction=rp.min_conviction)
         # d = self.models.apriori_analysis(documents, min_support=rp.min_support, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
         if self.required_params.convert_rsp_codes:
             d = self.convert_rsp_keys(d)
 
+        if rp.min_conviction == 0 and rp.min_confidence == 0:
+            directed = False
+        else:
+            directed = True
+
         self.log("Graphing")
         title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
-        self.graphs.visual_graph(d, filename, title=title)
+        self.graphs.visual_graph(d, filename, title=title, directed=directed)

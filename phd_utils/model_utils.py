@@ -13,11 +13,12 @@ from matplotlib import pyplot as plt
 from multiprocessing import Pool
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.code_converter import CodeConverter
-from tqdm import tqdm
+from scipy.stats import fisher_exact
 from sklearn import cluster, metrics
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.mixture import BayesianGaussianMixture as BGMM
+from tqdm import tqdm
 
 class ModelUtils():
     def __init__(self, logger):
@@ -216,7 +217,8 @@ class ModelUtils():
                                 min_confidence=0.8,
                                 min_conviction=1.1,
                                 min_lift=1,
-                                min_odds_ratio=0):
+                                min_odds_ratio=0,
+                                p_value=0.05):
         group_len = len(documents)
         if min_support < 1:
             min_occurrence = min_support * group_len
@@ -261,12 +263,15 @@ class ModelUtils():
                     f10 = reduced_items[a] - f11
                     f01 = reduced_items[b] - f11
                     f00 = group_len - (f10 + f01 + count)
-                    num = f11 * f00
-                    den = f01 * f10
-                    odds_ratio = num / den if den != 0 else 9999
-                    if odds_ratio < min_odds_ratio:
-                        continue
+                    # num = f11 * f00
+                    # den = f01 * f10
+                    odds_ratio, p_value = fisher_exact([[f11, f10], [f01, f00]], alternative='greater')
+                    if odds_ratio is np.nan:
+                        odds_ratio = 9999
 
+                    if odds_ratio < min_odds_ratio or p_value > p_value:
+                        continue
+                    
                     support = count / group_len
                     support_a = reduced_items[a] / group_len
                     support_b = reduced_items[b] / group_len
