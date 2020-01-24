@@ -209,7 +209,14 @@ class ModelUtils():
 
         return Y
 
-    def pairwise_market_basket(self, items, documents, min_support=0.01, min_confidence=0.8, min_conviction=1.1, min_lift=1.1):
+    def pairwise_market_basket(self,
+                                items,
+                                documents,
+                                min_support=0.01,
+                                min_confidence=0.8,
+                                min_conviction=1.1,
+                                min_lift=1,
+                                min_odds_ratio=0):
         group_len = len(documents)
         if min_support < 1:
             min_occurrence = min_support * group_len
@@ -247,11 +254,26 @@ class ModelUtils():
             for b in reduced_item_list:
                 if a == b:
                     continue
+
                 count = counts.at[a, b] 
                 if  count >= min_occurrence:
+                    f11 = count
+                    f10 = reduced_items[a] - f11
+                    f01 = reduced_items[b] - f11
+                    f00 = group_len - (f10 + f01 + count)
+                    num = f11 * f00
+                    den = f01 * f10
+                    odds_ratio = num / den if den != 0 else 9999
+                    if odds_ratio < min_odds_ratio:
+                        continue
+
                     support = count / group_len
                     support_a = reduced_items[a] / group_len
                     support_b = reduced_items[b] / group_len
+                    lift = support / (support_a * support_b)
+                    if lift < min_lift:
+                        continue
+                        
                     confidence = support / support_a
                     if confidence < min_confidence:
                         continue
@@ -260,16 +282,12 @@ class ModelUtils():
                     if conviction < min_conviction:
                         continue
 
-                    lift = support / (support_a * support_b)
-                    if lift < min_lift:
-                        continue
-
                     if a not in d:
                         d[a] = {}
 
                     d[a][b] = None
 
-                # new_row = {"Antecedent": a, "Consequent": b, "Count": count, "Support": support, "Confidence": confidence, "Conviction": conviction, "Lift": lift}
+                # new_row = {"Antecedent": a, "Consequent": b, "Count": count, "Support": support, "Confidence": confidence, "Conviction": conviction, "Lift": lift, "Odds ratio": odds_ratio}
                 # row_list.append(new_row)
 
         # output = pd.DataFrame(row_list)

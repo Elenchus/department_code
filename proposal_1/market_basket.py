@@ -11,8 +11,9 @@ class TestCase(ProposalTest):
         convert_rsp_codes:bool = False
         min_support:float = 0.01
         min_conviction:float = 1.1
-        min_confidence:float = 0.8
-        min_lift:float = 1.01
+        min_confidence:float = 0
+        min_lift:float = 0
+        min_odds_ratio = 0
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS

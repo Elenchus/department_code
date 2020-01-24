@@ -193,6 +193,12 @@ class ModelUtilsTest(unittest.TestCase):
                     else:
                         assert str(j) in d[str(i)]
 
+        # test min odds ratio - I believe all should go to infinity, denominator will always be 0. not a great test...
+        d = test_function(names, documents, min_support=0, min_confidence=0, min_conviction=0, min_lift=0, min_odds_ratio=9999)
+        assert len(d) == 8
+        for v in d.values():
+            assert len(v) == 7
+
     def test_sum_and_average_vecors(self):
         vocab = {}
         for n in range(1, 5):
