@@ -176,7 +176,11 @@ class GraphUtils():
         A.node_attr['width']=width
         A.node_attr['fontcolor']='#000000'
         A.edge_attr['penwidth']=7
-        A.edge_attr['style']='tapered'
+        if directed:
+            A.edge_attr['style']='tapered'
+        else:
+            A.edge_attr['style']='solid'
+
         for k, v in data_dict.items():
             for node, d in v.items():
                 if d is not None:

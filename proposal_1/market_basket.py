@@ -13,7 +13,7 @@ class TestCase(ProposalTest):
         min_conviction:float = 1.1
         min_confidence:float = 0
         min_lift:float = 0
-        min_odds_ratio = 0
+        min_odds_ratio:float = 0
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
