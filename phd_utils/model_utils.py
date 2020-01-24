@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import umap
 from apyori import apriori as apyori
+from enum import auto, Enum
 from mlxtend.frequent_patterns import association_rules, fpgrowth
 from mlxtend.preprocessing import TransactionEncoder
 from matplotlib import markers
@@ -19,6 +20,12 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.mixture import BayesianGaussianMixture as BGMM
 from tqdm import tqdm
+
+class AssociationRules(Enum):
+    CONFIDENCE = auto()
+    CONVICTION = auto()
+    LIFT = auto()
+    ODDS_RATIO = auto()
 
 class ModelUtils():
     def __init__(self, logger):
@@ -213,12 +220,10 @@ class ModelUtils():
     def pairwise_market_basket(self,
                                 items,
                                 documents,
-                                min_support=0.01,
-                                min_confidence=0.8,
-                                min_conviction=1.1,
-                                min_lift=1,
-                                min_odds_ratio=0,
-                                p_value=0.05):
+                                filters,
+                                min_support = 0.1,
+                                max_p_value=0.05):
+
         group_len = len(documents)
         if min_support < 1:
             min_occurrence = min_support * group_len
@@ -266,34 +271,47 @@ class ModelUtils():
                     # num = f11 * f00
                     # den = f01 * f10
                     odds_ratio, p_value = fisher_exact([[f11, f10], [f01, f00]], alternative='greater')
-                    if odds_ratio is np.nan:
-                        odds_ratio = 9999
 
-                    if odds_ratio < min_odds_ratio or p_value > p_value:
+                    if p_value > max_p_value:
                         continue
                     
                     support = count / group_len
                     support_a = reduced_items[a] / group_len
                     support_b = reduced_items[b] / group_len
+
                     lift = support / (support_a * support_b)
-                    if lift < min_lift:
-                        continue
-                        
                     confidence = support / support_a
-                    if confidence < min_confidence:
-                        continue
 
                     conviction = (1 - support_b) / (1 - confidence) if confidence != 1 else 9999
-                    if conviction < min_conviction:
-                        continue
 
-                    if a not in d:
-                        d[a] = {}
+                    for k, v in filters.items():
+                        assert isinstance(k, AssociationRules)
+                        assert 'value' in v
+                        assert 'operator' in v
 
-                    d[a][b] = None
+                        comp = v['operator']
+                        val = v['value']
+                        if k == AssociationRules.LIFT:
+                            fil = lift
+                        elif k == AssociationRules.CONFIDENCE:
+                            fil = confidence
+                        elif k == AssociationRules.CONVICTION:
+                            fil = conviction
+                        elif k == AssociationRules.ODDS_RATIO:
+                            fil = odds_ratio
+                        else:
+                            raise KeyError(f"No matching association rule {k}")
 
-                # new_row = {"Antecedent": a, "Consequent": b, "Count": count, "Support": support, "Confidence": confidence, "Conviction": conviction, "Lift": lift, "Odds ratio": odds_ratio}
-                # row_list.append(new_row)
+                        if not comp(fil, val):
+                            break
+                    else:
+                        if a not in d:
+                            d[a] = {}
+
+                        d[a][b] = None
+
+                    # new_row = {"Antecedent": a, "Consequent": b, "Count": count, "Support": support, "Confidence": confidence, "Conviction": conviction, "Lift": lift, "Odds ratio": odds_ratio}
+                    # row_list.append(new_row)
 
         # output = pd.DataFrame(row_list)
 

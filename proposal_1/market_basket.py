@@ -1,6 +1,8 @@
+import operator
 import pandas as pd
 from dataclasses import dataclass
 from phd_utils.base_proposal_test import ProposalTest
+from phd_utils.model_utils import AssociationRules
 from tqdm import tqdm
 
 class TestCase(ProposalTest):
@@ -10,10 +12,10 @@ class TestCase(ProposalTest):
         basket_header:str = 'SPR_RSP'
         convert_rsp_codes:bool = False
         min_support:float = 0.01
-        min_conviction:float = 1.1
-        min_confidence:float = 0
-        min_lift:float = 0
-        min_odds_ratio:float = 0
+        conviction:float = 1.1
+        confidence:float = 0
+        lift:float = 0
+        odds_ratio:float = 0
         p_value:float = 0.05
     
     FINAL_COLS = []
@@ -71,19 +73,27 @@ class TestCase(ProposalTest):
         self.log("Creating model")
         name = f"{rp.group_header}_{rp.basket_header}_graph.png"
         filename = self.logger.output_path / name
+        filters = {
+            AssociationRules.CONVICTION: {'operator': operator.ge,
+                                            'value': rp.conviction},
+            AssociationRules.CONFIDENCE: {'operator': operator.ge,
+                                            'value': rp.confidence},
+            AssociationRules.LIFT: {'operator': operator.ge,
+                                    'value': rp.lift},
+            AssociationRules.ODDS_RATIO: {'operator': operator.ge,
+                                            'value': rp.odds_ratio}
+        }
         d = self.models.pairwise_market_basket(unique_items,
                                                 documents,
+                                                filters,
                                                 min_support=rp.min_support,
-                                                min_conviction=rp.min_conviction,
-                                                min_confidence=rp.min_confidence,
-                                                min_lift=rp.min_lift,
-                                                p_value=rp.p_value)
+                                                max_p_value=rp.p_value)
         # d = self.models.fp_growth_analysis(documents, min_support=rp.min_support, min_conviction=rp.min_conviction)
         # d = self.models.apriori_analysis(documents, min_support=rp.min_support, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
         if self.required_params.convert_rsp_codes:
             d = self.convert_rsp_keys(d)
 
-        if rp.min_conviction == 0 and rp.min_confidence == 0:
+        if rp.conviction == 0 and rp.confidence == 0:
             directed = False
         else:
             directed = True

@@ -110,15 +110,15 @@ def start_test(test_details, additional_folder_name_part=None):
 
 if __name__ == "__main__":
     test_details = TestDetails(
-        notes = "Getting hip data with all categories",
+        notes = "",
         params = {'convert_rsp_codes':False, 
-                    'basket_header': 'ITEM', 
+                    'basket_header': 'PIN', 
                     'group_header':'SPR', 
-                    'min_confidence':0, 
-                    'min_lift':0, 
-                    'min_conviction': 1.1, 
-                    'min_odds_ratio': 1.1,
-                    'p-value': 0.05},
+                    'confidence':0, 
+                    'lift':0, 
+                    'conviction': 1.1, 
+                    'odds_ratio': 1.1,
+                    'p_value': 0.05},
         proposal = 1,
         # test_data = mbs,
         test_data = 'hip_21214_provider_subset.csv',
