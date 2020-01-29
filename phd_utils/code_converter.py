@@ -51,7 +51,7 @@ class CodeConverter:
         else:
             sub_desc = self.mbs_groups_dict[cat]["Groups"][group]["SubGroups"][sub]
 
-            return f"{cat_desc} - {group_desc} - {sub_desc}"
+            return [cat_desc, group_desc, sub_desc]
 
     def convert_mbs_code_to_group_numbers(self, code):
         '''convert mbs item code number to category definition'''
@@ -59,7 +59,7 @@ class CodeConverter:
         if item is None:
             return "Item code not in 2019 dictionary"
 
-        return f"{item['Category']} - {item['Group']} - {item['SubGroup']}"
+        return [item['Category'], item['Group'], item['SubGroup']]
 
     def convert_pbs_code(self, code):
         '''convert pbs item code number to definition string'''

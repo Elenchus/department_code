@@ -11,6 +11,7 @@ class TestCase(ProposalTest):
         group_header:str = 'PIN'
         basket_header:str = 'SPR_RSP'
         convert_rsp_codes:bool = False
+        add_mbs_code_groups: bool = False
         min_support:float = 0.01
         conviction:float = 1.1
         confidence:float = 0
@@ -40,6 +41,27 @@ class TestCase(ProposalTest):
 
         return new_data
 
+    def convert_mbs_codes(self, d):
+        lookup = {}
+        for k in d.keys():
+            labels = self.code_converter.convert_mbs_code_to_group_labels(k)
+            lookup[k] = f'{labels[0]}\n{labels[1]}\n{labels[2]}'
+
+        new_data = {}
+        for k, v in d.items():
+            new_k = f'{lookup[k]}\n{k}'
+            if new_k not in new_data:
+                new_data[new_k] = {}
+            for key, val in v.items():
+                if key not in lookup:
+                    labels = self.code_converter.convert_mbs_code_to_group_labels(key)
+                    lookup[key] = f'{labels[0]}\n{labels[1]}\n{labels[2]}'
+
+                new_key = f'{lookup[key]}\n{key}'
+                new_data[new_k][new_key] = val
+
+        return new_data
+
     def process_dataframe(self, data):
         raise NotImplementedError("Use load data")
         # super().process_dataframe(data)
@@ -52,6 +74,9 @@ class TestCase(ProposalTest):
         super().load_data()
         if self.required_params.convert_rsp_codes and self.required_params.basket_header != 'SPR_RSP':
             raise NotImplementedError("Can only convert RSP codes in basket")
+
+        if self.required_params.add_mbs_code_groups and self.required_params.basket_header != 'ITEM':
+            raise NotImplementedError("Can only convert ITEM codes in basket")
 
         data = pd.read_csv(data)
 
@@ -92,6 +117,9 @@ class TestCase(ProposalTest):
         # d = self.models.apriori_analysis(documents, min_support=rp.min_support, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
         if self.required_params.convert_rsp_codes:
             d = self.convert_rsp_keys(d)
+
+        if self.required_params.add_mbs_code_groups:
+            d = self.convert_mbs_codes(d)
 
         if rp.conviction == 0 and rp.confidence == 0:
             directed = False

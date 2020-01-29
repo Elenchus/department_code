@@ -9,14 +9,14 @@ class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
         convert_rsp_codes:bool = True
-        min_support:float = 0.005
+        min_support:float = 0
         conviction:float = 1.1
         confidence:float = 0
         lift:float = 0
         odds_ratio:float = 0
         p_value:float = 0.05
 
-    FINAL_COLS = ['PIN', 'SPR_RSP']
+    FINAL_COLS = ['SPR', 'SPR_RSP']
     INITIAL_COLS = FINAL_COLS
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
@@ -45,7 +45,7 @@ class TestCase(ProposalTest):
 
     def get_test_data(self):
         super().get_test_data()
-        data = self.processed_data.groupby('PIN')
+        data = self.processed_data.groupby('SPR')
         self.log("Creating documents")
         documents = []
         for _, group in tqdm(data): # update this to use models generate_string
@@ -87,5 +87,5 @@ class TestCase(ProposalTest):
             directed = True
 
         self.log("Graphing")
-        title = f'Connections between SPR_RSP when grouped by PIN'
+        title = f'Connections between SPR_RSP when grouped by SPR'
         self.graphs.visual_graph(d, filename, title=title, directed=directed)

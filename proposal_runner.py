@@ -111,18 +111,19 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     test_details = TestDetails(
         notes = "",
-        params = {'convert_rsp_codes':True, 
-                    # 'basket_header': 'PIN', 
-                    # 'group_header':'SPR', 
+        params = {'convert_rsp_codes':False,
+                    'add_mbs_code_groups': True, 
+                    'basket_header': 'ITEM', 
+                    'group_header':'SPR', 
                     'confidence':0, 
                     'lift':0, 
                     'conviction': 1.1, 
                     'odds_ratio': 1.1,
                     'p_value': 0.05},
         proposal = 1,
-        test_data = mbs,
-        # test_data = 'hip_21214_provider_subset.csv',
-        test_file_name = f'full_rsp_mba',
+        # test_data = mbs,
+        test_data = 'hip_21214_provider_subset.csv',
+        test_file_name = f'market_basket',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]
     )
