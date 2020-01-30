@@ -13,6 +13,7 @@ class TestCase(ProposalTest):
         basket_header:str = 'SPR_RSP'
         convert_rsp_codes:bool = False
         add_mbs_code_groups: bool = False
+        color_providers: bool = False
         min_support:float = 0.01
         conviction:float = 1.1
         confidence:float = 0
@@ -25,6 +26,50 @@ class TestCase(ProposalTest):
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
     test_data = None
+
+    def color_providers(self, d):
+        def get_provider_val(spr):
+            spr = int(spr)
+            rows = self.test_data[self.test_data['SPR'] == spr]
+            rsps = rows['SPR_RSP'].mode().tolist()
+            if len(rsps) == 1:
+                rsp = rsps[0]
+            else:
+                rsp = 'Multiple'
+
+            return rsp
+
+        lookup = {}
+        for k in d.keys():
+            lookup[k] = get_provider_val(k)
+
+        used_colors = set()
+        for k, v in d.items():
+            if lookup[k] not in lookup:
+                color = get_provider_val(k)
+                lookup[k] = color
+                used_colors.add(color)
+            for key in v.keys():
+                if key not in lookup:
+                    color = get_provider_val(key)
+                    lookup[key] = color
+                    used_colors.add(color)
+
+        colour_table = {}
+        for i, col in enumerate(used_colors):
+            color = int(i * 255 / len(used_colors))
+            anti_col = 255 - color
+            g = int(min(color, anti_col)/2)
+            c = '{:02x}'.format(color)
+            a = '{:02x}'.format(anti_col)
+
+            colour_table[col] = {'color': f"#{c}{g}{a}"}
+
+        colors = {}
+        for k, v in lookup.items():
+            colors[k] = colour_table[v]
+
+        return colors
 
     def convert_rsp_keys(self, d):
         lookup = {}
@@ -103,6 +148,9 @@ class TestCase(ProposalTest):
         if self.required_params.add_mbs_code_groups and self.required_params.basket_header != 'ITEM':
             raise NotImplementedError("Can only convert ITEM codes in basket")
 
+        if self.required_params.color_providers and self.required_params.basket_header != 'SPR':
+            raise NotImplementedError("Can only color SPR codes in basket")
+
         data = pd.read_csv(data)
 
         self.test_data = data
@@ -149,6 +197,10 @@ class TestCase(ProposalTest):
         if self.required_params.add_mbs_code_groups:
             self.log("Converting MBS codes")
             (d, attrs, legend) = self.convert_mbs_codes(d)
+
+        if rp.color_providers:
+            self.log("Colouring SPR")
+            attrs = self.color_providers(d)
 
         if rp.conviction == 0 and rp.confidence == 0:
             directed = False

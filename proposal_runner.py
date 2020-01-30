@@ -111,9 +111,10 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     test_details = TestDetails(
         notes = "",
-        params = {'convert_rsp_codes':True,
+        params = {'convert_rsp_codes':False,
+                    'color_providers': True,
                     'add_mbs_code_groups': False, 
-                    'basket_header': 'SPR_RSP', 
+                    'basket_header': 'SPR', 
                     'group_header':'PIN', 
                     'confidence':0, 
                     'lift':0, 
