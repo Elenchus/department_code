@@ -226,7 +226,7 @@ class TestCase(ProposalTest):
         self.log(thing.describe())
         susp = thing.nlargest(10, 'count').index.tolist()
         # complete_susp = []
-        for s in susp:
+        for idx, s in enumerate(susp):
             group = data.get_group(s)
             transactions = group[rp.basket_header].values.tolist()
             if rp.add_mbs_code_groups:
@@ -235,7 +235,11 @@ class TestCase(ProposalTest):
                     t = ' --- '.join(self.code_converter.convert_mbs_code_to_group_labels(t)) + str(t)
                     final_t.append(t)
                 transactions = final_t
-
+            
+            t_d = {i : {} for i in transactions}
+            nam = f"suspect_{idx}.png"
+            output_file_x = self.logger.output_path / nam
+            self.graphs.visual_graph(t_d, output_file_x, title=f'suspect {idx}')
             self.log(transactions)
         
 
