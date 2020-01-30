@@ -192,15 +192,16 @@ class TestCase(ProposalTest):
         legend = None
         if self.required_params.convert_rsp_codes:
             self.log("Converting RSP codes")
-            d = self.convert_rsp_keys(d)
-
-        if self.required_params.add_mbs_code_groups:
+            converted_d = self.convert_rsp_keys(d)
+        elif self.required_params.add_mbs_code_groups:
             self.log("Converting MBS codes")
-            (d, attrs, legend) = self.convert_mbs_codes(d)
+            (converted_d, attrs, legend) = self.convert_mbs_codes(d)
+        else:
+            converted_d = d
 
         if rp.color_providers:
             self.log("Colouring SPR")
-            attrs = self.color_providers(d)
+            attrs = self.color_providers(converted_d)
 
         if rp.conviction == 0 and rp.confidence == 0:
             directed = False
@@ -209,7 +210,37 @@ class TestCase(ProposalTest):
 
         self.log("Graphing")
         title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
-        self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs, legend=None)
+        self.graphs.visual_graph(converted_d, filename, title=title, directed=directed, node_attrs=attrs, legend=None)
+
+        self.log("Checking patients against graph")
+        suspicious_transactions = {}
+        for name, group in tqdm(data):
+            basket = [str(x) for x in group[rp.basket_header]]
+            for item in d.keys():
+                if item in basket:
+                    for expected_item in d[item].keys():
+                        if expected_item not in basket:
+                            suspicious_transactions[name] = suspicious_transactions.get(name, 0) + 1
+
+        thing = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
+        self.log(thing.describe())
+        susp = thing.nlargest(10, 'count').index.tolist()
+        # complete_susp = []
+        for s in susp:
+            group = data.get_group(s)
+            transactions = group[rp.basket_header].values.tolist()
+            if rp.add_mbs_code_groups:
+                final_t = []
+                for t in transactions:
+                    t = ' --- '.join(self.code_converter.convert_mbs_code_to_group_labels(t)) + str(t)
+                    final_t.append(t)
+                transactions = final_t
+
+            self.log(transactions)
+        
+
+        self.log(f'{len(suspicious_transactions)} of {len(data)} suspicious {rp.group_header}')
+
 
         # self.log("Getting negative correlations")
         # neg = self.models.pairwise_neg_cor_low_sup(unique_items, documents, max_support=rp.min_support)

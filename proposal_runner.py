@@ -112,9 +112,9 @@ if __name__ == "__main__":
     test_details = TestDetails(
         notes = "",
         params = {'convert_rsp_codes':False,
-                    'color_providers': True,
-                    'add_mbs_code_groups': False, 
-                    'basket_header': 'SPR', 
+                    'color_providers': False,
+                    'add_mbs_code_groups': True, 
+                    'basket_header': 'ITEM', 
                     'group_header':'PIN', 
                     'confidence':0, 
                     'lift':0, 
@@ -127,6 +127,6 @@ if __name__ == "__main__":
         test_data = 'hip_21214_provider_subset.csv',
         test_file_name = f'market_basket',
         test_format = TestFormat.CombineYears,
-        years = [str(x) for x in [2014]]
+        years = [str(x) for x in [2013]]
     )
     start_test(test_details)
