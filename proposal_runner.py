@@ -34,7 +34,7 @@ def run_combined_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
         test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", 
                                 fromlist=['TestCase'])
-        test_case = test_file.TestCase(logger, test_details.params)
+        test_case = test_file.TestCase(logger, test_details.params, test_details.years[-1])
         test_details.params = test_case.required_params
     
         logger.log(test_details.notes)
@@ -58,7 +58,7 @@ def run_iterative_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
         test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", 
                                 fromlist=['TestCase'])
-        test_case = test_file.TestCase(logger, test_details.params)
+        test_case = test_file.TestCase(logger, test_details.params, test_details.years[-1])
         test_details.params = test_case.required_params
     
         logger.log(test_details.notes)
@@ -111,10 +111,10 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     test_details = TestDetails(
         notes = "",
-        params = {'convert_rsp_codes':False,
-                    'add_mbs_code_groups': True, 
-                    'basket_header': 'ITEM', 
-                    'group_header':'SPR', 
+        params = {'convert_rsp_codes':True,
+                    'add_mbs_code_groups': False, 
+                    'basket_header': 'SPR_RSP', 
+                    'group_header':'PIN', 
                     'confidence':0, 
                     'lift':0, 
                     'conviction': 1.1, 

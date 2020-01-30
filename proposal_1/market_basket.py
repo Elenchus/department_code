@@ -44,14 +44,15 @@ class TestCase(ProposalTest):
 
     def convert_mbs_codes(self, d):
         get_color = {
+            'I': 'tomato', # for item not in dictionary
             '1': 'blue',
             '2': 'green',
             '3': 'red',
             '4': 'yellow',
             '5': 'cyan',
-            '6': 'oldlace',
+            '6': 'khaki',
             '7': 'orange',
-            '8': 'mintcream' 
+            '8': 'darkorchid' 
         }
 
         lookup = {}
@@ -61,11 +62,14 @@ class TestCase(ProposalTest):
 
         new_data = {}
         colors = {}
+        color_map = set()
         for k, v in d.items():
             new_k = f'{lookup[k]}\n{k}'
             if new_k not in new_data:
                 group_no = self.code_converter.convert_mbs_code_to_group_numbers(k)[0]
-                colors[new_k] = {'color': get_color[group_no]}
+                color = get_color[group_no]
+                colors[new_k] = {'color': color}
+                color_map.add(group_no)
                 new_data[new_k] = {}
             for key, val in v.items():
                 if key not in lookup:
@@ -75,7 +79,13 @@ class TestCase(ProposalTest):
                 new_key = f'{lookup[key]}\n{key}'
                 new_data[new_k][new_key] = val
 
-        return (new_data, colors)
+        legend = {}
+        for color in color_map:
+            color_name = get_color[color]
+            color_label = self.code_converter.convert_mbs_category_number_to_label(color)
+            legend[color_name] = {'color': color_name, 'label': color_label, 'labeljust': ';', 'rank': 'max'}
+
+        return (new_data, colors, legend)
 
     def process_dataframe(self, data):
         raise NotImplementedError("Use load data")
@@ -131,11 +141,14 @@ class TestCase(ProposalTest):
         # d = self.models.fp_growth_analysis(documents, min_support=rp.min_support, min_conviction=rp.min_conviction)
         # d = self.models.apriori_analysis(documents, min_support=rp.min_support, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
         attrs = None
+        legend = None
         if self.required_params.convert_rsp_codes:
+            self.log("Converting RSP codes")
             d = self.convert_rsp_keys(d)
 
         if self.required_params.add_mbs_code_groups:
-            (d, attrs) = self.convert_mbs_codes(d)
+            self.log("Converting MBS codes")
+            (d, attrs, legend) = self.convert_mbs_codes(d)
 
         if rp.conviction == 0 and rp.confidence == 0:
             directed = False
@@ -144,4 +157,20 @@ class TestCase(ProposalTest):
 
         self.log("Graphing")
         title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
-        self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs)
+        self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs, legend=None)
+
+        # self.log("Getting negative correlations")
+        # neg = self.models.pairwise_neg_cor_low_sup(unique_items, documents, max_support=rp.min_support)
+        # if self.required_params.convert_rsp_codes:
+        #     self.log("Converting RSP codes")
+        #     neg = self.convert_rsp_keys(neg)
+
+        # if self.required_params.add_mbs_code_groups:
+        #     self.log("Converting MBS codes")
+        #     (neg, attrs, legend) = self.convert_mbs_codes(neg)
+            
+        # neg_name = f"negative_{rp.group_header}_{rp.basket_header}_graph.png"
+        # neg_file = self.logger.output_path / neg_name
+        # neg_title= f"Negative connections for {rp.basket_header} when grouped by {rp.group_header}"
+        # self.log("Graphing")
+        # self.graphs.visual_graph(neg, neg_file, title=neg_title, directed=False)

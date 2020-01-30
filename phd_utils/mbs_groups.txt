@@ -1,5 +1,9 @@
 CATEGORY 1: PROFESSIONAL ATTENDANCES 
 Group A1. General Practitioner Attendances To Which No Other Item Applies 
+Subgroup 1. LEVEL A
+Subgroup 2. LEVEL B
+Subgroup 3. LEVEL C
+Subgroup 4. LEVEL D
 Group A2. Other Non-Referred Attendances To Which No Other Item Applies 
 Subgroup 1. Other Medical Practitioner Attendances 
 Group A3. Specialist Attendances To Which No Other Item Applies 

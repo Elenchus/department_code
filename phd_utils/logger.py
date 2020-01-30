@@ -70,14 +70,17 @@ class Logger:
 
                 return output_folder
 
-            def handle_exception(self, exc_type, exc_value, exc_traceback):
+            def handle_exception(self, exc_type, exc_value, exc_traceback, from_exit=False):
                 '''log exceptions to file'''
                 if issubclass(exc_type, KeyboardInterrupt):
                     sys.__excepthook__(exc_type, exc_value, exc_traceback)
                     return
 
-                self.logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
-                raise exc_type(exc_value)
+                if from_exit:
+                    self.logger.info("Uncaught exception", exc_info=1)
+                else:
+                    self.logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+                    raise exc_type(exc_value)
 
             def log(self, line, line_end='...'):
                 '''add to log file'''
@@ -89,4 +92,7 @@ class Logger:
         return self.logger
 
     def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is not None:
+            self.logger.handle_exception(exc_type, exc_type, traceback, True)
+
         self.logger.finalise()

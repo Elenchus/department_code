@@ -2,8 +2,8 @@ import pickle
 import xml.etree.ElementTree as ET
 
 
-def convert_xml():
-    tree = ET.parse('MBS_20190812.xml')
+def convert_xml(x, year):
+    tree = ET.parse(x)
     root = tree.getroot()
     mbs = {}
     for child in root:
@@ -16,12 +16,12 @@ def convert_xml():
             val = child[i].text
             mbs[item][key] = val
 
-    with open('MBS_2019.pkl', 'wb') as f:
+    with open(f'phd_utils/MBS_{year}.pkl', 'wb') as f:
         pickle.dump(mbs, f, pickle.HIGHEST_PROTOCOL)
 
 def convert_groups_txt():
     cats = {}
-    with open('phd_utils/mbs_groups.txt') as f:
+    with open(f'phd_utils/mbs_groups.txt') as f:
         current_cat = ''
         current_group = ''
         while True:
@@ -42,8 +42,11 @@ def convert_groups_txt():
             elif x[0][0] == 'S':
                 cats[current_cat]["Groups"][current_group]["SubGroups"][key] = val
 
-    with open('phd_utils/mbs_groups.pkl', 'wb') as f:
+    with open(f'phd_utils/mbs_groups.pkl', 'wb') as f:
         pickle.dump(cats, f, pickle.HIGHEST_PROTOCOL)
                 
 if __name__ == '__main__':
+    filename = '201411-XML.xml'
+    year = '2014'
+    # convert_xml(filename, year)
     convert_groups_txt()

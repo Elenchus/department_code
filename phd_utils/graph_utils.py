@@ -151,7 +151,7 @@ class GraphUtils():
         path = self.logger.output_path / name
         fig.savefig(path)
 
-    def visual_graph(self, data_dict, output_file, title=None, directed=True, node_attrs=None):
+    def visual_graph(self, data_dict, output_file, title=None, directed=True, node_attrs=None, legend=None):
         max_len = 0
         sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
         full_list = set(list(data_dict.keys()) + list(item for elem in sub_list_of_lists for item in elem))
@@ -194,5 +194,34 @@ class GraphUtils():
                 node = A.get_node(k)
                 for attr, val in v.items():
                     node.attr[attr] = val
+
+        if legend is not None:
+            nbunch = list(legend.keys())
+            for i, node in enumerate(nbunch):
+                A.add_node(node)
+                n = A.get_node(node)
+                n.attr['shape'] = 'rectangle'
+                # n.attr['rank'] = 'max'
+                n.attr['fontsize'] = 20
+                for attr, val in legend[node].items():
+                    n.attr[attr] = val
+
+                if i < len(nbunch) - 1:
+                    A.add_edge(node, nbunch[i+1])# , style='invis')
+
+            A.add_subgraph(nbunch=nbunch, name='Legend')
+            l = A.get_subgraph('Legend')
+            l.rank = 'max'
+            l.label = 'Legend'
+            l.style = 'filled'
+            l.shape = 'rectangle'
+            l.labelloc = 't'
+            l.fontcolor = '#000000'
+            l.color = 'grey'
+            l.pack = True
+                
+
+
+
 
         A.draw(str(output_file), prog='fdp')

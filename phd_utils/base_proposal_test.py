@@ -55,11 +55,11 @@ class ProposalTest(ABC):
     def test_data(self):
         raise NotImplementedError
     
-    def __init__(self, logger, params):
+    def __init__(self, logger, params, year):
         self.logger = logger
         self.graphs = GraphUtils(logger)
         self.models = ModelUtils(logger)
-        self.code_converter = CodeConverter()
+        self.code_converter = CodeConverter(year)
         self.processed_data = pd.DataFrame()
 
         if params is None:

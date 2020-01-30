@@ -5,9 +5,15 @@ import pandas as pd
 
 class CodeConverter:
     '''Converter for PBS items and MBS RSP codes'''
-    def __init__(self):
+    def __init__(self, year):
+        available_years = ['2014', '2019']
+        if year not in available_years:
+            year = '2019'
+
+        self.year = year
+
         mbs_group_filename = 'phd_utils/mbs_groups.pkl'
-        mbs_item_filename = 'phd_utils/MBS_2019.pkl'
+        mbs_item_filename = f'phd_utils/MBS_{year}.pkl'
         rsp_filename = 'phd_utils/SPR_RSP.csv'
         pbs_item_filename = 'phd_utils/pbs-item-drug-map.csv'
 
@@ -28,17 +34,38 @@ class CodeConverter:
         self.valid_rsp_num_values = self.rsp_table['SPR_RSP'].unique()
         self.valid_rsp_str_values = self.rsp_table['Label'].unique()
 
+    def convert_mbs_category_number_to_label(self, cat_num):
+        cat_num = str(cat_num)
+        d = {
+            '1': 'PROFESSIONAL ATTENDANCES',
+            '2': 'DIAGNOSTIC PROCEDURES AND INVESTIGATIONS',
+            '3': 'THERAPEUTIC PROCEDURES',
+            '4': 'ORAL AND MAXILLOFACIAL SERVICES',
+            '5': 'DIAGNOSTIC IMAGING SERVICES',
+            '6': 'PATHOLOGY SERVICES',
+            '7': 'CLEFT LIP AND CLEFT PALATE SERVICES',
+            '8': 'MISCELLANEOUS SERVICES'
+        }
+        
+        try:
+            x = d[cat_num]
+        except KeyError:
+            x = 'Item not in dictionary'
+        
+        return x
+
     def convert_mbs_code_to_description(self, code):
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
-            return "Item code not in 2019 dictionary"
+            return f"Item code not in {self.year} dictionary"
 
         return f"{item['Description']}"
 
     def convert_mbs_code_to_group_labels(self, code):
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
-            return "Item code not in 2019 dictionary"
+            return f"Item code not in {self.year} dictionary"
+
 
         cat = item['Category']
         group = item['Group']
@@ -48,16 +75,19 @@ class CodeConverter:
         group_desc = self.mbs_groups_dict[cat]["Groups"][group]["Label"] 
         if sub is None:
             return [cat_desc, group_desc]
-        else:
+
+        try:
             sub_desc = self.mbs_groups_dict[cat]["Groups"][group]["SubGroups"][sub]
 
             return [cat_desc, group_desc, sub_desc]
+        except KeyError:
+            return [cat_desc, group_desc, f'Missing information for subgroup {sub}']
 
     def convert_mbs_code_to_group_numbers(self, code):
         '''convert mbs item code number to category definition'''
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
-            return "Item code not in 2019 dictionary"
+            return f"Item code not in {self.year} dictionary"
 
         return [item['Category'], item['Group'], item['SubGroup']]
 

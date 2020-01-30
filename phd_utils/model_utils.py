@@ -217,13 +217,51 @@ class ModelUtils():
 
         return Y
 
+    def pairwise_neg_cor_low_sup(self, items, documents, max_support=0.01, hc=0.8):
+        group_count = len(documents)
+        max_occurrences = max_support * group_count
+        counts = pd.DataFrame(0, index=items, columns=items)
+        for doc in documents:
+            for item in doc:
+                for item_2 in doc:
+
+                    counts.at[item, item_2] += 1
+        
+        pairs = {}
+        for item in items:
+            for item_2 in items:
+                if item == item_2:
+                    continue
+
+                count = counts.at[item, item_2]
+                count_1 = counts.at[item, item]
+                count_2 = counts.at[item_2, item_2]
+                if count > max_occurrences:
+                    continue
+
+                s_1 = count_1 / group_count
+                s_2 = count_2 / group_count
+                s = count / group_count
+                cross_support=min(s_1, s_2) / max(s_1, s_2)
+                if cross_support < hc:
+                    continue
+
+                if s >= s_1 * s_2:
+                    continue
+
+                if item not in pairs:
+                    pairs[item] = {}
+
+                pairs[item][item_2] = None
+                
+        return pairs
+
     def pairwise_market_basket(self,
                                 items,
                                 documents,
                                 filters,
                                 min_support = 0.1,
                                 max_p_value=0.05):
-
         group_len = len(documents)
         if min_support < 1:
             min_occurrence = min_support * group_len
@@ -268,8 +306,6 @@ class ModelUtils():
                     f10 = reduced_items[a] - f11
                     f01 = reduced_items[b] - f11
                     f00 = group_len - (f10 + f01 + count)
-                    # num = f11 * f00
-                    # den = f01 * f10
                     odds_ratio, p_value = fisher_exact([[f11, f10], [f01, f00]], alternative='greater')
 
                     if p_value > max_p_value:
