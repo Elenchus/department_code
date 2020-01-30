@@ -232,19 +232,19 @@ class TestCase(ProposalTest):
             if rp.add_mbs_code_groups:
                 final_t = []
                 for t in transactions:
-                    t = ' --- '.join(self.code_converter.convert_mbs_code_to_group_labels(t)) + str(t)
+                    t = '\n'.join(self.code_converter.convert_mbs_code_to_group_labels(t)) + f'\n{t}'
                     final_t.append(t)
                 transactions = final_t
             
+        #################### ADD DIRECTION FOR MISSING COMPONENTS SOMEHOW? ALSO COLOURS ############ 
             t_d = {i : {} for i in transactions}
-            nam = f"suspect_{idx}.png"
+            nam = f"suspect_{idx}_{s}.png"
             output_file_x = self.logger.output_path / nam
-            self.graphs.visual_graph(t_d, output_file_x, title=f'suspect {idx}')
+            self.graphs.visual_graph(t_d, output_file_x, title=f'Suspect {idx}: {s}')
             self.log(transactions)
         
 
         self.log(f'{len(suspicious_transactions)} of {len(data)} suspicious {rp.group_header}')
-
 
         # self.log("Getting negative correlations")
         # neg = self.models.pairwise_neg_cor_low_sup(unique_items, documents, max_support=rp.min_support)
