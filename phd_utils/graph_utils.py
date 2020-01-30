@@ -151,7 +151,7 @@ class GraphUtils():
         path = self.logger.output_path / name
         fig.savefig(path)
 
-    def visual_graph(self, data_dict, output_file, title=None, directed=True):
+    def visual_graph(self, data_dict, output_file, title=None, directed=True, node_attrs=None):
         max_len = 0
         sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
         full_list = set(list(data_dict.keys()) + list(item for elem in sub_list_of_lists for item in elem))
@@ -188,5 +188,11 @@ class GraphUtils():
                     for att, val in d.items():
                         edge.attr[att] = val
                         True
+        
+        if node_attrs is not None:
+            for k, v in node_attrs.items():
+                node = A.get_node(k)
+                for attr, val in v.items():
+                    node.attr[attr] = val
 
         A.draw(str(output_file), prog='fdp')

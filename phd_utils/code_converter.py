@@ -47,7 +47,7 @@ class CodeConverter:
         cat_desc = self.mbs_groups_dict[cat]["Label"]
         group_desc = self.mbs_groups_dict[cat]["Groups"][group]["Label"] 
         if sub is None:
-            return f"{cat_desc} - {group_desc}"
+            return [cat_desc, group_desc]
         else:
             sub_desc = self.mbs_groups_dict[cat]["Groups"][group]["SubGroups"][sub]
 

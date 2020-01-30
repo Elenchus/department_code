@@ -1,6 +1,7 @@
 import operator
 import pandas as pd
 from dataclasses import dataclass
+from enum import Enum
 from phd_utils.base_proposal_test import ProposalTest
 from phd_utils.model_utils import AssociationRules
 from tqdm import tqdm
@@ -42,25 +43,39 @@ class TestCase(ProposalTest):
         return new_data
 
     def convert_mbs_codes(self, d):
+        get_color = {
+            '1': 'blue',
+            '2': 'green',
+            '3': 'red',
+            '4': 'yellow',
+            '5': 'cyan',
+            '6': 'oldlace',
+            '7': 'orange',
+            '8': 'mintcream' 
+        }
+
         lookup = {}
         for k in d.keys():
             labels = self.code_converter.convert_mbs_code_to_group_labels(k)
-            lookup[k] = f'{labels[0]}\n{labels[1]}\n{labels[2]}'
+            lookup[k] = '\n'.join(labels)
 
         new_data = {}
+        colors = {}
         for k, v in d.items():
             new_k = f'{lookup[k]}\n{k}'
             if new_k not in new_data:
+                group_no = self.code_converter.convert_mbs_code_to_group_numbers(k)[0]
+                colors[new_k] = {'color': get_color[group_no]}
                 new_data[new_k] = {}
             for key, val in v.items():
                 if key not in lookup:
                     labels = self.code_converter.convert_mbs_code_to_group_labels(key)
-                    lookup[key] = f'{labels[0]}\n{labels[1]}\n{labels[2]}'
+                    lookup[key] = '\n'.join(labels)
 
                 new_key = f'{lookup[key]}\n{key}'
                 new_data[new_k][new_key] = val
 
-        return new_data
+        return (new_data, colors)
 
     def process_dataframe(self, data):
         raise NotImplementedError("Use load data")
@@ -115,11 +130,12 @@ class TestCase(ProposalTest):
                                                 max_p_value=rp.p_value)
         # d = self.models.fp_growth_analysis(documents, min_support=rp.min_support, min_conviction=rp.min_conviction)
         # d = self.models.apriori_analysis(documents, min_support=rp.min_support, min_confidence=rp.min_confidence, min_lift=rp.min_lift)
+        attrs = None
         if self.required_params.convert_rsp_codes:
             d = self.convert_rsp_keys(d)
 
         if self.required_params.add_mbs_code_groups:
-            d = self.convert_mbs_codes(d)
+            (d, attrs) = self.convert_mbs_codes(d)
 
         if rp.conviction == 0 and rp.confidence == 0:
             directed = False
@@ -128,4 +144,4 @@ class TestCase(ProposalTest):
 
         self.log("Graphing")
         title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
-        self.graphs.visual_graph(d, filename, title=title, directed=directed)
+        self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs)
