@@ -164,7 +164,7 @@ class ModelUtils():
 
     def generate_sentences_from_group(self, data, column, convert_to_string=True):
         documents = []
-        for name, group in data:
+        for _, group in data:
             items = group[column].values.tolist()
             if convert_to_string:
                 items = [str(item) for item in items]

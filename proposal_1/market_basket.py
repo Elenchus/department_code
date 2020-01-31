@@ -11,6 +11,7 @@ class TestCase(ProposalTest):
         group_header:str = 'PIN'
         basket_header:str = 'SPR_RSP'
         sub_group_header:str = None
+        check_missing:bool = True
         convert_rsp_codes:bool = False
         add_mbs_code_groups: bool = False
         color_providers: bool = False
@@ -110,34 +111,40 @@ class TestCase(ProposalTest):
         for name, group in tqdm(data):
             if rp.sub_group_header is None:
                 basket = [str(x) for x in group[rp.basket_header]]
-                t = self.models.mba.check_basket(basket, d)
+                if rp.check_missing:
+                    t = self.models.mba.check_basket_for_absences(basket, d)
+                else:
+                    improper, _ = self.models.mba.check_basket_for_presences(basket, d)
+                    t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
+
                 suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
             else:
                 for _, sub_group in group.groupby(rp.sub_group_header):
                     basket = [str(x) for x in sub_group[rp.basket_header]]
-                    t = self.models.mba.check_basket(basket, d)
+                    if rp.check_missing:
+                        t = self.models.mba.check_basket_for_absences(basket, d)
+                    else:
+                        improper, _ = self.models.mba.check_basket_for_presences(basket, d)
+                        t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
+
                     suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
+
         for idx, s in enumerate(susp):
             group = data.get_group(s)
-            items = [str(x) for x in group[rp.basket_header]]
+            unique_items = [str(x) for x in group[rp.basket_header].unique()]
+            items_list = [str(x) for x in group[rp.basket_header]]
 
-            items = {i: {} for i in items}
-            diamonds = []
-            for k in d.keys():
-                if k in items:
-                    for key in d[k].keys():
-                        if key not in items:
-                            diamonds.append(key)
-                            items[k][key] = {'color': 'red'}
-                        else:
-                            items[k][key] = None
-
+            items, diamonds = self.models.mba.assign_diamonds_to_absences(unique_items, d)
             for i in diamonds:
                 items[i] = {}
+
+            improper, _ = self.models.mba.check_basket_for_presences(items_list, d)
+            trapeziums = self.models.mba.assign_trapeziums_to_presences(unique_items, improper, threshold=10)
+
 
             if rp.add_mbs_code_groups:
                 (items, cols, leg) = self.models.mba.convert_mbs_codes(items)
@@ -145,8 +152,13 @@ class TestCase(ProposalTest):
                     labels = self.code_converter.convert_mbs_code_to_group_labels(i)
                     key = '\n'.join(labels) + f'\n{i}'
                     cols[key]['shape'] = 'diamond'
+                for i in trapeziums:
+                    labels = self.code_converter.convert_mbs_code_to_group_labels(i)
+                    key = '\n'.join(labels) + f'\n{i}'
+                    cols[key]['shape'] = 'trapezium'
             else:
                 cols = {i: {'shape': 'diamond'} for i in diamonds}
+                cols = {i: {'shape': 'trapezium'} for i in trapeziums}
 
             nam = f"suspect_{idx}_{s}.png"
             output_file_x = self.logger.output_path / nam

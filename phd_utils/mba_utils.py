@@ -35,7 +35,33 @@ class MbaUtils:
                     raise KeyError(f"Invalid {k} filter option {key}")
                 self.filters[k][key] = val
 
-    def check_basket(self, basket, model):
+    def assign_diamonds_to_absences(self, items, model):
+        _items = {}
+        for i in items:
+            if i not in _items:
+                _items[i] = {}
+
+        diamonds = []
+        for k in model.keys():
+            if k in _items:
+                for key in model[k].keys():
+                    if key not in _items:
+                        diamonds.append(key)
+                        _items[k][key] = {'color': 'red'}
+                    else:
+                        _items[k][key] = None
+
+        return _items, diamonds
+
+    def assign_trapeziums_to_presences(self, items, interest, threshold=10):
+        diamonds = []
+        for k in items:
+            if interest.get(k, -1) > threshold:
+                diamonds.append(k)
+
+        return diamonds
+
+    def check_basket_for_absences(self, basket, model):
         tally = 0
         for item in model.keys():
             if item in basket:
@@ -44,6 +70,23 @@ class MbaUtils:
                         tally += 1
         return tally
 
+    def check_basket_for_presences(self, basket, model):
+        # two problems - unique item differences, and repeated item differences
+        tally = {i: 0 for i in basket}
+        for item in basket:
+            if item in model.keys():
+                tally[item] -= 1
+            else:
+                tally[item] += 1
+
+        proper = {}
+        improper = {}
+        for k, v in tally.items():
+            x = proper if v < 0 else improper
+            x[k] = abs(v)
+
+        return improper, proper
+            
     def color_providers(self, d, data):
         def get_provider_val(spr):
             spr = int(spr)
