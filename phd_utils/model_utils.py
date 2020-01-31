@@ -6,33 +6,23 @@ import pandas as pd
 import numpy as np
 import umap
 from apyori import apriori as apyori
-from enum import auto, Enum
 from mlxtend.frequent_patterns import association_rules, fpgrowth
 from mlxtend.preprocessing import TransactionEncoder
 from matplotlib import markers
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
-from phd_utils import mba_utils
-from phd_utils.graph_utils import GraphUtils
-from phd_utils.code_converter import CodeConverter
-from scipy.stats import fisher_exact
+from phd_utils.mba_utils import MbaUtils
 from sklearn import cluster, metrics
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.mixture import BayesianGaussianMixture as BGMM
 from tqdm import tqdm
 
-class AssociationRules(Enum):
-    CONFIDENCE = auto()
-    CONVICTION = auto()
-    LIFT = auto()
-    ODDS_RATIO = auto()
-
 class ModelUtils():
-    def __init__(self, logger):
+    def __init__(self, logger, graph_utils, code_converter):
         self.logger = logger
-        self.graph_utils = GraphUtils(logger)
-        self.mba = mba_utils
+        self.graph_utils = graph_utils
+        self.mba = MbaUtils(code_converter)
 
     def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
         max_length=2
@@ -257,103 +247,6 @@ class ModelUtils():
                 pairs[item][item_2] = None
                 
         return pairs
-
-    def pairwise_market_basket(self,
-                                items,
-                                documents,
-                                filters,
-                                min_support = 0.1,
-                                max_p_value=0.05):
-        group_len = len(documents)
-        if min_support < 1:
-            min_occurrence = min_support * group_len
-        else:
-            min_occurrence = min_support
-
-        reduced_items = {}
-        for item in items:
-            reduced_items[item] = 0
-        for doc in documents:
-            for item in doc:
-                reduced_items[item] += 1
-
-        keys = list(reduced_items.keys())
-        for item in keys:
-            if reduced_items[item] < min_occurrence:
-                reduced_items.pop(item)
-
-        reduced_item_list = reduced_items.keys()
-        counts = pd.DataFrame(0, index=reduced_item_list, columns=reduced_item_list)
-        for doc in documents:
-            for item in doc:
-                if item not in reduced_item_list:
-                    continue
-
-                for item_2 in doc:
-                    if item_2 not in reduced_item_list:
-                        continue
-
-                    counts.at[item, item_2] += 1
-
-        # row_list = []
-        d = {}
-        for a in reduced_item_list:
-            for b in reduced_item_list:
-                if a == b:
-                    continue
-
-                count = counts.at[a, b] 
-                if  count >= min_occurrence:
-                    f11 = count
-                    f10 = reduced_items[a] - f11
-                    f01 = reduced_items[b] - f11
-                    f00 = group_len - (f10 + f01 + count)
-                    odds_ratio, p_value = fisher_exact([[f11, f10], [f01, f00]], alternative='greater')
-
-                    if p_value > max_p_value:
-                        continue
-                    
-                    support = count / group_len
-                    support_a = reduced_items[a] / group_len
-                    support_b = reduced_items[b] / group_len
-
-                    lift = support / (support_a * support_b)
-                    confidence = support / support_a
-
-                    conviction = (1 - support_b) / (1 - confidence) if confidence != 1 else 9999
-
-                    for k, v in filters.items():
-                        assert isinstance(k, AssociationRules)
-                        assert 'value' in v
-                        assert 'operator' in v
-
-                        comp = v['operator']
-                        val = v['value']
-                        if k == AssociationRules.LIFT:
-                            fil = lift
-                        elif k == AssociationRules.CONFIDENCE:
-                            fil = confidence
-                        elif k == AssociationRules.CONVICTION:
-                            fil = conviction
-                        elif k == AssociationRules.ODDS_RATIO:
-                            fil = odds_ratio
-                        else:
-                            raise KeyError(f"No matching association rule {k}")
-
-                        if not comp(fil, val):
-                            break
-                    else:
-                        if a not in d:
-                            d[a] = {}
-
-                        d[a][b] = None
-
-                    # new_row = {"Antecedent": a, "Consequent": b, "Count": count, "Support": support, "Confidence": confidence, "Conviction": conviction, "Lift": lift, "Odds ratio": odds_ratio}
-                    # row_list.append(new_row)
-
-        # output = pd.DataFrame(row_list)
-
-        return d
 
     def pca_2d(self, data):
         self.logger.log("Performing PCA")

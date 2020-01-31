@@ -117,10 +117,9 @@ if __name__ == "__main__":
                     'basket_header': 'ITEM', 
                     'group_header':'SPR', 
                     'sub_group_header': 'PIN',
-                    'confidence':0, 
-                    'lift':0, 
-                    'conviction': 1.1, 
-                    'odds_ratio': 0,
+                    'filters': {
+                        'conviction': {'value': 1.1}
+                        },
                     'p_value': 1,
                     'min_support': 0.01},
         proposal = 1,
@@ -128,6 +127,6 @@ if __name__ == "__main__":
         test_data = 'hip_21214_provider_subset.csv',
         test_file_name = f'market_basket',
         test_format = TestFormat.CombineYears,
-        years = [str(x) for x in [2013]]
+        years = [str(x) for x in [2014]]
     )
     start_test(test_details)

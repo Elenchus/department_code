@@ -57,9 +57,9 @@ class ProposalTest(ABC):
     
     def __init__(self, logger, params, year):
         self.logger = logger
-        self.graphs = GraphUtils(logger)
-        self.models = ModelUtils(logger)
         self.code_converter = CodeConverter(year)
+        self.graphs = GraphUtils(logger)
+        self.models = ModelUtils(logger, self.graphs, self.code_converter)
         self.processed_data = pd.DataFrame()
 
         if params is None:
