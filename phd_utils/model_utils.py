@@ -12,6 +12,7 @@ from mlxtend.preprocessing import TransactionEncoder
 from matplotlib import markers
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
+from phd_utils import mba_utils
 from phd_utils.graph_utils import GraphUtils
 from phd_utils.code_converter import CodeConverter
 from scipy.stats import fisher_exact
@@ -31,6 +32,7 @@ class ModelUtils():
     def __init__(self, logger):
         self.logger = logger
         self.graph_utils = GraphUtils(logger)
+        self.mba = mba_utils
 
     def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
         max_length=2

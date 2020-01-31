@@ -11,6 +11,7 @@ class TestCase(ProposalTest):
     class RequiredParams:
         group_header:str = 'PIN'
         basket_header:str = 'SPR_RSP'
+        sub_group_header:str = None
         convert_rsp_codes:bool = False
         add_mbs_code_groups: bool = False
         color_providers: bool = False
@@ -86,6 +87,8 @@ class TestCase(ProposalTest):
                 new_data[lookup[k]][lookup[key]] = val
 
         return new_data
+    def compare_items_to_model(self, items, model):
+        pass
 
     def convert_mbs_codes(self, d):
         get_color = {
@@ -164,9 +167,15 @@ class TestCase(ProposalTest):
         self.log("Creating documents")
         documents = []
         for _, group in tqdm(data): # update this to use models generate_string
-            items = group[rp.basket_header].unique().tolist()
-            items = [str(item) for item in items]
-            documents.append(items)
+            if rp.sub_group_header is not None:
+                for _, sub_group in tqdm(group.groupby(rp.sub_group_header)):
+                    items = sub_group[rp.basket_header].unique().tolist()
+                    items = [str(item) for item in items]
+                    documents.append(items)
+            else:
+                items = group[rp.basket_header].unique().tolist()
+                items = [str(item) for item in items]
+                documents.append(items)
 
         self.log("Creating model")
         name = f"{rp.group_header}_{rp.basket_header}_graph.png"
@@ -212,7 +221,7 @@ class TestCase(ProposalTest):
         title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
         self.graphs.visual_graph(converted_d, filename, title=title, directed=directed, node_attrs=attrs, legend=None)
 
-        self.log("Checking patients against graph")
+        self.log("Checking transactions against model")
         suspicious_transactions = {}
         for name, group in tqdm(data):
             basket = [str(x) for x in group[rp.basket_header]]
@@ -225,26 +234,30 @@ class TestCase(ProposalTest):
         thing = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
         self.log(thing.describe())
         susp = thing.nlargest(10, 'count').index.tolist()
-        # complete_susp = []
         for idx, s in enumerate(susp):
             group = data.get_group(s)
-            transactions = [str(x) for x in group[rp.basket_header]]
-            transactions = {i: {} for i in transactions}
+            if rp.sub_group_header is not None:
+                sub = group.groupby(rp.sub_group_header)
+                raise NotImplementedError
+            else:
+                items = [str(x) for x in group[rp.basket_header]]
+
+            items = {i: {} for i in items}
             diamonds = []
             for k in d.keys():
-                if k in transactions:
+                if k in items:
                     for key in d[k].keys():
-                        if key not in transactions:
+                        if key not in items:
                             diamonds.append(key)
-                            transactions[k][key] = {'color': 'red'}
+                            items[k][key] = {'color': 'red'}
                         else:
-                            transactions[k][key] = None
+                            items[k][key] = None
 
             for i in diamonds:
-                transactions[i] = {}
+                items[i] = {}
 
             if rp.add_mbs_code_groups:
-                (transactions, cols, leg) = self.convert_mbs_codes(transactions)
+                (items, cols, leg) = self.convert_mbs_codes(items)
                 for i in diamonds:
                     labels = self.code_converter.convert_mbs_code_to_group_labels(i)
                     key = '\n'.join(labels) + f'\n{i}'
@@ -254,8 +267,8 @@ class TestCase(ProposalTest):
 
             nam = f"suspect_{idx}_{s}.png"
             output_file_x = self.logger.output_path / nam
-            self.graphs.visual_graph(transactions, output_file_x, title=f'Suspect {idx}: {s}', node_attrs=cols)
-            self.log(transactions)
+            self.graphs.visual_graph(items, output_file_x, title=f'Suspect {idx}: {s}', node_attrs=cols)
+            self.log(items)
         
 
         self.log(f'{len(suspicious_transactions)} of {len(data)} suspicious {rp.group_header}')
