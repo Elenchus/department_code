@@ -121,12 +121,12 @@ if __name__ == "__main__":
                     'conviction': 1.1, 
                     'odds_ratio': 0,
                     'p_value': 1,
-                    'min_support': 0.01},
+                    'min_support': 0.1},
         proposal = 1,
         # test_data = mbs,
         test_data = 'hip_21214_provider_subset.csv',
         test_file_name = f'market_basket',
         test_format = TestFormat.CombineYears,
-        years = [str(x) for x in [2013]]
+        years = [str(x) for x in [2014]]
     )
     start_test(test_details)

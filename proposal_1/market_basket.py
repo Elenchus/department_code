@@ -228,19 +228,33 @@ class TestCase(ProposalTest):
         # complete_susp = []
         for idx, s in enumerate(susp):
             group = data.get_group(s)
-            transactions = group[rp.basket_header].values.tolist()
+            transactions = [str(x) for x in group[rp.basket_header]]
+            transactions = {i: {} for i in transactions}
+            diamonds = []
+            for k in d.keys():
+                if k in transactions:
+                    for key in d[k].keys():
+                        if key not in transactions:
+                            diamonds.append(key)
+                            transactions[k][key] = {'color': 'red'}
+                        else:
+                            transactions[k][key] = None
+
+            for i in diamonds:
+                transactions[i] = {}
+
             if rp.add_mbs_code_groups:
-                final_t = []
-                for t in transactions:
-                    t = '\n'.join(self.code_converter.convert_mbs_code_to_group_labels(t)) + f'\n{t}'
-                    final_t.append(t)
-                transactions = final_t
-            
-        #################### ADD DIRECTION FOR MISSING COMPONENTS SOMEHOW? ALSO COLOURS ############ 
-            t_d = {i : {} for i in transactions}
+                (transactions, cols, leg) = self.convert_mbs_codes(transactions)
+                for i in diamonds:
+                    labels = self.code_converter.convert_mbs_code_to_group_labels(i)
+                    key = '\n'.join(labels) + f'\n{i}'
+                    cols[key]['shape'] = 'diamond'
+            else:
+                cols = {i: {'shape': 'diamond'} for i in diamonds}
+
             nam = f"suspect_{idx}_{s}.png"
             output_file_x = self.logger.output_path / nam
-            self.graphs.visual_graph(t_d, output_file_x, title=f'Suspect {idx}: {s}')
+            self.graphs.visual_graph(transactions, output_file_x, title=f'Suspect {idx}: {s}', node_attrs=cols)
             self.log(transactions)
         
 

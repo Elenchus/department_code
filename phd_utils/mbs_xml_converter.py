@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 
 
 def convert_xml(x, year):
-    tree = ET.parse(x)
+    tree = ET.parse('phd_utils/' + x)
     root = tree.getroot()
     mbs = {}
     for child in root:
@@ -48,5 +48,5 @@ def convert_groups_txt():
 if __name__ == '__main__':
     filename = '201411-XML.xml'
     year = '2014'
-    # convert_xml(filename, year)
-    convert_groups_txt()
+    convert_xml(filename, year)
+    # convert_groups_txt()
