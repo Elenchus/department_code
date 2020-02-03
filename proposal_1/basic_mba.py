@@ -74,31 +74,17 @@ class BasicMba:
             self.subgroup_data = None
 
 
-    def get_suspicious_transactions(self, d):
+    def get_suspicious_transaction_count(self, d, data):
         self.log("Checking transactions against model")
         suspicious_transactions = {}
-        for name, group in tqdm(self.group_data):
-            if self.sub_group_header is None:
-                if False:
-                    basket = [str(x) for x in sub_group[self.basket_header].unique()]
-                    t = self.model.mba.check_basket_for_absences(basket, d)
-                else:
-                    basket = [str(x) for x in group[self.basket_header]]
-                    improper, _ = self.model.mba.check_basket_for_presences(basket, d)
-                    t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
+        for name, group in tqdm(data):
+            # basket = [str(x) for x in group[self.basket_header].unique()]
+            # missing = self.model.mba.check_basket_for_absences(basket, d)
+            basket = [str(x) for x in group[self.basket_header]]
+            improper, _ = self.model.mba.check_basket_for_presences(basket, d)
+            t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
 
-                suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
-            else:
-                for _, sub_group in group.groupby(self.sub_group_header):
-                    if False:
-                        basket = [str(x) for x in sub_group[self.basket_header].unique()]
-                        t = self.model.mba.check_basket_for_absences(basket, d)
-                    else:
-                        basket = [str(x) for x in sub_group[self.basket_header]]
-                        improper, _ = self.model.mba.check_basket_for_presences(basket, d)
-                        t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
-
-                    suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
+            suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
 
         return suspicious_transactions
 

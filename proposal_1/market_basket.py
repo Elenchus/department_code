@@ -71,7 +71,7 @@ class TestCase(ProposalTest):
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
             
         mba_funcs.create_graph(d, name, title, attrs, legend)
-        suspicious_transactions = mba_funcs.get_suspicious_transactions(d)
+        suspicious_transactions = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
