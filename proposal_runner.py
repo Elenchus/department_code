@@ -116,7 +116,7 @@ if __name__ == "__main__":
                     'add_mbs_code_groups': True, 
                     'check_missing': False,
                     'basket_header': 'ITEM', 
-                    'group_header':'SPR', 
+                    'group_header':'PIN', 
                     'sub_group_header': None,
                     'filters': {
                         'conviction': {'value': 1.1}

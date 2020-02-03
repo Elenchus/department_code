@@ -1,5 +1,6 @@
 import operator
 import pandas as pd
+from basic_mba import BasicMba
 from dataclasses import dataclass
 from enum import Enum
 from phd_utils.base_proposal_test import ProposalTest
@@ -55,86 +56,29 @@ class TestCase(ProposalTest):
         rp = self.required_params
 
         unique_items = [str(x) for x in self.test_data[rp.basket_header].unique().tolist()]
-        data = self.test_data.groupby(rp.group_header)
-        self.log("Creating documents")
-        documents = []
+        mba_funcs = BasicMba(self.test_data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
-        for _, group in tqdm(data): 
-            if rp.sub_group_header is not None:
-                for _, sub_group in group.groupby(rp.sub_group_header):
-                    items = sub_group[rp.basket_header].unique().tolist()
-                    items = [str(item) for item in items]
-                    documents.append(items)
-            else:
-                items = group[rp.basket_header].unique().tolist()
-                items = [str(item) for item in items]
-                documents.append(items)
+        if rp.sub_group_header is None:
+            documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
+        else:
+            documents = mba_funcs.create_documents(mba_funcs.group_data)
 
-        self.log("Creating model")
+        d, attrs, legend = mba_funcs.create_model(unique_items, documents, rp.min_support)
         name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_graph.png"
-        filename = self.logger.output_path / name
-        d = self.models.mba.pairwise_market_basket(unique_items,
-                                                documents,
-                                                min_support=rp.min_support,
-                                                max_p_value=rp.p_value)
-
-        attrs = None
-        legend = None
-        if self.required_params.convert_rsp_codes:
-            self.log("Converting RSP codes")
-            converted_d = self.models.mba.convert_rsp_keys(d)
-        elif self.required_params.add_mbs_code_groups:
-            self.log("Converting MBS codes")
-            (converted_d, attrs, legend) = self.models.mba.convert_mbs_codes(d)
-        else:
-            converted_d = d
-
-        if rp.color_providers:
-            self.log("Colouring SPR")
-            attrs = self.models.mba.color_providers(converted_d, self.test_data)
-
-        if self.models.mba.filters['conviction']['value'] == 0 and self.models.mba.filters['confidence']['value'] == 0:
-            directed = False
-        else:
-            directed = True
-
-        self.log("Graphing")
         if rp.sub_group_header is None:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
         else:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
-
-        self.graphs.visual_graph(converted_d, filename, title=title, directed=directed, node_attrs=attrs, legend=None)
-
-        self.log("Checking transactions against model")
-        suspicious_transactions = {}
-        for name, group in tqdm(data):
-            if rp.sub_group_header is None:
-                basket = [str(x) for x in group[rp.basket_header]]
-                if rp.check_missing:
-                    t = self.models.mba.check_basket_for_absences(basket, d)
-                else:
-                    improper, _ = self.models.mba.check_basket_for_presences(basket, d)
-                    t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
-
-                suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
-            else:
-                for _, sub_group in group.groupby(rp.sub_group_header):
-                    basket = [str(x) for x in sub_group[rp.basket_header]]
-                    if rp.check_missing:
-                        t = self.models.mba.check_basket_for_absences(basket, d)
-                    else:
-                        improper, _ = self.models.mba.check_basket_for_presences(basket, d)
-                        t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
-
-                    suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
+            
+        mba_funcs.create_graph(d, name, title, attrs, legend)
+        suspicious_transactions = mba_funcs.get_suspicious_transactions(d)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
 
         for idx, s in enumerate(susp):
-            group = data.get_group(s)
+            group = mba_funcs.group_data.get_group(s)
             unique_items = [str(x) for x in group[rp.basket_header].unique()]
             items_list = [str(x) for x in group[rp.basket_header]]
 
@@ -161,11 +105,11 @@ class TestCase(ProposalTest):
                 cols = {i: {'shape': 'trapezium'} for i in trapeziums}
 
             nam = f"suspect_{idx}_{s}.png"
-            output_file_x = self.logger.output_path / nam
-            self.graphs.visual_graph(items, output_file_x, title=f'Suspect {idx}: {s}', node_attrs=cols)
+            title=f'Suspect {idx}: {s}'
+            mba_funcs.create_graph(items, nam, title, attrs=cols)
         
 
-        self.log(f'{len(suspicious_transactions)} of {len(data)} suspicious {rp.group_header}')
+        self.log(f'{len(suspicious_transactions)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')
 
         # self.log("Getting negative correlations")
         # neg = self.models.pairwise_neg_cor_low_sup(unique_items, documents, max_support=rp.min_support)
