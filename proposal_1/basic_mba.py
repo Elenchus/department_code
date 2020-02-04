@@ -60,7 +60,7 @@ class BasicMba:
         else:
             directed = True
 
-        self.log("Graphing")
+        self.log(f"Graphing {title}")
         self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs)
 
     def create_groups(self):
