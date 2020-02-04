@@ -151,7 +151,7 @@ class GraphUtils():
         path = self.logger.output_path / name
         fig.savefig(path)
 
-    def visual_graph(self, data_dict, output_file, title=None, directed=True, node_attrs=None, legend=None):
+    def visual_graph(self, data_dict, output_file, title=None, directed=True, node_attrs=None):
         max_len = 0
         sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
         full_list = set(list(data_dict.keys()) + list(item for elem in sub_list_of_lists for item in elem))
@@ -195,33 +195,58 @@ class GraphUtils():
                 for attr, val in v.items():
                     node.attr[attr] = val
 
-        if legend is not None:
-            nbunch = list(legend.keys())
-            for i, node in enumerate(nbunch):
-                A.add_node(node)
-                n = A.get_node(node)
-                n.attr['shape'] = 'rectangle'
-                # n.attr['rank'] = 'max'
-                n.attr['fontsize'] = 20
-                for attr, val in legend[node].items():
-                    n.attr[attr] = val
-
-                if i < len(nbunch) - 1:
-                    A.add_edge(node, nbunch[i+1])# , style='invis')
-
-            A.add_subgraph(nbunch=nbunch, name='Legend')
-            l = A.get_subgraph('Legend')
-            l.rank = 'max'
-            l.label = 'Legend'
-            l.style = 'filled'
-            l.shape = 'rectangle'
-            l.labelloc = 't'
-            l.fontcolor = '#000000'
-            l.color = 'grey'
-            l.pack = True
-                
-
-
-
 
         A.draw(str(output_file), prog='fdp')
+
+    def graph_legend(self, data_dict, output_file, title=None):
+        max_len = 0
+        sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
+        full_list = set(list(data_dict.keys()) + list(item for elem in sub_list_of_lists for item in elem))
+        for s in full_list:
+            if len(s) > max_len:
+                max_len = len(s)
+
+        if max_len < 10:
+            width = 2
+        else:
+            width = 5
+
+        A = pgv.AGraph(data={})
+        if title is not None:
+            A.graph_attr['label'] = title
+            A.graph_attr['labelloc'] = 't'
+
+        A.node_attr['style']='filled'
+        A.node_attr['shape'] = 'circle'
+        A.node_attr['fixedsize']='true'
+        A.node_attr['height']=width 
+        A.node_attr['width']=width
+        A.node_attr['fontcolor']='#000000'
+        A.edge_attr['penwidth']=7
+        A.edge_attr['style']='invis'
+
+        nbunch = list(data_dict.keys())
+        for i, node in enumerate(nbunch):
+            A.add_node(node)
+            n = A.get_node(node)
+            n.attr['shape'] = 'rectangle'
+            n.attr['rank'] = 'max'
+            n.attr['fontsize'] = 20
+            for attr, val in data_dict[node].items():
+                n.attr[attr] = val
+
+            if i < len(nbunch) - 1:
+                A.add_edge(node, nbunch[i+1])# , style='invis')
+
+        A.add_subgraph(nbunch=nbunch, name='Legend')
+        l = A.get_subgraph('Legend')
+        l.rank = 'max'
+        l.label = 'Legend'
+        l.style = 'filled'
+        l.shape = 'rectangle'
+        l.labelloc = 't'
+        l.fontcolor = '#000000'
+        l.color = 'grey'
+        l.pack = True
+
+        A.draw(str(output_file), prog='dot')

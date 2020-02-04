@@ -14,7 +14,7 @@ class TestCase(ProposalTest):
         sub_group_header:str = None
         min_support:float = 0.01
         filters:dict = None
-        scoring_method:str = 'avg'
+        scoring_method:str = 'max'
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -58,7 +58,7 @@ class TestCase(ProposalTest):
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
         
         formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
-        mba_funcs.create_graph(formatted_d, name, title, attrs, legend)
+        mba_funcs.create_graph(formatted_d, name, title, attrs)
         suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data, rp.scoring_method)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_counts, orient='index', columns=['count'])
@@ -76,9 +76,8 @@ class TestCase(ProposalTest):
 
             repeated_non_model_nodes = self.models.mba.find_repeated_abnormal_nodes(items_list, d, threshold=10)
 
-
             if rp.basket_header == 'ITEM':
-                (transaction_graph, attrs, leg) = self.models.mba.convert_mbs_codes(transaction_graph)
+                (transaction_graph, attrs, _) = self.models.mba.convert_mbs_codes(transaction_graph)
                 for i in missing_nodes:
                     labels = self.code_converter.convert_mbs_code_to_group_labels(i)
                     key = '\n'.join(labels) + f'\n{i}'
@@ -97,6 +96,13 @@ class TestCase(ProposalTest):
         
 
         self.log(f'{len(suspicious_transaction_counts)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')
+
+        if legend is not None:
+            legend['Repeated abnormal items'] = {'shape': 'house', 'color': 'grey'}
+            legend['Missing normal items'] = {'shape': 'invhouse', 'color': 'grey'}
+            l_name = 'Legend'
+            legend_file = self.logger.output_path / l_name
+            self.graphs.graph_legend(legend, legend_file, title='Legend')
 
         # self.log("getting negative correlations")
         # neg = self.models.pairwise_neg_cor_low_sup(unique_items, documents, max_support=rp.min_support)
