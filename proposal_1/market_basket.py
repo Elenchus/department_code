@@ -100,7 +100,7 @@ class TestCase(ProposalTest):
         if legend is not None:
             legend['Repeated abnormal items'] = {'shape': 'house', 'color': 'grey'}
             legend['Missing normal items'] = {'shape': 'invhouse', 'color': 'grey'}
-            l_name = 'Legend'
+            l_name = 'Legend.png'
             legend_file = self.logger.output_path / l_name
             self.graphs.graph_legend(legend, legend_file, title='Legend')
 
