@@ -111,17 +111,12 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     test_details = TestDetails(
         notes = "",
-        params = {'convert_rsp_codes':False,
-                    'color_providers': False,
-                    'add_mbs_code_groups': True, 
-                    'check_missing': False,
-                    'basket_header': 'ITEM', 
-                    'group_header':'PIN', 
+        params = {'basket_header': 'ITEM', 
+                    'group_header':'SPR', 
                     'sub_group_header': None,
                     'filters': {
                         'conviction': {'value': 1.1}
                         },
-                    'p_value': 1,
                     'min_support': 0.01},
         proposal = 1,
         # test_data = mbs,

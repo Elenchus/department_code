@@ -1,6 +1,6 @@
 import operator
 import pandas as pd
-from basic_mba import BasicMba
+from proposal_1.basic_mba import BasicMba
 from dataclasses import dataclass
 from enum import Enum
 from phd_utils.base_proposal_test import ProposalTest
@@ -14,7 +14,6 @@ class TestCase(ProposalTest):
         sub_group_header:str = None
         min_support:float = 0.01
         filters:dict = None
-        p_value:float = 0.05
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -46,18 +45,19 @@ class TestCase(ProposalTest):
         mba_funcs = BasicMba(self.test_data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
         if rp.sub_group_header is None:
-            documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
-        else:
             documents = mba_funcs.create_documents(mba_funcs.group_data)
+        else:
+            documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
 
-        d, attrs, legend = mba_funcs.create_model(unique_items, documents, rp.min_support)
+        d = mba_funcs.create_model(unique_items, documents, rp.min_support)
         name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_graph.png"
         if rp.sub_group_header is None:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
         else:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
-            
-        mba_funcs.create_graph(d, name, title, attrs, legend)
+        
+        formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
+        mba_funcs.create_graph(formatted_d, name, title, attrs, legend)
         suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_counts, orient='index', columns=['count'])
@@ -69,31 +69,30 @@ class TestCase(ProposalTest):
             unique_items = [str(x) for x in group[rp.basket_header].unique()]
             items_list = [str(x) for x in group[rp.basket_header]]
 
-            items, clouds = self.models.mba.find_missing_nodes(unique_items, d)
-            for i in clouds:
-                items[i] = {}
+            transaction_graph, missing_nodes = self.models.mba.compare_transaction_to_model(unique_items, d)
+            for i in missing_nodes:
+                transaction_graph[i] = {}
 
-            improper, proper = self.models.mba.check_basket_for_presences(items_list, d)
-            triangles = self.models.mba.find_repeated_abnormal_nodes(unique_items, improper, threshold=10)
+            repeated_non_model_nodes = self.models.mba.find_repeated_abnormal_nodes(items_list, d, threshold=10)
 
 
             if rp.basket_header == 'ITEM':
-                (items, cols, leg) = self.models.mba.convert_mbs_codes(items)
-                for i in clouds:
+                (transaction_graph, attrs, leg) = self.models.mba.convert_mbs_codes(transaction_graph)
+                for i in missing_nodes:
                     labels = self.code_converter.convert_mbs_code_to_group_labels(i)
                     key = '\n'.join(labels) + f'\n{i}'
-                    cols[key]['shape'] = 'polygon'
-                for i in triangles:
+                    attrs[key]['shape'] = 'invhouse'
+                for i in repeated_non_model_nodes:
                     labels = self.code_converter.convert_mbs_code_to_group_labels(i)
                     key = '\n'.join(labels) + f'\n{i}'
-                    cols[key]['shape'] = 'triangles'
+                    attrs[key]['shape'] = 'house'
             else:
-                cols = {i: {'shape': 'polygon'} for i in clouds}
-                cols = {i: {'shape': 'triangles'} for i in triangles}
+                attrs = {i: {'shape': 'hexagon'} for i in missing_nodes}
+                attrs = {i: {'shape': 'trapezium'} for i in repeated_non_model_nodes}
 
             nam = f"suspect_{idx}_{s}.png"
             title=f'Suspect {idx}: {s}'
-            mba_funcs.create_graph(items, nam, title, attrs=cols)
+            mba_funcs.create_graph(transaction_graph, nam, title, attrs=attrs)
         
 
         self.log(f'{len(suspicious_transaction_counts)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')

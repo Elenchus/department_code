@@ -16,6 +16,23 @@ class BasicMba:
 
         self.create_groups()
 
+    def convert_graph_and_attrs(self, d):
+        attrs = None
+        legend = None
+        if self.basket_header == 'RSP':
+            self.log("Converting RSP codes")
+            converted_d = self.model.mba.convert_rsp_keys(d)
+        elif self.basket_header == 'ITEM':
+            self.log("Converting MBS codes")
+            (converted_d, attrs, legend) = self.model.mba.convert_mbs_codes(d)
+        elif self.basket_header == 'SPR':
+            self.log("Colouring SPR")
+            attrs = self.model.mba.color_providers(converted_d, self.test_data)
+        else:
+            converted_d = d
+
+        return converted_d, attrs, legend
+
     def create_documents(self, data):
         self.log("Creating documents")
         documents = []
@@ -34,21 +51,7 @@ class BasicMba:
                                                 min_support=min_support,
                                                 max_p_value=1)
 
-        attrs = None
-        legend = None
-        if self.basket_header == 'RSP':
-            self.log("Converting RSP codes")
-            converted_d = self.model.mba.convert_rsp_keys(d)
-        elif self.basket_header == 'ITEM':
-            self.log("Converting MBS codes")
-            (converted_d, attrs, legend) = self.model.mba.convert_mbs_codes(d)
-        elif self.basket_header == 'SPR':
-            self.log("Colouring SPR")
-            attrs = self.model.mba.color_providers(converted_d, self.test_data)
-        else:
-            converted_d = d
-
-        return converted_d, attrs, legend
+        return d
 
     def create_graph(self, d, name, title, attrs=None, legend=None):
         filename = self.logger.output_path / name
@@ -83,6 +86,7 @@ class BasicMba:
             basket = [str(x) for x in group[self.basket_header]]
             improper, _ = self.model.mba.check_basket_for_presences(basket, d)
             t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
+            # t = max(list(improper.values())) if len(improper) != 0 else 0
 
             suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
 

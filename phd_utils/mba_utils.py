@@ -35,7 +35,7 @@ class MbaUtils:
                     raise KeyError(f"Invalid {k} filter option {key}")
                 self.filters[k][key] = val
 
-    def find_missing_nodes(self, items, model):
+    def compare_transaction_to_model(self, items, model):
         _items = {}
         for i in items:
             if i not in _items:
@@ -53,10 +53,12 @@ class MbaUtils:
 
         return _items, diamonds
 
-    def find_repeated_abnormal_nodes(self, items, interest, threshold=10):
+    def find_repeated_abnormal_nodes(self, non_unique_basket, model, threshold=10):
+        improper, _ = self.check_basket_for_presences(non_unique_basket, model)
+        basket = list(set(non_unique_basket))
         diamonds = []
-        for k in items:
-            if interest.get(k, -1) > threshold:
+        for k in basket:
+            if improper.get(k, -1) > threshold:
                 diamonds.append(k)
 
         return diamonds
@@ -71,6 +73,15 @@ class MbaUtils:
 
         return diamonds
 
+    def get_nodes_from_digraph(self, d):
+        a = set()
+        for x in d.keys():
+            a.add(x)
+            for y in d[x].keys():
+                a.add(y)
+
+        return a
+
     def check_basket_for_absences(self, basket, model):
         tally = 0
         for item in model.keys():
@@ -83,8 +94,9 @@ class MbaUtils:
     def check_basket_for_presences(self, basket, model):
         # two problems - unique item differences, and repeated item differences
         tally = {i: 0 for i in basket}
+        nodes = self.get_nodes_from_digraph(model)
         for item in basket:
-            if item in model.keys():
+            if item in nodes:
                 tally[item] -= 1
             else:
                 tally[item] += 1
@@ -209,7 +221,7 @@ class MbaUtils:
                                 items,
                                 documents,
                                 min_support = 0.1,
-                                max_p_value=0.05):
+                                max_p_value=1):
         group_len = len(documents)
         if min_support < 1:
             min_occurrence = min_support * group_len
