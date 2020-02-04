@@ -12,10 +12,6 @@ class TestCase(ProposalTest):
         group_header:str = 'PIN'
         basket_header:str = 'SPR_RSP'
         sub_group_header:str = None
-        check_missing:bool = True
-        convert_rsp_codes:bool = False
-        add_mbs_code_groups: bool = False
-        color_providers: bool = False
         min_support:float = 0.01
         filters:dict = None
         p_value:float = 0.05
@@ -37,15 +33,6 @@ class TestCase(ProposalTest):
 
     def load_data(self, data):
         super().load_data()
-        if self.required_params.convert_rsp_codes and self.required_params.basket_header != 'SPR_RSP':
-            raise NotImplementedError("Can only convert RSP codes in basket")
-
-        if self.required_params.add_mbs_code_groups and self.required_params.basket_header != 'ITEM':
-            raise NotImplementedError("Can only convert ITEM codes in basket")
-
-        if self.required_params.color_providers and self.required_params.basket_header != 'SPR':
-            raise NotImplementedError("Can only color SPR codes in basket")
-
         self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
 
@@ -71,9 +58,9 @@ class TestCase(ProposalTest):
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
             
         mba_funcs.create_graph(d, name, title, attrs, legend)
-        suspicious_transactions = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data)
+        suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data)
 
-        suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
+        suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_counts, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
 
@@ -82,43 +69,43 @@ class TestCase(ProposalTest):
             unique_items = [str(x) for x in group[rp.basket_header].unique()]
             items_list = [str(x) for x in group[rp.basket_header]]
 
-            items, diamonds = self.models.mba.assign_diamonds_to_absences(unique_items, d)
-            for i in diamonds:
+            items, clouds = self.models.mba.find_missing_nodes(unique_items, d)
+            for i in clouds:
                 items[i] = {}
 
-            improper, _ = self.models.mba.check_basket_for_presences(items_list, d)
-            trapeziums = self.models.mba.assign_trapeziums_to_presences(unique_items, improper, threshold=10)
+            improper, proper = self.models.mba.check_basket_for_presences(items_list, d)
+            triangles = self.models.mba.find_repeated_abnormal_nodes(unique_items, improper, threshold=10)
 
 
-            if rp.add_mbs_code_groups:
+            if rp.basket_header == 'ITEM':
                 (items, cols, leg) = self.models.mba.convert_mbs_codes(items)
-                for i in diamonds:
+                for i in clouds:
                     labels = self.code_converter.convert_mbs_code_to_group_labels(i)
                     key = '\n'.join(labels) + f'\n{i}'
-                    cols[key]['shape'] = 'diamond'
-                for i in trapeziums:
+                    cols[key]['shape'] = 'polygon'
+                for i in triangles:
                     labels = self.code_converter.convert_mbs_code_to_group_labels(i)
                     key = '\n'.join(labels) + f'\n{i}'
-                    cols[key]['shape'] = 'trapezium'
+                    cols[key]['shape'] = 'triangles'
             else:
-                cols = {i: {'shape': 'diamond'} for i in diamonds}
-                cols = {i: {'shape': 'trapezium'} for i in trapeziums}
+                cols = {i: {'shape': 'polygon'} for i in clouds}
+                cols = {i: {'shape': 'triangles'} for i in triangles}
 
             nam = f"suspect_{idx}_{s}.png"
             title=f'Suspect {idx}: {s}'
             mba_funcs.create_graph(items, nam, title, attrs=cols)
         
 
-        self.log(f'{len(suspicious_transactions)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')
+        self.log(f'{len(suspicious_transaction_counts)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')
 
-        # self.log("Getting negative correlations")
+        # self.log("getting negative correlations")
         # neg = self.models.pairwise_neg_cor_low_sup(unique_items, documents, max_support=rp.min_support)
         # if self.required_params.convert_rsp_codes:
-        #     self.log("Converting RSP codes")
+        #     self.log("converting rsp codes")
         #     neg = self.convert_rsp_keys(neg)
 
         # if self.required_params.add_mbs_code_groups:
-        #     self.log("Converting MBS codes")
+        #     self.log("converting mbs codes")
         #     (neg, attrs, legend) = self.convert_mbs_codes(neg)
             
         # neg_name = f"negative_{rp.group_header}_{rp.basket_header}_graph.png"

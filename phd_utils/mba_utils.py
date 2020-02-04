@@ -35,7 +35,7 @@ class MbaUtils:
                     raise KeyError(f"Invalid {k} filter option {key}")
                 self.filters[k][key] = val
 
-    def assign_diamonds_to_absences(self, items, model):
+    def find_missing_nodes(self, items, model):
         _items = {}
         for i in items:
             if i not in _items:
@@ -53,10 +53,20 @@ class MbaUtils:
 
         return _items, diamonds
 
-    def assign_trapeziums_to_presences(self, items, interest, threshold=10):
+    def find_repeated_abnormal_nodes(self, items, interest, threshold=10):
         diamonds = []
         for k in items:
             if interest.get(k, -1) > threshold:
+                diamonds.append(k)
+
+        return diamonds
+
+    def find_underutilised_normal_nodes(self, items, interest, threshold=10):
+        diamonds = []
+        for k in items:
+            count = interest.get(k, -1)  
+            raise KeyError
+            if count == 1:
                 diamonds.append(k)
 
         return diamonds
