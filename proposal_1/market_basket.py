@@ -90,8 +90,8 @@ class TestCase(ProposalTest):
                 attrs = {i: {'shape': 'invhouse'} for i in missing_nodes}
                 attrs = {i: {'shape': 'house'} for i in repeated_non_model_nodes}
 
-            nam = f"suspect_{idx}_{s}.png"
-            title=f'Suspect {idx}: {s}'
+            nam = f"rank_{idx}_{s}.png"
+            title=f'Rank {idx}: {s}'
             mba_funcs.create_graph(transaction_graph, nam, title, attrs=attrs)
         
 
