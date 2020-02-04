@@ -117,7 +117,7 @@ if __name__ == "__main__":
                     'filters': {
                         'conviction': {'value': 1.1}
                         },
-                    'min_support': 0.01},
+                    'min_support': 0.005},
         proposal = 1,
         # test_data = mbs,
         test_data = 'hip_21214_provider_subset.csv',

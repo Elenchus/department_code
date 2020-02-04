@@ -93,7 +93,7 @@ class MbaUtils:
 
     def check_basket_for_presences(self, basket, model):
         # two problems - unique item differences, and repeated item differences
-        tally = {i: 0 for i in basket}
+        tally = {i: 0 for i in set(basket)}
         nodes = self.get_nodes_from_digraph(model)
         for item in basket:
             if item in nodes:

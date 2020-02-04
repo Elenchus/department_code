@@ -77,7 +77,7 @@ class BasicMba:
             self.subgroup_data = None
 
 
-    def get_suspicious_transaction_count(self, d, data):
+    def get_suspicious_transaction_count(self, d, data, scoring_method='max'):
         self.log("Checking transactions against model")
         suspicious_transactions = {}
         for name, group in tqdm(data):
@@ -85,8 +85,15 @@ class BasicMba:
             # missing = self.model.mba.check_basket_for_absences(basket, d)
             basket = [str(x) for x in group[self.basket_header]]
             improper, _ = self.model.mba.check_basket_for_presences(basket, d)
-            t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
-            # t = max(list(improper.values())) if len(improper) != 0 else 0
+            if scoring_method == 'avg':
+                t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
+            elif scoring_method == 'max':
+                t = max(list(improper.values())) if len(improper) != 0 else 0
+            else:
+                raise KeyError
+
+            if t == 0:
+                continue
 
             suspicious_transactions[name] = suspicious_transactions.get(name, 0) + t
 

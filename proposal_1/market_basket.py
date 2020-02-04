@@ -14,6 +14,7 @@ class TestCase(ProposalTest):
         sub_group_header:str = None
         min_support:float = 0.01
         filters:dict = None
+        scoring_method:str = 'avg'
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -58,7 +59,7 @@ class TestCase(ProposalTest):
         
         formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
         mba_funcs.create_graph(formatted_d, name, title, attrs, legend)
-        suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data)
+        suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data, rp.scoring_method)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_counts, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
@@ -87,8 +88,8 @@ class TestCase(ProposalTest):
                     key = '\n'.join(labels) + f'\n{i}'
                     attrs[key]['shape'] = 'house'
             else:
-                attrs = {i: {'shape': 'hexagon'} for i in missing_nodes}
-                attrs = {i: {'shape': 'trapezium'} for i in repeated_non_model_nodes}
+                attrs = {i: {'shape': 'invhouse'} for i in missing_nodes}
+                attrs = {i: {'shape': 'house'} for i in repeated_non_model_nodes}
 
             nam = f"suspect_{idx}_{s}.png"
             title=f'Suspect {idx}: {s}'
