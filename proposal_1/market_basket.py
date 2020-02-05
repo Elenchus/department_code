@@ -87,8 +87,12 @@ class TestCase(ProposalTest):
                     key = '\n'.join(labels) + f'\n{i}'
                     attrs[key]['shape'] = 'house'
             else:
-                attrs = {i: {'shape': 'invhouse'} for i in missing_nodes}
-                attrs = {i: {'shape': 'house'} for i in repeated_non_model_nodes}
+                attrs = {}
+                for i in missing_nodes:
+                    attrs[i] =  {'shape': 'invhouse'}
+
+                for i in repeated_non_model_nodes:
+                    attrs[i] = {'shape': 'house'} 
 
             nam = f"rank_{idx}_{s}.png"
             title=f'Rank {idx}: {s}'
