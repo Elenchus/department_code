@@ -19,7 +19,7 @@ class BasicMba:
     def convert_graph_and_attrs(self, d):
         attrs = None
         legend = None
-        if self.basket_header == 'RSP':
+        if self.basket_header == 'SPR_RSP':
             self.log("Converting RSP codes")
             converted_d = self.model.mba.convert_rsp_keys(d)
         elif self.basket_header == 'ITEM':
