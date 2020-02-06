@@ -145,13 +145,13 @@ class MbaUtils:
             c = '{:02x}'.format(color)
             a = '{:02x}'.format(anti_col)
 
-            colour_table[col] = {'color': f"#{c}{g}{a}"}
+            colour_table[col] = {'color': f"#{a}{c}{0}"}
 
         colors = {}
         for k, v in lookup.items():
             colors[k] = colour_table[v]
 
-        return colors
+        return colors, colour_table
 
     def compare_items_to_model(self, items, model):
         pass

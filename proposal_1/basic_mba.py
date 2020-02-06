@@ -27,7 +27,8 @@ class BasicMba:
             (converted_d, attrs, legend) = self.model.mba.convert_mbs_codes(d)
         elif self.basket_header == 'SPR':
             self.log("Colouring SPR")
-            attrs = self.model.mba.color_providers(converted_d, self.test_data)
+            converted_d = d
+            attrs, legend = self.model.mba.color_providers(converted_d, self.test_data)
         else:
             converted_d = d
 
