@@ -20,6 +20,10 @@ class MbaUtils:
         'odds_ratio': {
             'operator': operator.ge,
             'value': 0
+        },
+        'certianty_factor': {
+            'operator': operator.ge,
+            'value': -1
         }
     }
 
@@ -310,6 +314,7 @@ class MbaUtils:
                     confidence = support / support_a
 
                     conviction = (1 - support_b) / (1 - confidence) if confidence != 1 else 9999
+                    certainty_factor = (confidence - support_b) / (1 - support_b) if support_b != 1 else 9999
 
                     for k, v in self.filters.items():
                         comp = v['operator']
@@ -322,6 +327,8 @@ class MbaUtils:
                             fil = conviction
                         elif k == 'odds_ratio':
                             fil = odds_ratio
+                        elif k == 'certainty_factor':
+                            fil = certainty_factor
                         else:
                             raise KeyError(f"No matching association rule {k}")
 
