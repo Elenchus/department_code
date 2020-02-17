@@ -56,7 +56,10 @@ class TestCase(ProposalTest):
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
         else:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
+
+        mba_funcs.log_exclusion_rules(d, 0.1, 21214, documents)
         
+        self.log("Finding suspicious transactions")
         formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
         mba_funcs.create_graph(formatted_d, name, title, attrs)
         suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data, rp.scoring_method)

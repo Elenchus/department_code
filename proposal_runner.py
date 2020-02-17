@@ -111,9 +111,9 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     test_details = TestDetails(
         notes = "",
-        params = {'basket_header': 'SPR', 
-                    'group_header':'SPR_RSP', 
-                    'sub_group_header': 'ITEM',
+        params = {'basket_header': 'ITEM', 
+                    'group_header':'SPR', 
+                    'sub_group_header': None,
                     'filters': {
                         'conviction': {'value': 1.1}
                         },

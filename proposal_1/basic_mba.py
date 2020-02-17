@@ -100,6 +100,18 @@ class BasicMba:
 
         return suspicious_transactions
 
+    def log_exclusion_rules(self, model, threshold, ignore_consequent, documents):
+        self.log("Getting exclusion rules")
+        for antecedent in list(model.keys()):
+            for consequent in list(model[antecedent].keys()):
+                if consequent == str(ignore_consequent):
+                    continue
+
+                rules = self.model.mba.exclusion_rules(antecedent, consequent, threshold, documents)
+                if len(rules) > 0:
+                    for e in rules:
+                        self.log(f"{antecedent} -> {consequent} -| {e}")
+
     def update_properties(self, basket_header, group_header, sub_group_header):
         self.basket_header=basket_header
         self.group_header=group_header

@@ -6,6 +6,7 @@ import pandas as pd
 class CodeConverter:
     '''Converter for PBS items and MBS RSP codes'''
     def __init__(self, year):
+        year = str(year)
         available_years = ['2014', '2019']
         if year not in available_years:
             year = '2019'

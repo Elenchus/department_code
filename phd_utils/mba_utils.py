@@ -217,6 +217,37 @@ class MbaUtils:
 
         return new_data
 
+    def exclusion_rules(self, antecedent, consequent, threshold, documents):
+        X_subset = []
+        item_subset = {}
+        exclusions = []
+        for doc in documents:
+            if antecedent in doc:
+                X_subset.append(doc)
+                for item in doc:
+                    item_subset[item] = item_subset.get(item, 0) + 1
+
+        support_Y = item_subset[consequent] / len(X_subset)
+        for item in list(item_subset.keys()):
+            if item == consequent:
+                continue
+
+            support_X = item_subset[item] / len(X_subset)
+            support_XY = 0
+            for doc in X_subset:
+                if consequent in doc and item in doc:
+                    support_XY += 1
+
+            support_XY = support_XY / len(X_subset)
+            confidence = support_XY / support_X
+            num = (1 - support_Y) 
+            den = (1 - confidence)
+            conviction = num / den if den != 0 else 2 * threshold
+            if conviction < threshold:
+                exclusions.append(item)
+
+        return exclusions
+
     def pairwise_market_basket(self,
                                 items,
                                 documents,
