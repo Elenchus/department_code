@@ -56,7 +56,8 @@ class BasicMba:
 
     def create_graph(self, d, name, title, attrs=None):
         filename = self.logger.output_path / name
-        if self.model.mba.filters['conviction']['value'] == 0 and self.model.mba.filters['confidence']['value'] == 0:
+        filters = self.model.mba.filters
+        if filters['conviction']['value'] == 0 and filters['confidence']['value'] == 0 and filters['certainty_factor']['value'] <= 0:
             directed = False
         else:
             directed = True

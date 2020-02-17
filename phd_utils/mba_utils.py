@@ -21,7 +21,7 @@ class MbaUtils:
             'operator': operator.ge,
             'value': 0
         },
-        'certianty_factor': {
+        'certainty_factor': {
             'operator': operator.ge,
             'value': -1
         }
