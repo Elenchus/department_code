@@ -314,7 +314,12 @@ class MbaUtils:
                     confidence = support / support_a
 
                     conviction = (1 - support_b) / (1 - confidence) if confidence != 1 else 9999
-                    certainty_factor = (confidence - support_b) / (1 - support_b) if support_b != 1 else 9999
+                    if confidence > support_b:
+                        certainty_factor = (confidence - support_b) / (1 - support_b) if support_b != 1 else 9999
+                    elif confidence < support_b:
+                        certainty_factor = (confidence - support_b) / support_b
+                    else:
+                        certainty_factor = 0
 
                     for k, v in self.filters.items():
                         comp = v['operator']
