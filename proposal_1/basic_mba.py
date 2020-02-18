@@ -41,6 +41,9 @@ class BasicMba:
         for _, group in tqdm(data): 
             items = group[self.basket_header].unique().tolist()
             items = [str(item) for item in items]
+            if len(items) == 1:
+                items.append("No other items")
+
             documents.append(items)
 
         return documents

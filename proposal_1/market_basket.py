@@ -14,7 +14,7 @@ class TestCase(ProposalTest):
         sub_group_header:str = None
         min_support:float = 0.01
         filters:dict = None
-        scoring_method:str = 'max'
+        scoring_method:str = 'avg'
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -82,12 +82,22 @@ class TestCase(ProposalTest):
             if rp.basket_header == 'ITEM':
                 (transaction_graph, attrs, _) = self.models.mba.convert_mbs_codes(transaction_graph)
                 for i in missing_nodes:
-                    labels = self.code_converter.convert_mbs_code_to_group_labels(i)
-                    key = '\n'.join(labels) + f'\n{i}'
+                    if i == "No other items":
+                        key = f"{i}\n{i}"
+                        attrs[key] = {}
+                    else:
+                        labels = self.code_converter.convert_mbs_code_to_group_labels(i)
+                        key = '\n'.join(labels) + f'\n{i}'
+
                     attrs[key]['shape'] = 'invhouse'
                 for i in repeated_non_model_nodes:
-                    labels = self.code_converter.convert_mbs_code_to_group_labels(i)
-                    key = '\n'.join(labels) + f'\n{i}'
+                    if i == "No other items":
+                        key = f"{i}\n{i}"
+                        attrs[key] = {}
+                    else:
+                        labels = self.code_converter.convert_mbs_code_to_group_labels(i)
+                        key = '\n'.join(labels) + f'\n{i}'
+
                     attrs[key]['shape'] = 'house'
             else:
                 attrs = {}

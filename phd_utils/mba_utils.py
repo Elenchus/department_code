@@ -175,8 +175,11 @@ class MbaUtils:
 
         lookup = {}
         for k in d.keys():
-            labels = self.code_converter.convert_mbs_code_to_group_labels(k)
-            lookup[k] = '\n'.join(labels)
+            if k == "No other items":
+                lookup["No other items"] = "No other items"
+            else:
+                labels = self.code_converter.convert_mbs_code_to_group_labels(k)
+                lookup[k] = '\n'.join(labels)
 
         new_data = {}
         colors = {}
@@ -184,15 +187,22 @@ class MbaUtils:
         for k, v in d.items():
             new_k = f'{lookup[k]}\n{k}'
             if new_k not in new_data:
-                group_no = self.code_converter.convert_mbs_code_to_group_numbers(k)[0]
+                if new_k == "No other items":
+                    group_no = 'I'
+                else:
+                    group_no = self.code_converter.convert_mbs_code_to_group_numbers(k)[0]
+
                 color = get_color[group_no]
                 colors[new_k] = {'color': color}
                 color_map.add(group_no)
                 new_data[new_k] = {}
             for key, val in v.items():
                 if key not in lookup:
-                    labels = self.code_converter.convert_mbs_code_to_group_labels(key)
-                    lookup[key] = '\n'.join(labels)
+                    if k == "No other items":
+                        lookup["No other items"] = "No other items"
+                    else:
+                        labels = self.code_converter.convert_mbs_code_to_group_labels(key)
+                        lookup[key] = '\n'.join(labels)
 
                 new_key = f'{lookup[key]}\n{key}'
                 new_data[new_k][new_key] = val
@@ -208,7 +218,10 @@ class MbaUtils:
     def convert_rsp_keys(self, d):
         lookup = {}
         for k in d.keys():
-            lookup[k] = self.code_converter.convert_rsp_num(k)
+            if k == "No other items":
+                lookup["No other items"] = "No other items"
+            else:
+                lookup[k] = self.code_converter.convert_rsp_num(k)
 
         new_data = {}
         for k, v in d.items():
@@ -216,7 +229,11 @@ class MbaUtils:
                 new_data[lookup[k]] = {}
             for key, val in v.items():
                 if key not in lookup:
-                    lookup[key] = self.code_converter.convert_rsp_num(key)
+                    if key == "No other items":
+                        lookup["No other items"] = "No other items"
+                    else:
+                        lookup[key] = self.code_converter.convert_rsp_num(key)
+
                 new_data[lookup[k]][lookup[key]] = val
 
         return new_data
@@ -263,7 +280,7 @@ class MbaUtils:
         else:
             min_occurrence = min_support
 
-        reduced_items = {}
+        reduced_items = {"No other items": 0}
         for item in items:
             reduced_items[item] = 0
         for doc in documents:
