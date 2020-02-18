@@ -89,13 +89,26 @@ class BasicMba:
             # basket = [str(x) for x in group[self.basket_header].unique()]
             # missing = self.model.mba.check_basket_for_absences(basket, d)
             basket = [str(x) for x in group[self.basket_header]]
-            improper, _ = self.model.mba.check_basket_for_presences(basket, d)
-            if scoring_method == 'avg':
-                t = sum(list(improper.values())) / len(improper) if len(improper) != 0 else 0
-            elif scoring_method == 'max':
-                t = max(list(improper.values())) if len(improper) != 0 else 0
+            if scoring_method == 'avg_thrsh' or scoring_method == 'imp_avg_thrsh' or scoring_method == 'max_prop':
+                threshold = 10
             else:
-                raise KeyError
+                threshold = 0
+
+            improper, proper = self.model.mba.check_basket_for_presences(basket, d, threshold=threshold)
+            improper_len = len(improper)
+            total_len = len(improper) + len(proper)
+            if improper_len == 0:
+                t = 0
+            elif scoring_method == 'avg' or scoring_method == 'avg_thrsh':
+                t = sum(list(improper.values())) / total_len
+            elif scoring_method == 'imp_avg' or scoring_method == 'imp_avg_thrsh':
+                t = sum(list(improper.values())) / improper_len
+            elif scoring_method == 'max':
+                t = max(list(improper.values()))
+            elif scoring_method == 'max_prop':
+                t = max(list(improper.values())) / total_len
+            else:
+                raise KeyError(f"{scoring_method} is not a scoring method")
 
             if t == 0:
                 continue

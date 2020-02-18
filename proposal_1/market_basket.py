@@ -14,7 +14,7 @@ class TestCase(ProposalTest):
         sub_group_header:str = None
         min_support:float = 0.01
         filters:dict = None
-        scoring_method:str = 'avg'
+        scoring_method:str = 'max_prop'
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS

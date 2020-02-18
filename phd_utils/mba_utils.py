@@ -95,7 +95,7 @@ class MbaUtils:
                         tally += 1
         return tally
 
-    def check_basket_for_presences(self, basket, model):
+    def check_basket_for_presences(self, basket, model, threshold=0):
         # two problems - unique item differences, and repeated item differences
         tally = {i: 0 for i in set(basket)}
         nodes = self.get_nodes_from_digraph(model)
@@ -108,7 +108,7 @@ class MbaUtils:
         proper = {}
         improper = {}
         for k, v in tally.items():
-            x = proper if v < 0 else improper
+            x = proper if v < threshold + 1 else improper
             x[k] = abs(v)
 
         return improper, proper
