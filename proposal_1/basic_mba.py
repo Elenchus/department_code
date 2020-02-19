@@ -117,11 +117,14 @@ class BasicMba:
 
         return suspicious_transactions
 
-    def log_exclusion_rules(self, model, threshold, ignore_consequent, documents):
+    def log_exclusion_rules(self, model, threshold, ignore_list, documents):
         self.log("Getting exclusion rules")
         for antecedent in list(model.keys()):
+            if antecedent in ignore_list:
+                continue
+
             for consequent in list(model[antecedent].keys()):
-                if consequent == str(ignore_consequent):
+                if consequent in ignore_list:
                     continue
 
                 rules = self.model.mba.exclusion_rules(antecedent, consequent, threshold, documents)
