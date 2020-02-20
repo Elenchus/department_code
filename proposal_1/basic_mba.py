@@ -49,7 +49,6 @@ class BasicMba:
         return documents
 
     def create_model(self, items, documents, min_support):
-        self.log("Creating model")
         d = self.model.mba.pairwise_market_basket(items,
                                                 documents,
                                                 min_support=min_support,
@@ -92,7 +91,6 @@ class BasicMba:
         current_name, unique_items, documents = reset()
 
         suspicious_transactions = {}
-        self.log(f"Getting association rules for individual {self.group_header}")
         for name, group in data:
             group_name, sub_name = name.split('__')
             if group_name != current_name:
@@ -102,7 +100,7 @@ class BasicMba:
                 current_name, unique_items, documents = reset()
                 current_name = group_name
 
-            documents.append(group[self.basket_header])
+            documents.append(group[self.basket_header].unique().tolist())
             unique_items.update(group[self.basket_header])
         
         return ged
