@@ -91,24 +91,30 @@ class BasicMba:
         current_name, unique_items, documents = reset()
 
         suspicious_transactions = {}
-        for name, group in data:
+        for name, group in tqdm(data):
             group_name, sub_name = name.split('__')
             if group_name != current_name:
-                d = self.create_model(list(unique_items), documents, min_support)
-                ged = self.graphs.graph_edit_distance(model, d)
-                suspicious_transactions[current_name] = ged
+                if current_name != '':
+                    d = self.create_model(list(unique_items), documents, min_support)
+                    ged = self.graphs.graph_edit_distance(model, d)
+                    suspicious_transactions[int(current_name)] = ged
+
                 current_name, unique_items, documents = reset()
                 current_name = group_name
 
             documents.append(group[self.basket_header].unique().tolist())
             unique_items.update(group[self.basket_header])
         
-        return ged
+        return suspicious_transactions
 
     def get_suspicious_transaction_score(self, d, data, scoring_method='max', min_support = 0.005):
-        self.log("Checking transactions against model")
-        suspicious_transactions = {}
+        if scoring_method == 'ged':
+            suspicious_transactions = self.get_suspicious_ged(d, data, min_support)
+
+            return suspicious_transactions
+
         for name, group in tqdm(data):
+            suspicious_transactions = {}
             # basket = [str(x) for x in group[self.basket_header].unique()]
             # missing = self.model.mba.check_basket_for_absences(basket, d)
             basket = [str(x) for x in group[self.basket_header]]
@@ -124,8 +130,6 @@ class BasicMba:
                 t = 0
             elif scoring_method == 'avg' or scoring_method == 'avg_thrsh':
                 t = sum(list(improper.values())) / total_len
-            elif scoring_method == 'ged':
-                self.get_suspicious_ged(d, data, min_support)
             elif scoring_method == 'imp_avg' or scoring_method == 'imp_avg_thrsh':
                 t = sum(list(improper.values())) / improper_len
             elif scoring_method == 'max':

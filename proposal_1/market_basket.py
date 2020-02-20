@@ -76,7 +76,7 @@ class TestCase(ProposalTest):
         susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
 
         for idx, s in enumerate(susp):
-            if rp.sub_group_header is None:
+            if rp.sub_group_header is None or rp.scoring_method == 'ged':
                 group = mba_funcs.group_data.get_group(s)
             else:
                 group = dict(mba_funcs.subgroup_data)[s]
