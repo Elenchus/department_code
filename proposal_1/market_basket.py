@@ -60,7 +60,7 @@ class TestCase(ProposalTest):
         formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
         mba_funcs.create_graph(formatted_d, name, title, attrs)
 
-        mba_funcs.log_exception_rules(d, 0.1, ['21214', "No other items"], documents)
+        # mba_funcs.log_exception_rules(d, 0.1, ['21214', "No other items"], documents)
 
         self.log("Finding suspicious transactions")
         if rp.sub_group_header is None:

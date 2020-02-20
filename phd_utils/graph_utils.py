@@ -110,10 +110,15 @@ class GraphUtils():
 
         ged_score = 0
         d = {x: {} for x in flatten_dict(test)}
-        possible_nodes = flatten_dict(expected)
-        for key in d.keys():
+        possible_nodes = list(flatten_dict(expected))
+        keys = list(d.keys())
+        for key in keys:
             if key not in possible_nodes:
                 ged_score += 1
+                if key in test:
+                    edges = test[key]
+                    ged_score += len(edges)
+
                 d.pop(key)
 
         nodes_to_add = set()
@@ -121,10 +126,16 @@ class GraphUtils():
             if key not in expected:
                 continue
 
+
             possible_edges = set(expected[key].keys())
-            actual_edges = set(test[key].keys())
+            if key in test:
+                actual_edges = set(test[key].keys())
+            else:
+                actual_edges = set()
+
             missing_edges = possible_edges - actual_edges
-            should_have = possible_edges.intersection(actual_edges) + missing_edges
+            should_have = possible_edges.intersection(actual_edges)
+            should_have.update(missing_edges)
             should_not_have = actual_edges - possible_edges
             d[key] = {x: {} for x in should_have}
             missing_nodes = set()
@@ -135,19 +146,22 @@ class GraphUtils():
             nodes_to_add.update(missing_nodes)
             ged_score += len(missing_edges) + len(should_not_have)
 
-        while True:
+        while True:# infinite loop!
             if len(nodes_to_add) == 0:
                 break
 
+            ignore_list = []
             node = nodes_to_add.pop()
             ged_score += 1
             if node not in expected:
+                ignore_list.append(node)
                 continue
 
             edges = expected[node]
             ged_score += len(edges)
+            d[node] = edges
             for new_node in edges:
-                if new_node not in d:
+                if new_node not in d and new_node not in ignore_list:
                     nodes_to_add.add(new_node)
 
         return ged_score
