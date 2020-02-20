@@ -60,15 +60,20 @@ class TestCase(ProposalTest):
         formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
         mba_funcs.create_graph(formatted_d, name, title, attrs)
 
-        mba_funcs.log_exclusion_rules(d, 0.1, ['21214', "No other items"], documents)
+        mba_funcs.log_exception_rules(d, 0.1, ['21214', "No other items"], documents)
 
         self.log("Finding suspicious transactions")
         if rp.sub_group_header is None:
-            suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data, rp.scoring_method)
+            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.group_data, rp.scoring_method)
         else:
-            suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.subgroup_data, rp.scoring_method)
+            if rp.scoring_method != 'ged':
+                suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method)
+            else:
+                #get provider normal graphs
+                # get ged for each
+                pass
 
-        suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_counts, orient='index', columns=['count'])
+        suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_score, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
 
@@ -120,7 +125,7 @@ class TestCase(ProposalTest):
             mba_funcs.create_graph(transaction_graph, nam, title, attrs=attrs)
         
 
-        self.log(f'{len(suspicious_transaction_counts)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')
+        self.log(f'{len(suspicious_transaction_score)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')
 
         if legend is not None:
             legend['Repeated abnormal items'] = {'shape': 'house', 'color': 'grey'}

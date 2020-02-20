@@ -81,8 +81,13 @@ class BasicMba:
         else:
             self.subgroup_data = None
 
+    def get_suspicious_ged(self, d, model):
+        self.log("Checking graph edit distance")
+        ged = self.graphs.graph_edit_distance(model, d)
+        
+        return ged
 
-    def get_suspicious_transaction_count(self, d, data, scoring_method='max'):
+    def get_suspicious_transaction_score(self, d, data, scoring_method='max'):
         self.log("Checking transactions against model")
         suspicious_transactions = {}
         for name, group in tqdm(data):
@@ -117,8 +122,8 @@ class BasicMba:
 
         return suspicious_transactions
 
-    def log_exclusion_rules(self, model, threshold, ignore_list, documents):
-        self.log("Getting exclusion rules")
+    def log_exception_rules(self, model, threshold, ignore_list, documents):
+        self.log("Getting exception rules")
         for antecedent in list(model.keys()):
             if antecedent in ignore_list:
                 continue
@@ -127,7 +132,7 @@ class BasicMba:
                 if consequent in ignore_list:
                     continue
 
-                rules = self.model.mba.exclusion_rules(antecedent, consequent, threshold, documents)
+                rules = self.model.mba.exception_rules(antecedent, consequent, threshold, documents)
                 if len(rules) > 0:
                     for e in rules:
                         self.log(f"{antecedent} -> {consequent} -| {e}")

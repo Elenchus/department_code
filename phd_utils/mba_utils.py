@@ -238,7 +238,7 @@ class MbaUtils:
 
         return new_data
 
-    def exclusion_rules(self, antecedent, consequent, threshold, documents):
+    def exception_rules(self, antecedent, consequent, threshold, documents):
         X_subset = []
         item_subset = {}
         exclusions = []

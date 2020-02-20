@@ -1,6 +1,6 @@
 import itertools
 import pandas as pd
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime as dt
 from datetime import timedelta
 from phd_utils.base_proposal_test import ProposalTest
@@ -14,7 +14,7 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        codes_of_interest:list 
+        codes_of_interest:list = field(default_factory=lambda: ['21214']) 
         code_type:str = 'hip'
         output_name:str = 'provider_subset'
 

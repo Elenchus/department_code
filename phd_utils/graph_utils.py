@@ -95,6 +95,60 @@ class GraphUtils():
 
         self.save_plt_fig(fig, filename, [ttl, legend])
 
+    def graph_edit_distance(self, expected, test):
+        def flatten_dict(dictionary):
+            temp = set()
+            for k, v in dictionary.items():
+                temp.add(k)
+                for key in v.keys():
+                    temp.add(key)
+
+            return temp
+
+        ged_score = 0
+        d = {x: {} for x in flatten_dict(test)}
+        possible_nodes = flatten_dict(expected)
+        for key in d.keys():
+            if key not in possible_nodes:
+                ged_score += 1
+                d.pop(key)
+
+        nodes_to_add = set()
+        for key in d.keys():
+            if key not in expected:
+                continue
+
+            possible_edges = set(expected[key].keys())
+            actual_edges = set(test[key].keys())
+            missing_edges = possible_edges - actual_edges
+            should_have = possible_edges.intersection(actual_edges) + missing_edges
+            should_not_have = actual_edges - possible_edges
+            d[key] = {x: {} for x in should_have}
+            missing_nodes = set()
+            for node in missing_edges:
+                if node not in d:
+                    missing_nodes.add(node)
+
+            nodes_to_add.update(missing_nodes)
+            ged_score += len(missing_edges) + len(should_not_have)
+
+        while True:
+            if len(nodes_to_add) == 0:
+                break
+
+            node = nodes_to_add.pop()
+            ged_score += 1
+            if node not in expected:
+                continue
+
+            edges = expected[node]
+            ged_score += len(edges)
+            for new_node in edges:
+                if new_node not in d:
+                    nodes_to_add.add(new_node)
+
+        return ged_score
+
     def plot_tsne(self, new_values, labels, title):
         '''Create and save a t-SNE plot'''
         self.logger.log(f"Plotting TSNE figure")
