@@ -113,11 +113,12 @@ if __name__ == "__main__":
         notes = "",
         params = {'basket_header': 'ITEM', 
                     'group_header':'SPR', 
-                    'sub_group_header': None,
+                    'sub_group_header': 'PIN',
                     'filters': {
                         'conviction': {'value': 1.1}
                         },
-                    'min_support': 0.005},
+                    'min_support': 0.005,
+                    'scoring_method': 'imp_avg_thrsh'},
         proposal = 1,
         # test_data = mbs,
         test_data = 'hip_21214_provider_subset.csv',

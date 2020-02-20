@@ -63,13 +63,21 @@ class TestCase(ProposalTest):
         mba_funcs.log_exclusion_rules(d, 0.1, ['21214', "No other items"], documents)
 
         self.log("Finding suspicious transactions")
-        suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data, rp.scoring_method)
+        if rp.sub_group_header is None:
+            suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.group_data, rp.scoring_method)
+        else:
+            suspicious_transaction_counts = mba_funcs.get_suspicious_transaction_count(d, mba_funcs.subgroup_data, rp.scoring_method)
+
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_counts, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
 
         for idx, s in enumerate(susp):
-            group = mba_funcs.group_data.get_group(s)
+            if rp.sub_group_header is None:
+                group = mba_funcs.group_data.get_group(s)
+            else:
+                group = dict(mba_funcs.subgroup_data)[s]
+
             unique_items = [str(x) for x in group[rp.basket_header].unique()]
             items_list = [str(x) for x in group[rp.basket_header]]
 

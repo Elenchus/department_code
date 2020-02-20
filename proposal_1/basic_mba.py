@@ -74,8 +74,8 @@ class BasicMba:
             subgroup_data = []
             for name, group in self.group_data:
                 new_groups = group.groupby(self.sub_group_header)
-                for _, new_group in new_groups:
-                    subgroup_data.append((name, new_group))
+                for sub_name, new_group in new_groups:
+                    subgroup_data.append((f"{name}__{sub_name}", new_group))
 
             self.subgroup_data = subgroup_data
         else:
