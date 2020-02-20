@@ -105,6 +105,9 @@ class GraphUtils():
 
             return temp
 
+        if not test:
+            return 0
+
         ged_score = 0
         d = {x: {} for x in flatten_dict(test)}
         possible_nodes = flatten_dict(expected)

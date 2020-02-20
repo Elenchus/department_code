@@ -64,14 +64,12 @@ class TestCase(ProposalTest):
 
         self.log("Finding suspicious transactions")
         if rp.sub_group_header is None:
+            if rp.scoring_method == 'ged':
+                raise KeyError("GED method must currently have subgroup")
+
             suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.group_data, rp.scoring_method)
         else:
-            if rp.scoring_method != 'ged':
-                suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method)
-            else:
-                #get provider normal graphs
-                # get ged for each
-                pass
+            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, rp.min_support)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_score, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
