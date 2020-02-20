@@ -118,7 +118,8 @@ if __name__ == "__main__":
                         'conviction': {'value': 1.1}
                         },
                     'min_support': 0.005,
-                    'scoring_method': 'ged'},
+                    'scoring_method': 'ged',
+                    'ged_support': 0.1},
         # params = { 'codes_of_interest': ['21402'],
         #             'code_type': 'knee_replacement',
         #             'output_name': 'provider_subset'

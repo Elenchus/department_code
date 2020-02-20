@@ -15,6 +15,7 @@ class TestCase(ProposalTest):
         min_support:float = 0.01
         filters:dict = None
         scoring_method:str = 'max_prop'
+        ged_support:float = 0.1
     
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -69,7 +70,7 @@ class TestCase(ProposalTest):
 
             suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.group_data, rp.scoring_method)
         else:
-            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, rp.min_support)
+            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, rp.ged_support)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_score, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
