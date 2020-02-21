@@ -1,6 +1,7 @@
 '''functions for quick graphing'''
 from datetime import datetime
 # from cuml import UMAP as umap
+import pandas as pd
 import numpy as np
 import pygraphviz as pgv
 from matplotlib import pyplot as plt
@@ -36,6 +37,29 @@ class GraphUtils():
             ax.set_ylabel(axis_labels[1])
 
         self.save_plt_fig(fig, filename, (lgd, ttl, ))
+
+    def convert_adjacency_matrix_to_graph(self, a_m):
+        items = a_m.columns
+        graph = {}
+        for ante in items:
+            for con in items:
+                val = a_m.at[ante, con]
+                if val != 0:
+                    if ante in graph:
+                        graph[ante][con] = None
+                    else:
+                        graph[ante] = {con: None}
+
+        return graph
+
+    def convert_graph_to_adjacency_matrix(self, graph):
+        items = [x for x in self.flatten_graph_dict(graph)]
+        a_m = pd.DataFrame(0, index=items, columns=items)
+        for ante in graph.keys():
+            for con in graph[ante].keys():
+                a_m.at[ante, con] += 1
+
+        return a_m
 
     def create_boxplot(self, data, title, filename):
         '''creates and saves a single boxplot'''
@@ -95,22 +119,22 @@ class GraphUtils():
 
         self.save_plt_fig(fig, filename, [ttl, legend])
 
+    def flatten_graph_dict(self, dictionary):
+        temp = set()
+        for k, v in dictionary.items():
+            temp.add(k)
+            for key in v.keys():
+                temp.add(key)
+
+        return temp
+
     def graph_edit_distance(self, expected, test, attrs=None):
-        def flatten_dict(dictionary):
-            temp = set()
-            for k, v in dictionary.items():
-                temp.add(k)
-                for key in v.keys():
-                    temp.add(key)
-
-            return temp
-
         if not test:
             return 0
 
         ged_score = 0
-        d = {x: {} for x in flatten_dict(test)}
-        possible_nodes = list(flatten_dict(expected))
+        d = {x: {} for x in self.flatten_graph_dict(test)}
+        possible_nodes = list(self.flatten_graph_dict(expected))
         keys = list(d.keys())
         for key in keys:
             if key not in possible_nodes:

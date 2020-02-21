@@ -9,6 +9,27 @@ class ModelUtilsTest(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_graph_conversion(self):
+        model = {
+            1: {2: {}},
+            3: {4: {}},
+            4: {5: {}, 6: {}, 1: {}},
+            5: {4: {}},
+            6: {1: {}},
+            7: {6: {}}
+        }
+
+        am = self.graphs.convert_graph_to_adjacency_matrix(model)
+        assert am.at[1, 2] == 1
+        assert am.loc[1].sum() == 1
+        assert am[1].sum() == 2
+
+        graph = self.graphs.convert_adjacency_matrix_to_graph(am)
+        assert len(model.keys()) == len(graph.keys())
+        for ante in model.keys():
+            for con in model[ante].keys():
+                assert graph[ante][con] is None
+
     def test_graph_edit_distance(self):
         model = {
             1: {2: {}},
