@@ -30,6 +30,20 @@ class ModelUtilsTest(unittest.TestCase):
             for con in model[ante].keys():
                 assert graph[ante][con] is None
 
+    def test_component_id(self):
+        model = {
+            1: {2: {}},
+            3: {4: {}},
+            4: {5: {}},
+            5: {3: {}}
+        }
+
+        components = self.graphs.graph_component_finder(model)
+        assert len(components) == 2
+        assert len(components[0]) == 2 or len(components[0]) == 3
+        assert len(components[1]) == 3 or len(components[1]) == 2
+        assert len(components[0]) != len(components[1])
+
     def test_graph_edit_distance(self):
         model = {
             1: {2: {}},

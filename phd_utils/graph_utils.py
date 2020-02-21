@@ -128,6 +128,40 @@ class GraphUtils():
 
         return temp
 
+    def graph_component_finder(self, graph):
+        am = self.convert_graph_to_adjacency_matrix(graph)
+        keys = am.index.tolist()
+        ITEMS = am.index.tolist()
+        def search_matrix(node, current_component, connected_nodes):
+            for item in ITEMS:
+                row = am.at[node, item]
+                col = am.at[item, node]
+                if (row > 0 or col > 0) and item not in current_component:
+                    current_component.add(item)
+                    connected_nodes.add(item)
+
+        identified = set()
+        components = []       
+        while len(keys) > 0:
+            component = set()
+            connected_nodes = set()
+            node = keys.pop()
+            if node in identified:
+                continue
+
+            component.add(node)
+            while True:
+                search_matrix(node, component, connected_nodes)
+                if not connected_nodes:
+                    break
+
+                node = connected_nodes.pop()
+            
+            identified.update(component)
+            components.append(component)
+
+        return components
+                
     def graph_edit_distance(self, expected, test, attrs=None):
         if not test:
             return 0
