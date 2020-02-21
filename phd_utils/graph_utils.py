@@ -95,7 +95,7 @@ class GraphUtils():
 
         self.save_plt_fig(fig, filename, [ttl, legend])
 
-    def graph_edit_distance(self, expected, test):
+    def graph_edit_distance(self, expected, test, attrs=None):
         def flatten_dict(dictionary):
             temp = set()
             for k, v in dictionary.items():

@@ -52,6 +52,11 @@ class TestCase(ProposalTest):
             documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
 
         d = mba_funcs.create_model(unique_items, documents, rp.min_support)
+        # remove no other item:
+        d.pop("No other items")
+        for k in d.keys():
+            d[k].pop("No other items")
+
         name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_graph.png"
         if rp.sub_group_header is None:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
