@@ -360,7 +360,7 @@ class MbaUtils:
                         if a not in d:
                             d[a] = {}
 
-                        d[a][b] = None
+                        d[a][b] = {"weight": confidence}
 
                     # new_row = {"Antecedent": a, "Consequent": b, "Count": count, "Support": support, "Confidence": confidence, "Conviction": conviction, "Lift": lift, "Odds ratio": odds_ratio}
                     # row_list.append(new_row)

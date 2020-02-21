@@ -62,12 +62,27 @@ class TestCase(ProposalTest):
         for k in d.keys():
             d[k].pop("No other items", None)
 
+        # find component specialties
+        if rp.basket_header == "ITEM":
+            components = self.graphs.graph_component_finder(d)
+            for i in range(len(components)):
+                self.log(f"Specialties in component {i}")
+                specs = set()
+                for item in components[i]:
+                    item_claims = self.test_data[self.test_data[rp.basket_header] == int(item)]
+                    item_specs = item_claims["SPR_RSP"].unique().tolist()
+                    specs.update(item_specs)
+                    
+                for spec in specs:
+                    words = self.code_converter.convert_rsp_num(spec)
+                    self.log(words)
+
         name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_graph.png"
         if rp.sub_group_header is None:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
         else:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
-        
+
         formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
         mba_funcs.create_graph(formatted_d, name, title, attrs)
 
