@@ -53,9 +53,14 @@ class TestCase(ProposalTest):
 
         d = mba_funcs.create_model(unique_items, documents, rp.min_support)
         # remove no other item:
-        d.pop("No other items")
+        if "No other items" in d:
+            for k in d["No other items"]:
+                if k not in d:
+                    d[k] = {}
+
+            d.pop("No other items")
         for k in d.keys():
-            d[k].pop("No other items")
+            d[k].pop("No other items", None)
 
         name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_graph.png"
         if rp.sub_group_header is None:

@@ -113,12 +113,13 @@ if __name__ == "__main__":
         notes = "",
         params = {'basket_header': 'ITEM', 
                     'group_header':'SPR', 
-                    'sub_group_header': 'PIN',
+                    'sub_group_header': None,
+                    # 'sub_group_header': 'PIN',
                     'filters': {
                         'conviction': {'value': 1.1}
                         },
                     'min_support': 0.005,
-                    'scoring_method': 'ged',
+                    'scoring_method': 'imp_avg_thrsh',
                     'ged_support': 0.1},
         # params = { 'codes_of_interest': ['21402'],
         #             'code_type': 'knee_replacement',
@@ -127,7 +128,8 @@ if __name__ == "__main__":
         # },
         proposal = 1,
         # test_data = mbs,
-        test_data = 'hip_21214_provider_subset.csv',
+        test_data = 'knee_replacement_provider_subset.csv',
+        # test_data = 'hip_21214_provider_subset.csv',
         test_file_name = f'market_basket',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]

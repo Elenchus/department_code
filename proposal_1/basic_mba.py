@@ -113,8 +113,8 @@ class BasicMba:
 
             return suspicious_transactions
 
+        suspicious_transactions = {}
         for name, group in tqdm(data):
-            suspicious_transactions = {}
             # basket = [str(x) for x in group[self.basket_header].unique()]
             # missing = self.model.mba.check_basket_for_absences(basket, d)
             basket = [str(x) for x in group[self.basket_header]]
