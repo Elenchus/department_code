@@ -172,10 +172,10 @@ class GraphUtils():
         keys = list(d.keys())
         for key in keys:
             if key not in possible_nodes:
-                ged_score += 1
+                ged_score += attrs[key].get('weight', 1) # fee
                 if key in test:
                     edges = test[key]
-                    ged_score += len(edges)
+                    ged_score += sum([test[key][x].get('weight', 1) for x in edges]) # confidence
 
                 d.pop(key)
 
@@ -202,7 +202,7 @@ class GraphUtils():
                     missing_nodes.add(node)
 
             nodes_to_add.update(missing_nodes)
-            ged_score += len(missing_edges) + len(should_not_have)
+            ged_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) + sum([test[key][x].get('weight', 1) for x in should_not_have]) # confidence
 
         while True:# infinite loop!
             if len(nodes_to_add) == 0:
@@ -210,13 +210,13 @@ class GraphUtils():
 
             ignore_list = []
             node = nodes_to_add.pop()
-            ged_score += 1
+            ged_score += attrs[key].get('weight', 1) # fee
             if node not in expected:
                 ignore_list.append(node)
                 continue
 
             edges = expected[node]
-            ged_score += len(edges)
+            sum([expected[key][x].get('weight', 1) for x in edges]) # confidence
             d[node] = edges
             for new_node in edges:
                 if new_node not in d and new_node not in ignore_list:

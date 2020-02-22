@@ -43,7 +43,7 @@ class TestCase(ProposalTest):
         super().run_test()
         rp = self.required_params
 
-        unique_items = [str(x) for x in self.test_data[rp.basket_header].unique().tolist()]
+        all_unique_items = [str(x) for x in self.test_data[rp.basket_header].unique().tolist()]
         mba_funcs = BasicMba(self.test_data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
         if rp.sub_group_header is None:
@@ -51,7 +51,7 @@ class TestCase(ProposalTest):
         else:
             documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
 
-        d = mba_funcs.create_model(unique_items, documents, rp.min_support)
+        d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
         # remove no other item:
         if "No other items" in d:
             for k in d["No other items"]:
@@ -84,6 +84,15 @@ class TestCase(ProposalTest):
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
 
         formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
+        #get and normalise fees
+        if rp.basket_header == "ITEM":
+            fees = [self.code_converter.get_mbs_item_fee(x) for x in all_unique_items]
+            max_fee = max(fees)
+            min_fee = min(fees)
+            for node in attrs:
+                item = '\n'.split(node)[-1]
+                attrs[node]['weight'] =  (self.code_converter.get_mbs_item_fee(item) - min_fee) / (max_fee - min_fee)
+
         mba_funcs.create_graph(formatted_d, name, title, attrs)
 
         # mba_funcs.log_exception_rules(d, 0.1, ['21214', "No other items"], documents)
@@ -118,6 +127,13 @@ class TestCase(ProposalTest):
 
             if rp.basket_header == 'ITEM':
                 (transaction_graph, attrs, _) = self.models.mba.convert_mbs_codes(transaction_graph)
+                fees = [self.code_converter.get_mbs_item_fee(x) for x in all_unique_items]
+                max_fee = max(fees)
+                min_fee = min(fees)
+                for node in attrs:
+                    item = '\n'.split(node)[-1]
+                    attrs[node]['weight'] =  (self.code_converter.get_mbs_item_fee(item) - min_fee) / (max_fee - min_fee)
+
                 for i in missing_nodes:
                     if i == "No other items":
                         key = f"{i}\n{i}"

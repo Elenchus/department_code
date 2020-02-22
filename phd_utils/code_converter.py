@@ -1,5 +1,6 @@
 '''Code converter class for PBS items and MBS RSP codes'''
 import os
+import re
 import pickle
 import pandas as pd
 
@@ -113,3 +114,27 @@ class CodeConverter:
             raise ValueError(f"{rsp} is not a valid name")
 
         return self.rsp_table.loc[self.rsp_table['Label'] == str(rsp)]['SPR_RSP'].values.tolist()[0]
+
+    def get_mbs_item_fee(self, code):
+        item = self.mbs_item_dict.get(str(code), None)
+        if item is None:
+            return 500
+
+        if "ScheduleFee" not in item:
+            derived_fee = item["DerivedFee"]
+            try:
+                number = re.search(r'item\s(\d+)', derived_fee)[1]
+                if number is None:
+                    raise TypeError
+            except TypeError:
+                if code == '51303':
+                    return 113
+                else:
+                    return float(re.search(r'\$(\d+\.\d+)', derived_fee)[1])
+
+            item = self.mbs_item_dict.get(str(number), None)
+
+        dollar_fee = item["ScheduleFee"]
+        fee = float(dollar_fee[1:])
+
+        return fee
