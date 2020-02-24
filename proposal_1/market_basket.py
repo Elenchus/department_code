@@ -77,6 +77,8 @@ class TestCase(ProposalTest):
                     words = self.code_converter.convert_rsp_num(spec)
                     self.log(words)
 
+            self.log(f"Specialties in component {i + 1}: None")
+
         name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_graph.png"
         if rp.sub_group_header is None:
             title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
@@ -181,6 +183,7 @@ class TestCase(ProposalTest):
                 break
 
         
+        self.log(f"Quantity of {rp.group_header} per component:")
         self.log(suspicious_component_id)
         self.log(f'{len(suspicious_transaction_score)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')
 
