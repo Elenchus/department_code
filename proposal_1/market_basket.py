@@ -110,7 +110,7 @@ class TestCase(ProposalTest):
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_score, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         # susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
-        susp = suspicion_matrix.sort_index(ascending=False).index.to_list()
+        susp = suspicion_matrix.sort_values('count', axis=0, ascending=False).index.to_list()
 
         suspicious_component_id = [0] * len(components)
 
@@ -132,6 +132,7 @@ class TestCase(ProposalTest):
             if suspicious_component_id[closest_component] > 3:
                 continue
 
+            self.log(f"Rank {idx} suspicion score {suspicion_matrix.at[s, 'count']} with closest component: {closest_component}")
             repeated_non_model_nodes = self.models.mba.find_repeated_abnormal_nodes(items_list, d, threshold=10)
 
             if rp.basket_header == 'ITEM':
