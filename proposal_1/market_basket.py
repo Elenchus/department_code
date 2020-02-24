@@ -44,7 +44,7 @@ class TestCase(ProposalTest):
         rp = self.required_params
 
         all_unique_items = [str(x) for x in self.test_data[rp.basket_header].unique().tolist()]
-        mba_funcs = BasicMba(self.test_data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
+        mba_funcs = BasicMba(self.code_converter, self.test_data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
         if rp.sub_group_header is None:
             documents = mba_funcs.create_documents(mba_funcs.group_data)
@@ -86,12 +86,13 @@ class TestCase(ProposalTest):
         formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
         #get and normalise fees
         if rp.basket_header == "ITEM":
+            fee_record = {int(x): {} for x in all_unique_items}
+
             fees = [self.code_converter.get_mbs_item_fee(x) for x in all_unique_items]
             max_fee = max(fees)
             min_fee = min(fees)
-            for node in attrs:
-                item = '\n'.split(node)[-1]
-                attrs[node]['weight'] =  (self.code_converter.get_mbs_item_fee(item) - min_fee) / (max_fee - min_fee)
+            for node in fee_record:
+                fee_record[node]['weight'] =  (self.code_converter.get_mbs_item_fee(node) - min_fee) / (max_fee - min_fee)
 
         mba_funcs.create_graph(formatted_d, name, title, attrs)
 
@@ -104,11 +105,14 @@ class TestCase(ProposalTest):
 
             suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.group_data, rp.scoring_method)
         else:
-            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, rp.ged_support)
+            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, fee_record, rp.ged_support)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_score, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
-        susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
+        # susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
+        susp = suspicion_matrix.index.to_list()
+
+        suspicious_component_id = [0] * len(components)
 
         for idx, s in enumerate(susp):
             if rp.sub_group_header is None or rp.scoring_method == 'ged':
@@ -123,13 +127,15 @@ class TestCase(ProposalTest):
             for i in missing_nodes:
                 transaction_graph[i] = {}
 
+            closest_component = mba_funcs.identify_closest_component(components, transaction_graph)
+            suspicious_component_id[closest_component] += 1
+            if suspicious_component_id[closest_component] > 3:
+                continue
+
             repeated_non_model_nodes = self.models.mba.find_repeated_abnormal_nodes(items_list, d, threshold=10)
 
             if rp.basket_header == 'ITEM':
                 (transaction_graph, attrs, _) = self.models.mba.convert_mbs_codes(transaction_graph)
-                fees = [self.code_converter.get_mbs_item_fee(x) for x in all_unique_items]
-                max_fee = max(fees)
-                min_fee = min(fees)
                 for node in attrs:
                     item = '\n'.split(node)[-1]
                     attrs[node]['weight'] =  (self.code_converter.get_mbs_item_fee(item) - min_fee) / (max_fee - min_fee)
@@ -163,8 +169,12 @@ class TestCase(ProposalTest):
             nam = f"rank_{idx}_{s}.png"
             title=f'Rank {idx}: {s}'
             mba_funcs.create_graph(transaction_graph, nam, title, attrs=attrs)
-        
 
+            if all(x > 3 for x in suspicious_component_id):
+                break
+
+        
+        self.log(suspicious_component_id)
         self.log(f'{len(suspicious_transaction_score)} of {len(mba_funcs.group_data)} suspicious {rp.group_header}')
 
         if legend is not None:

@@ -124,10 +124,8 @@ class CodeConverter:
             derived_fee = item["DerivedFee"]
             try:
                 number = re.search(r'item\s(\d+)', derived_fee)[1]
-                if number is None:
-                    raise TypeError
             except TypeError:
-                if code == '51303':
+                if code == 51303 or code == '51303':
                     return 113
                 else:
                     return float(re.search(r'\$(\d+\.\d+)', derived_fee)[1])

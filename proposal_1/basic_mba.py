@@ -2,7 +2,8 @@ import pandas as pd
 from tqdm import tqdm
 
 class BasicMba:
-    def __init__(self, test_data, model, graphs, basket_header, group_header, sub_group_header=None):
+    def __init__(self, code_converter, test_data, model, graphs, basket_header, group_header, sub_group_header=None):
+        self.code_converter = code_converter
         self.model = model
         self.graphs = graphs
         self.test_data = test_data
@@ -80,7 +81,7 @@ class BasicMba:
         else:
             self.subgroup_data = None
 
-    def get_suspicious_ged(self, model, data, min_support):
+    def get_suspicious_ged(self, model, data, min_support, attrs=None):
         def reset():
             c = ""
             u = set()
@@ -96,7 +97,7 @@ class BasicMba:
             if group_name != current_name:
                 if current_name != '':
                     d = self.create_model(list(unique_items), documents, min_support)
-                    ged = self.graphs.graph_edit_distance(model, d)
+                    ged = self.graphs.graph_edit_distance(model, d, attrs)
                     suspicious_transactions[int(current_name)] = ged
 
                 current_name, unique_items, documents = reset()
@@ -107,9 +108,9 @@ class BasicMba:
         
         return suspicious_transactions
 
-    def get_suspicious_transaction_score(self, d, data, scoring_method='max', min_support = 0.005):
+    def get_suspicious_transaction_score(self, d, data, scoring_method='max', attrs=None, min_support = 0.005):
         if scoring_method == 'ged':
-            suspicious_transactions = self.get_suspicious_ged(d, data, min_support)
+            suspicious_transactions = self.get_suspicious_ged(d, data, min_support, attrs)
 
             return suspicious_transactions
 
@@ -146,6 +147,19 @@ class BasicMba:
 
         return suspicious_transactions
 
+    def identify_closest_component(self, components, d):
+        test_items = self.graphs.flatten_graph_dict(d)
+        component_score = []
+        for component in components:
+            joint_items = test_items.intersection(component)
+            component_score.append(len(joint_items))
+
+        max_score = max(component_score)
+        if max_score == 0:
+            return component_score.index(min(component_score))
+
+        return component_score.index(max_score)
+        
     def log_exception_rules(self, model, threshold, ignore_list, documents):
         self.log("Getting exception rules")
         for antecedent in list(model.keys()):

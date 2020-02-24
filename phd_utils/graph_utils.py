@@ -168,6 +168,9 @@ class GraphUtils():
 
         ged_score = 0
         d = {x: {} for x in self.flatten_graph_dict(test)}
+        if attrs == None:
+            attrs = {x: {} for x in d}
+
         possible_nodes = list(self.flatten_graph_dict(expected))
         keys = list(d.keys())
         for key in keys:

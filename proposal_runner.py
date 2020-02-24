@@ -113,13 +113,13 @@ if __name__ == "__main__":
         notes = "",
         params = {'basket_header': 'ITEM', 
                     'group_header':'SPR', 
-                    'sub_group_header': None,
-                    # 'sub_group_header': 'PIN',
+                    # 'sub_group_header': None,
+                    'sub_group_header': 'PIN',
                     'filters': {
                         'conviction': {'value': 1.1}
                         },
                     'min_support': 0.005,
-                    'scoring_method': 'imp_avg_thrsh',
+                    'scoring_method': 'ged',
                     'ged_support': 0.1},
         # params = { 'codes_of_interest': ['21402'],
         #             'code_type': 'knee_replacement',
