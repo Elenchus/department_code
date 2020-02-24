@@ -91,12 +91,14 @@ class BasicMba:
 
         current_name, unique_items, documents = reset()
 
+        all_graphs = {}
         suspicious_transactions = {}
         for name, group in tqdm(data):
-            group_name, sub_name = name.split('__')
+            group_name, _ = name.split('__')
             if group_name != current_name:
                 if current_name != '':
                     d = self.create_model(list(unique_items), documents, min_support)
+                    all_graphs[int(current_name)] = d
                     ged = self.graphs.graph_edit_distance(model, d, attrs)
                     suspicious_transactions[int(current_name)] = ged
 
@@ -106,13 +108,13 @@ class BasicMba:
             documents.append(group[self.basket_header].unique().tolist())
             unique_items.update(group[self.basket_header])
         
-        return suspicious_transactions
+        return suspicious_transactions, all_graphs
 
     def get_suspicious_transaction_score(self, d, data, scoring_method='max', attrs=None, min_support = 0.005):
         if scoring_method == 'ged':
-            suspicious_transactions = self.get_suspicious_ged(d, data, min_support, attrs)
+            suspicious_transactions, all_graphs = self.get_suspicious_ged(d, data, min_support, attrs)
 
-            return suspicious_transactions
+            return suspicious_transactions, all_graphs
 
         suspicious_transactions = {}
         for name, group in tqdm(data):
@@ -156,7 +158,7 @@ class BasicMba:
 
         max_score = max(component_score)
         if max_score == 0:
-            return component_score.index(min(component_score))
+            return len(components)
 
         return component_score.index(max_score)
         

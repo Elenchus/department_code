@@ -99,20 +99,20 @@ class TestCase(ProposalTest):
         # mba_funcs.log_exception_rules(d, 0.1, ['21214', "No other items"], documents)
 
         self.log("Finding suspicious transactions")
-        if rp.sub_group_header is None:
-            if rp.scoring_method == 'ged':
+        if rp.scoring_method == 'ged':
+            if rp.sub_group_header is None:
                 raise KeyError("GED method must currently have subgroup")
-
-            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.group_data, rp.scoring_method)
+            else:
+                suspicious_transaction_score, normal_group_graphs = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, fee_record, rp.ged_support)
         else:
-            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, fee_record, rp.ged_support)
+            suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.group_data, rp.scoring_method)
 
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_score, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         # susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
         susp = suspicion_matrix.sort_values('count', axis=0, ascending=False).index.to_list()
 
-        suspicious_component_id = [0] * len(components)
+        suspicious_component_id = [0] * (len(components) + 1)
 
         for idx, s in enumerate(susp):
             if rp.sub_group_header is None or rp.scoring_method == 'ged':
@@ -131,6 +131,12 @@ class TestCase(ProposalTest):
             suspicious_component_id[closest_component] += 1
             if suspicious_component_id[closest_component] > 3:
                 continue
+
+            if rp.scoring_method == 'ged':
+                group_graph_title = f'Rank {idx}: normal basket {rp.basket_header} for {rp.group_header} {s}'
+                group_graph_name = f"rank_{idx}_{s}_normal_items.png"
+                group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(normal_group_graphs[s])
+                mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
             self.log(f"Rank {idx} suspicion score {suspicion_matrix.at[s, 'count']} with closest component: {closest_component}")
             repeated_non_model_nodes = self.models.mba.find_repeated_abnormal_nodes(items_list, d, threshold=10)
@@ -167,8 +173,8 @@ class TestCase(ProposalTest):
                 for i in repeated_non_model_nodes:
                     attrs[i] = {'shape': 'house'} 
 
-            nam = f"rank_{idx}_{s}.png"
-            title=f'Rank {idx}: {s}'
+            nam = f"rank_{idx}_{s}_all_items.png"
+            title=f'All items for rank {idx}: {s}'
             mba_funcs.create_graph(transaction_graph, nam, title, attrs=attrs)
 
             if all(x > 3 for x in suspicious_component_id):

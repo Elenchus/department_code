@@ -286,7 +286,7 @@ class GraphUtils():
     def visual_graph(self, data_dict, output_file, title=None, directed=True, node_attrs=None):
         max_len = 0
         sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
-        full_list = set(list(data_dict.keys()) + list(item for elem in sub_list_of_lists for item in elem))
+        full_list = set(list(str(x) for x in data_dict.keys()) + list(str(item) for elem in sub_list_of_lists for item in elem))
         for s in full_list:
             if len(s) > max_len:
                 max_len = len(s)

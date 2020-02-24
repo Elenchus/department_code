@@ -67,16 +67,6 @@ class MbaUtils:
 
         return diamonds
 
-    def find_underutilised_normal_nodes(self, items, interest, threshold=10):
-        diamonds = []
-        for k in items:
-            count = interest.get(k, -1)  
-            raise KeyError
-            if count == 1:
-                diamonds.append(k)
-
-        return diamonds
-
     def get_nodes_from_digraph(self, d):
         a = set()
         for x in d.keys():
