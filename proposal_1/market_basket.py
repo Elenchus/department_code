@@ -110,7 +110,7 @@ class TestCase(ProposalTest):
         suspicion_matrix = pd.DataFrame.from_dict(suspicious_transaction_score, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         # susp = suspicion_matrix.nlargest(10, 'count').index.tolist()
-        susp = suspicion_matrix.index.to_list()
+        susp = suspicion_matrix.sort_index(ascending=False).index.to_list()
 
         suspicious_component_id = [0] * len(components)
 
