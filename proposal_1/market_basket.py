@@ -105,7 +105,7 @@ class TestCase(ProposalTest):
             if rp.sub_group_header is None:
                 raise KeyError("GED method must currently have subgroup")
             else:
-                suspicious_transaction_score, normal_group_graphs = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, fee_record, rp.ged_support)
+                suspicious_transaction_score, normal_group_graphs, edit_graphs, edit_attrs = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.subgroup_data, rp.scoring_method, fee_record, rp.ged_support)
         else:
             suspicious_transaction_score = mba_funcs.get_suspicious_transaction_score(d, mba_funcs.group_data, rp.scoring_method)
 
@@ -139,6 +139,16 @@ class TestCase(ProposalTest):
                 group_graph_name = f"rank_{idx}_{s}_normal_items.png"
                 group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(normal_group_graphs[s])
                 mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
+
+                edit_graph_title = f'Rank {idx}: edit history of basket {rp.basket_header} for {rp.group_header} {s}'
+                edit_graph_name = f"rank_{idx}_{s}_edit_history_for_basket.png"
+                converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
+                for key in new_edit_attrs:
+                    code = int(key.split('\n')[-1])
+                    if 'shape' in edit_attrs[s][code]:
+                        new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
+
+                mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
 
             self.log(f"Rank {idx} suspicion score {suspicion_matrix.at[s, 'count']} with closest component: {closest_component}")
             repeated_non_model_nodes = self.models.mba.find_repeated_abnormal_nodes(items_list, d, threshold=10)

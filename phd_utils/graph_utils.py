@@ -1,4 +1,5 @@
 '''functions for quick graphing'''
+from copy import deepcopy
 from datetime import datetime
 # from cuml import UMAP as umap
 import pandas as pd
@@ -173,14 +174,20 @@ class GraphUtils():
 
         possible_nodes = list(self.flatten_graph_dict(expected))
         keys = list(d.keys())
+        edit_attrs = {}
+        edit_history = deepcopy(test)
         for key in keys:
             if key not in possible_nodes:
                 ged_score += attrs[key].get('weight', 1) # fee
                 if key in test:
                     edges = test[key]
-                    ged_score += sum([test[key][x].get('weight', 1) for x in edges]) # confidence
+                    # ged_score += sum([test[key][x].get('weight', 1) for x in edges]) # confidence
+
+                for k in edit_history[key]:
+                    edit_history[key][k]['color'] = 'red'
 
                 d.pop(key)
+                edit_attrs[key]['shape'] = 'invhouse'
 
         nodes_to_add = set()
         for key in d.keys():
@@ -205,7 +212,7 @@ class GraphUtils():
                     missing_nodes.add(node)
 
             nodes_to_add.update(missing_nodes)
-            ged_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) + sum([test[key][x].get('weight', 1) for x in should_not_have]) # confidence
+            # ged_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) + sum([test[key][x].get('weight', 1) for x in should_not_have]) # confidence
 
         while True:# infinite loop!
             if len(nodes_to_add) == 0:
@@ -213,19 +220,25 @@ class GraphUtils():
 
             ignore_list = []
             node = nodes_to_add.pop()
-            ged_score += attrs[key].get('weight', 1) # fee
             if node not in expected:
                 ignore_list.append(node)
                 continue
 
+            ged_score += attrs[key].get('weight', 1) # fee
+            edit_attrs[node] = {'shape': 'house'}
+
             edges = expected[node]
-            sum([expected[key][x].get('weight', 1) for x in edges]) # confidence
+            # sum([expected[key][x].get('weight', 1) for x in edges]) # confidence
             d[node] = edges
+            edit_history[node] = edges
+            for k in edit_history[node]:
+                edit_history[node][k]['color'] = 'red'
+
             for new_node in edges:
                 if new_node not in d and new_node not in ignore_list:
                     nodes_to_add.add(new_node)
 
-        return ged_score
+        return ged_score, edit_history, edit_attrs
 
     def plot_tsne(self, new_values, labels, title):
         '''Create and save a t-SNE plot'''

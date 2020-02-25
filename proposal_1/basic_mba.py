@@ -93,13 +93,17 @@ class BasicMba:
 
         all_graphs = {}
         suspicious_transactions = {}
+        edit_graphs = {}
+        edit_attrs = {}
         for name, group in tqdm(data):
             group_name, _ = name.split('__')
             if group_name != current_name:
                 if current_name != '':
                     d = self.create_model(list(unique_items), documents, min_support)
                     all_graphs[int(current_name)] = d
-                    ged = self.graphs.graph_edit_distance(model, d, attrs)
+                    ged, edit_d, edit_attrs = self.graphs.graph_edit_distance(model, d, attrs)
+                    edit_graphs[int(current_name)] = edit_d
+                    edit_attrs[int(current_name)] = edit_attrs
                     suspicious_transactions[int(current_name)] = ged
 
                 current_name, unique_items, documents = reset()
@@ -108,13 +112,13 @@ class BasicMba:
             documents.append(group[self.basket_header].unique().tolist())
             unique_items.update(group[self.basket_header])
         
-        return suspicious_transactions, all_graphs
+        return suspicious_transactions, all_graphs, edit_graphs, edit_attrs 
 
     def get_suspicious_transaction_score(self, d, data, scoring_method='max', attrs=None, min_support = 0.005):
         if scoring_method == 'ged':
-            suspicious_transactions, all_graphs = self.get_suspicious_ged(d, data, min_support, attrs)
+            suspicious_transactions, all_graphs, edit_graphs, edit_attrs = self.get_suspicious_ged(d, data, min_support, attrs)
 
-            return suspicious_transactions, all_graphs
+            return suspicious_transactions, all_graphs, edit_graphs, edit_attrs
 
         suspicious_transactions = {}
         for name, group in tqdm(data):
