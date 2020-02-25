@@ -145,8 +145,10 @@ class TestCase(ProposalTest):
                 converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
                 for key in new_edit_attrs:
                     code = int(key.split('\n')[-1])
-                    if 'shape' in edit_attrs[s][code]:
-                        new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
+                    if s in edit_attrs:
+                        if code in edit_attrs[s]:
+                            if 'shape' in edit_attrs[s][code]:
+                                new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
                 mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
 

@@ -165,14 +165,14 @@ class GraphUtils():
                 
     def graph_edit_distance(self, expected, test, attrs=None):
         if not test:
-            return 0
+            return 0, {}, {}
 
         ged_score = 0
         d = {x: {} for x in self.flatten_graph_dict(test)}
         if attrs == None:
             attrs = {x: {} for x in d}
 
-        possible_nodes = list(self.flatten_graph_dict(expected))
+        possible_nodes = list(int(x) for x in self.flatten_graph_dict(expected))
         keys = list(d.keys())
         edit_attrs = {}
         edit_history = deepcopy(test)
@@ -182,12 +182,11 @@ class GraphUtils():
                 if key in test:
                     edges = test[key]
                     # ged_score += sum([test[key][x].get('weight', 1) for x in edges]) # confidence
+                    for k in edges:
+                        edit_history[key][k]['color'] = 'red'
 
-                for k in edit_history[key]:
-                    edit_history[key][k]['color'] = 'red'
-
+                edit_attrs[key] = {'shape': 'invhouse'}
                 d.pop(key)
-                edit_attrs[key]['shape'] = 'invhouse'
 
         nodes_to_add = set()
         for key in d.keys():

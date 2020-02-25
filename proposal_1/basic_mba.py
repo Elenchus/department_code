@@ -101,9 +101,9 @@ class BasicMba:
                 if current_name != '':
                     d = self.create_model(list(unique_items), documents, min_support)
                     all_graphs[int(current_name)] = d
-                    ged, edit_d, edit_attrs = self.graphs.graph_edit_distance(model, d, attrs)
+                    ged, edit_d, edit_attr = self.graphs.graph_edit_distance(model, d, attrs)
                     edit_graphs[int(current_name)] = edit_d
-                    edit_attrs[int(current_name)] = edit_attrs
+                    edit_attrs[int(current_name)] = edit_attr
                     suspicious_transactions[int(current_name)] = ged
 
                 current_name, unique_items, documents = reset()
