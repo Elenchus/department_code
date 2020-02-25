@@ -200,6 +200,7 @@ class GraphUtils():
                 d.pop(key)
 
         nodes_to_add = set()
+        edges_to_add = {}
         for key in d.keys():
             if key == '11700':
                 x = 1
@@ -223,12 +224,21 @@ class GraphUtils():
             for node in missing_edges:
                 if node not in d:
                     missing_nodes.add(node)
+            
+            edges_to_add[key] = missing_edges
 
             nodes_to_add.update(missing_nodes)
             ged_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) + sum([test[key][x].get('weight', 1) for x in should_not_have]) # confidence
             for k in should_not_have:
                 edit_history[key][k]['color'] = 'red'
 
+        for key in edges_to_add:
+            for k in edges_to_add[key]:
+                if key not in edit_history:
+                    edit_history[key] = {}
+
+                edit_history[key][k] = {'color': 'blue'}
+                
         while True:# infinite loop!
             if len(nodes_to_add) == 0:
                 break
@@ -256,7 +266,7 @@ class GraphUtils():
             d[node] = edges
             edit_history[node] = edges
             for k in edit_history[node]:
-                edit_history[node][k]['color'] = 'orange'
+                edit_history[node][k]['color'] = 'blue'
 
             for new_node in edges:
                 if new_node not in d and new_node not in ignore_list:
