@@ -144,7 +144,7 @@ class TestCase(ProposalTest):
                 edit_graph_name = f"rank_{idx}_{s}_edit_history_for_basket.png"
                 converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
                 for key in new_edit_attrs:
-                    code = int(key.split('\n')[-1])
+                    code = key.split('\n')[-1]
                     if s in edit_attrs:
                         if code in edit_attrs[s]:
                             if 'shape' in edit_attrs[s][code]:

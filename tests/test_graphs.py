@@ -60,8 +60,9 @@ class ModelUtilsTest(unittest.TestCase):
             ({7: {3: {}}}, 14),
             ({7: {}, 3: {}}, 13),
             ({7: {3: {}}, 8: {7: {}}}, 16),
-            ({7: {3: {}}, 4: {7: {}}}, 14)
+            ({7: {3: {}}, 4: {7: {}}}, 14),
+            ({1: {}, 2: {}}, 1)
         ]
         for test, val in tests:
-            ged = self.graphs.graph_edit_distance(model, test)
+            ged, _, _ = self.graphs.graph_edit_distance(model, test)
             assert ged == val

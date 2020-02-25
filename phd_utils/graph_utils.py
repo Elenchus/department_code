@@ -167,34 +167,48 @@ class GraphUtils():
         if not test:
             return 0, {}, {}
 
+        expected = self.stringify_graph(expected)
+        test = self.stringify_graph(test)
+
         ged_score = 0
         d = {x: {} for x in self.flatten_graph_dict(test)}
         if attrs == None:
             attrs = {x: {} for x in d}
 
-        possible_nodes = list(int(x) for x in self.flatten_graph_dict(expected))
+        possible_nodes = list(x for x in self.flatten_graph_dict(expected))
         keys = list(d.keys())
         edit_attrs = {}
         edit_history = deepcopy(test)
         for key in keys:
+            if key == '11700':
+                x = 1
+                y = 2
+
             if key not in possible_nodes:
-                ged_score += attrs[key].get('weight', 1) # fee
+                if key in attrs:
+                    ged_score += attrs[key].get('weight', 1) # fee
+                else:
+                    ged_score += 1
+
                 if key in test:
                     edges = test[key]
-                    # ged_score += sum([test[key][x].get('weight', 1) for x in edges]) # confidence
+                    ged_score += sum([test[key][x].get('weight', 1) for x in edges]) # confidence
                     for k in edges:
                         edit_history[key][k]['color'] = 'red'
 
-                edit_attrs[key] = {'shape': 'invhouse'}
+                edit_attrs[key] = {'shape': 'house'}
                 d.pop(key)
 
         nodes_to_add = set()
         for key in d.keys():
+            if key == '11700':
+                x = 1
+                y = 2
+
             if key not in expected:
                 continue
 
-
-            possible_edges = set(expected[key].keys())
+            possible_edges = set(x for x in expected[key].keys())
             if key in test:
                 actual_edges = set(test[key].keys())
             else:
@@ -211,7 +225,9 @@ class GraphUtils():
                     missing_nodes.add(node)
 
             nodes_to_add.update(missing_nodes)
-            # ged_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) + sum([test[key][x].get('weight', 1) for x in should_not_have]) # confidence
+            ged_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) + sum([test[key][x].get('weight', 1) for x in should_not_have]) # confidence
+            for k in should_not_have:
+                edit_history[key][k]['color'] = 'red'
 
         while True:# infinite loop!
             if len(nodes_to_add) == 0:
@@ -219,19 +235,28 @@ class GraphUtils():
 
             ignore_list = []
             node = nodes_to_add.pop()
+            if key == '11700':
+                x = 1
+                y = 2
+
+            if node in attrs:
+                ged_score += attrs[node].get('weight', 1) # fee
+            else:
+                ged_score += 1
+
+            edit_attrs[node] = {'shape': 'invhouse'}
+
             if node not in expected:
                 ignore_list.append(node)
                 continue
 
-            ged_score += attrs[key].get('weight', 1) # fee
-            edit_attrs[node] = {'shape': 'house'}
 
             edges = expected[node]
-            # sum([expected[key][x].get('weight', 1) for x in edges]) # confidence
+            ged_score += sum([expected[node][x].get('weight', 1) for x in edges]) # confidence
             d[node] = edges
             edit_history[node] = edges
             for k in edit_history[node]:
-                edit_history[node][k]['color'] = 'red'
+                edit_history[node][k]['color'] = 'orange'
 
             for new_node in edges:
                 if new_node not in d and new_node not in ignore_list:
@@ -281,6 +306,15 @@ class GraphUtils():
             fig.savefig(output_path, bbox_extra_artists=bbox_extra_artists, bbox_inches='tight')
 
         plt.close(fig)
+
+    def stringify_graph(self, graph):
+        str_graph = {}
+        for key in graph:
+            str_graph[str(key)] = {}
+            for k in graph[key]:
+                str_graph[str(key)][str(k)] = graph[key][k]
+
+        return str_graph
 
     def plot_umap(self, embedding, title):
         '''Create and save a UMAP plot'''

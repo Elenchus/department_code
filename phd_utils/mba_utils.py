@@ -177,7 +177,7 @@ class MbaUtils:
         for k, v in d.items():
             new_k = f'{lookup[k]}\n{k}'
             if new_k not in new_data:
-                if new_k == "No other items":
+                if new_k == "No other items" or new_k == "No other items\nNo other items":
                     group_no = 'I'
                 else:
                     group_no = self.code_converter.convert_mbs_code_to_group_numbers(k)[0]
@@ -196,6 +196,16 @@ class MbaUtils:
 
                 new_key = f'{lookup[key]}\n{key}'
                 new_data[new_k][new_key] = val
+
+                if key not in d:
+                    if new_key == "No other items" or new_key == "No other items\nNo other items":
+                        group_no = 'I'
+                    else:
+                        group_no = self.code_converter.convert_mbs_code_to_group_numbers(key)[0]
+
+                    color = get_color[group_no]
+                    colors[new_key] = {'color': color}
+                    color_map.add(group_no)
 
         legend = {}
         for color in color_map:
