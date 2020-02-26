@@ -15,6 +15,7 @@ class BasicMba:
         self.group_header = group_header
         self.sub_group_header = sub_group_header
 
+        self.log("Initialising basic MBA groups")
         self.create_groups()
 
     def convert_graph_and_attrs(self, d):
