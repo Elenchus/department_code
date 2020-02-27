@@ -39,66 +39,69 @@ class TestCase(ProposalTest):
 
     def run_test(self):
         super().run_test()
-        rp = self.required_params
+        for inhospital in ['Y', 'N']:
+            self.log(f"Test run inhospital {inhospital}")
+            data = self.test_data[self.test_data['INHOSPITAL'] == inhospital]
+            rp = self.required_params
 
-        all_unique_items = [str(x) for x in self.test_data[rp.basket_header].unique().tolist()]
-        mba_funcs = BasicMba(self.code_converter, self.test_data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
+            all_unique_items = [str(x) for x in data[rp.basket_header].unique().tolist()]
+            mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
-        if rp.sub_group_header is None:
-            documents = mba_funcs.create_documents(mba_funcs.group_data)
-        else:
-            documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
+            if rp.sub_group_header is None:
+                documents = mba_funcs.create_documents(mba_funcs.group_data)
+            else:
+                documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
 
-        self.log("Creating model")
-        d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
-        # remove no other item:
-        if "No other items" in d:
-            for k in d["No other items"]:
-                if k not in d:
-                    d[k] = {}
+            self.log("Creating model")
+            d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
+            # remove no other item:
+            if "No other items" in d:
+                for k in d["No other items"]:
+                    if k not in d:
+                        d[k] = {}
 
-            d.pop("No other items")
-        for k in d.keys():
-            d[k].pop("No other items", None)
+                d.pop("No other items")
+            for k in d.keys():
+                d[k].pop("No other items", None)
 
-        # find component specialties
-        if rp.basket_header == "ITEM":
-            components = self.graphs.graph_component_finder(d)
-            for i in range(len(components)):
-                self.log(f"Specialties in component {i}")
-                specs = set()
-                for item in components[i]:
-                    item_claims = self.test_data[self.test_data[rp.basket_header] == int(item)]
-                    item_specs = item_claims["SPR_RSP"].unique().tolist()
-                    specs.update(item_specs)
-                    
-                for spec in specs:
-                    words = self.code_converter.convert_rsp_num(spec)
-                    self.log(words)
+            # find component specialties
+            if rp.basket_header == "ITEM":
+                components = self.graphs.graph_component_finder(d)
+                for i in range(len(components)):
+                    self.log(f"Specialties in component {i}")
+                    specs = set()
+                    for item in components[i]:
+                        item_claims = data[data[rp.basket_header] == int(item)]
+                        item_specs = item_claims["SPR_RSP"].unique().tolist()
+                        specs.update(item_specs)
+                        
+                    for spec in specs:
+                        words = self.code_converter.convert_rsp_num(spec)
+                        self.log(words)
 
-            self.log(f"Specialties in component {i + 1}: None")
+                self.log(f"Specialties in component {i + 1}: None")
 
-        name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_graph.png"
-        if rp.sub_group_header is None:
-            title = f'Connections between {rp.basket_header} when grouped by {rp.group_header}'
-        else:
-            title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header}'
+            name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_inhospital_{inhospital}_graph.png"
+            if rp.sub_group_header is None:
+                title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and in hospital {inhospital}'
+            else:
+                title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header} and in hospital {inhospital}'
 
-        formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
-        with open("model.pkl", "wb") as f:
-            pickle.dump(formatted_d, f)
-        
-        with open("attrs.pkl", "wb") as f:
-            pickle.dump(attrs, f)
+            formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
+            with open(f"model_inhospital_{inhospital}.pkl", "wb") as f:
+                pickle.dump(formatted_d, f)
+            
+            with open(f"attrs_inhospital{inhospital}.pkl", "wb") as f:
+                pickle.dump(attrs, f)
 
-        # #get and normalise fees
-        # if rp.basket_header == "ITEM":
-        #     fee_record = {int(x): {} for x in all_unique_items}
+            # #get and normalise fees
+            # if rp.basket_header == "ITEM":
+            #     fee_record = {int(x): {} for x in all_unique_items}
 
-        #     fees = [self.code_converter.get_mbs_item_fee(x) for x in all_unique_items]
-        #     max_fee = max(fees)
-        #     min_fee = min(fees)
-        #     for node in fee_record:
-        #         fee_record[node]['weight'] =  (self.code_converter.get_mbs_item_fee(node) - min_fee) / (max_fee - min_fee)
+            #     fees = [self.code_converter.get_mbs_item_fee(x) for x in all_unique_items]
+            #     max_fee = max(fees)
+            #     min_fee = min(fees)
+            #     for node in fee_record:
+            #         fee_record[node]['weight'] =  (self.code_converter.get_mbs_item_fee(node) - min_fee) / (max_fee - min_fee)
 
-        mba_funcs.create_graph(formatted_d, name, title, attrs)
+            mba_funcs.create_graph(formatted_d, name, title, attrs)
