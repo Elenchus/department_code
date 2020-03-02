@@ -16,9 +16,9 @@ class TestCase(ProposalTest):
     class RequiredParams:
         codes_of_interest:list = field(default_factory=lambda: ['21214']) 
         code_type:str = 'hip'
-        output_name:str = 'provider_subset'
+        output_name:str = 'provider_subset_with_state'
 
-    FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP']
+    FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', 'SPRSTATE']
     INITIAL_COLS = FINAL_COLS
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
