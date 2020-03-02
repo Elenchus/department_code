@@ -119,7 +119,7 @@ class TestCase(ProposalTest):
                     mod_line.append('')
 
                 mod_line.append(str(code))
-                mod_line.appent(f',"{desc}"\r\n')
+                mod_line.append(f',"{desc}"\r\n')
 
                 line = ','.join(mod_line)
                 f.write(line)
