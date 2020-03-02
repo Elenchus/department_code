@@ -94,7 +94,7 @@ class TestCase(ProposalTest):
             with open(f"attrs_state_{state}.pkl", "wb") as f:
                 pickle.dump(attrs, f)
 
-            states.append(formatted_d)
+            states.append(d)
 
             mba_funcs.create_graph(formatted_d, name, title, attrs)
 
@@ -103,6 +103,18 @@ class TestCase(ProposalTest):
             s = self.graphs.flatten_graph_dict(state)
             state_sets.append(s)
 
-        u = set.difference(*state_sets)
-        self.log(u)
+        differences = set()
+        for i in range(len(state_sets)):
+            for j in range(len(state_sets)):
+                differences.update(state_sets[i].difference(state_sets[j]))
+        # u = set.difference(*state_sets)
+        # self.log(u)
+        diff_file = self.logger.output_path / 'diff_file.csv'
+        with open(diff_file, 'w+') as f:
+            for code in differences:
+                groups = self.code_converter.convert_mbs_code_to_group_labels(code)
+                desc = self.code_converter.convert_mbs_code_to_description(code)
+                mod_line = [f'{x}' for x in groups]
+                line = ','.join(mod_line) + f',"{desc}"\r\n'
+                f.write(line)
         
