@@ -40,6 +40,7 @@ class TestCase(ProposalTest):
 
     def run_test(self):
         super().run_test()
+        states = []
         for state, data in self.test_data:
             rp = self.required_params
 
@@ -93,4 +94,15 @@ class TestCase(ProposalTest):
             with open(f"attrs_state_{state}.pkl", "wb") as f:
                 pickle.dump(attrs, f)
 
+            states.append(formatted_d)
+
             mba_funcs.create_graph(formatted_d, name, title, attrs)
+
+        state_sets = []
+        for state in states:
+            s = self.graphs.flatten_graph_dict(state)
+            state_sets.append(s)
+
+        u = set.difference(*state_sets)
+        self.log(u)
+        
