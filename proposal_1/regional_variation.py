@@ -115,6 +115,12 @@ class TestCase(ProposalTest):
                 groups = self.code_converter.convert_mbs_code_to_group_labels(code)
                 desc = self.code_converter.convert_mbs_code_to_description(code)
                 mod_line = [f'{x}' for x in groups]
-                line = ','.join(mod_line) + f',"{desc}"\r\n'
+                if len(mod_line) == 2:
+                    mod_line.append('')
+
+                mod_line.append(str(code))
+                mod_line.appent(f',"{desc}"\r\n')
+
+                line = ','.join(mod_line)
                 f.write(line)
         
