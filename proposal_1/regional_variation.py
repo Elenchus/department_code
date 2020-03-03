@@ -114,12 +114,12 @@ class TestCase(ProposalTest):
             for code in differences:
                 groups = self.code_converter.convert_mbs_code_to_group_labels(code)
                 desc = self.code_converter.convert_mbs_code_to_description(code)
-                mod_line = [f'{x}' for x in groups]
+                mod_line = [f'"{x}"' for x in groups]
                 if len(mod_line) == 2:
                     mod_line.append('')
 
                 mod_line.append(str(code))
-                mod_line.append(f',"{desc}"\r\n')
+                mod_line.append(f'"{desc}"\r\n')
 
                 line = ','.join(mod_line)
                 f.write(line)
