@@ -110,17 +110,23 @@ class TestCase(ProposalTest):
         # u = set.difference(*state_sets)
         # self.log(u)
         diff_file = self.logger.output_path / 'diff_file.csv'
-        with open(diff_file, 'w+') as f:
-            for code in differences:
-                groups = self.code_converter.convert_mbs_code_to_group_labels(code)
-                desc = self.code_converter.convert_mbs_code_to_description(code)
-                mod_line = [f'"{x}"' for x in groups]
-                if len(mod_line) == 2:
-                    mod_line.append('')
 
-                mod_line.append(str(code))
-                mod_line.append(f'"{desc}"\r\n')
+        def turn_all_codes_to_csv(codes, filename):
+            with open(filename, 'w+') as f:
+                for code in codes:
+                    groups = self.code_converter.convert_mbs_code_to_group_labels(code)
+                    desc = self.code_converter.convert_mbs_code_to_description(code)
+                    mod_line = [f'"{x}"' for x in groups]
+                    if len(mod_line) == 2:
+                        mod_line.append('')
 
-                line = ','.join(mod_line)
-                f.write(line)
+                    mod_line.append(str(code))
+                    mod_line.append(f'"{desc}"\r\n')
+
+                    line = ','.join(mod_line)
+                    f.write(line)
         
+        turn_all_codes_to_csv(differences, diff_file)
+        sames = set.intersection(*state_sets)
+        same_file = self.logger.output_path / 'same_file.csv'
+        turn_all_codes_to_csv(sames, same_file)
