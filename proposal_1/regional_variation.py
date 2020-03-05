@@ -4,6 +4,7 @@ from proposal_1.basic_mba import BasicMba
 from dataclasses import dataclass
 from enum import Enum
 from phd_utils.base_proposal_test import ProposalTest
+from phd_utils.file_utils import write_mbs_codes_to_csv
 from tqdm import tqdm
 
 class TestCase(ProposalTest):
@@ -88,10 +89,12 @@ class TestCase(ProposalTest):
                 title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header} and in state {state}'
 
             formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
-            with open(f"model_state_{state}.pkl", "wb") as f:
+            model_name = self.logger.output_path / f"model_state_{state}.pkl" 
+            with open(model_name, "wb") as f:
                 pickle.dump(formatted_d, f)
             
-            with open(f"attrs_state_{state}.pkl", "wb") as f:
+            attrs_name = self.logger.output_path / f"attrs_state_{state}.pkl" 
+            with open(attrs_name, "wb") as f:
                 pickle.dump(attrs, f)
 
             states.append(d)
@@ -111,22 +114,7 @@ class TestCase(ProposalTest):
         # self.log(u)
         diff_file = self.logger.output_path / 'diff_file.csv'
 
-        def turn_all_codes_to_csv(codes, filename):
-            with open(filename, 'w+') as f:
-                for code in codes:
-                    groups = self.code_converter.convert_mbs_code_to_group_labels(code)
-                    desc = self.code_converter.convert_mbs_code_to_description(code)
-                    mod_line = [f'"{x}"' for x in groups]
-                    if len(mod_line) == 2:
-                        mod_line.append('')
-
-                    mod_line.append(str(code))
-                    mod_line.append(f'"{desc}"\r\n')
-
-                    line = ','.join(mod_line)
-                    f.write(line)
-        
-        turn_all_codes_to_csv(differences, diff_file)
+        write_mbs_codes_to_csv(self.code_converter, differences, diff_file)
         sames = set.intersection(*state_sets)
         same_file = self.logger.output_path / 'same_file.csv'
-        turn_all_codes_to_csv(sames, same_file)
+        write_mbs_codes_to_csv(self.code_converter, sames, same_file)
