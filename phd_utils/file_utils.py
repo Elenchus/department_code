@@ -74,17 +74,21 @@ def get_pbs_files(years):
 
     return files
 
+def get_mbs_code_as_line(code_converter, code):
+    groups = code_converter.convert_mbs_code_to_group_labels(code)
+    desc = code_converter.convert_mbs_code_to_description(code)
+    mod_line = [f'"{x}"' for x in groups]
+    if len(mod_line) == 2:
+        mod_line.append('')
+
+    mod_line.append(str(code))
+    mod_line.append(f'"{desc}"')
+    
+    return mod_line
+
 def write_mbs_codes_to_csv(code_converter, codes, filename):
     with open(filename, 'w+') as f:
         for code in codes:
-            groups = code_converter.convert_mbs_code_to_group_labels(code)
-            desc = code_converter.convert_mbs_code_to_description(code)
-            mod_line = [f'"{x}"' for x in groups]
-            if len(mod_line) == 2:
-                mod_line.append('')
-
-            mod_line.append(str(code))
-            mod_line.append(f'"{desc}"\r\n')
-
-            line = ','.join(mod_line)
+            mod_line = get_mbs_code_as_line(code_converter, code)
+            line = ','.join(mod_line) + '\r\n'
             f.write(line)

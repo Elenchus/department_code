@@ -4,7 +4,7 @@ from proposal_1.basic_mba import BasicMba
 from dataclasses import dataclass
 from enum import Enum
 from phd_utils.base_proposal_test import ProposalTest
-from phd_utils.file_utils import write_mbs_codes_to_csv
+from phd_utils.file_utils import write_mbs_codes_to_csv, get_mbs_code_as_line
 from tqdm import tqdm
 
 class TestCase(ProposalTest):
@@ -37,12 +37,14 @@ class TestCase(ProposalTest):
         self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
 
-        self.test_data = data.groupby('SPRSTATE')
+        self.test_data = data.groupby('PINSTATE')
 
     def run_test(self):
         super().run_test()
         states = []
+        state_order = []
         for state, data in self.test_data:
+            state_order.append(state)
             rp = self.required_params
 
             all_unique_items = [str(x) for x in data[rp.basket_header].unique().tolist()]
@@ -62,31 +64,15 @@ class TestCase(ProposalTest):
                         d[k] = {}
 
                 d.pop("No other items")
+
             for k in d.keys():
                 d[k].pop("No other items", None)
 
-            # find component specialties
-            if rp.basket_header == "ITEM":
-                components = self.graphs.graph_component_finder(d)
-                for i in range(len(components)):
-                    self.log(f"Specialties in component {i}")
-                    specs = set()
-                    for item in components[i]:
-                        item_claims = data[data[rp.basket_header] == int(item)]
-                        item_specs = item_claims["SPR_RSP"].unique().tolist()
-                        specs.update(item_specs)
-                        
-                    for spec in specs:
-                        words = self.code_converter.convert_rsp_num(spec)
-                        self.log(words)
-
-                self.log(f"Specialties in component {i + 1}: None")
-
             name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_state_{state}_graph.png"
             if rp.sub_group_header is None:
-                title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and in state {state}'
+                title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and in state {self.code_converter.convert_state_num(state)}'
             else:
-                title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header} and in state {state}'
+                title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header} and in state {self.code_converter.convert_state_num(state)}'
 
             formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
             model_name = self.logger.output_path / f"model_state_{state}.pkl" 
@@ -102,9 +88,24 @@ class TestCase(ProposalTest):
             mba_funcs.create_graph(formatted_d, name, title, attrs)
 
         state_sets = []
-        for state in states:
+        for i, state in enumerate(states):
             s = self.graphs.flatten_graph_dict(state)
             state_sets.append(s)
+            total_cost = 0
+            name = f"costs_for_state_{self.code_converter.convert_state_num(state_order[i])}.csv"
+            filename = self.logger.output_path / name
+            with open(filename, 'w+') as f:
+                f.write("Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
+                for item in s:
+                    code = item.split('\n')[-1]
+                    line = ','.join(get_mbs_code_as_line(self.code_converter, code))
+                    item_cost, fee_type = self.code_converter.get_mbs_item_fee(code)
+                    total_cost += item_cost
+                    item_cost = "${:.2f}".format(item_cost)
+                    f.write(f"{line},{item_cost},{fee_type}\r\n")
+
+                total_cost = "${:.2f}".format(total_cost)
+                self.log(f"Cost for {self.code_converter.convert_state_num(state_order[i])}: {total_cost}")
 
         differences = set()
         for i in range(len(state_sets)):

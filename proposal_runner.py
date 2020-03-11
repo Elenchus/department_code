@@ -126,7 +126,7 @@ if __name__ == "__main__":
         # test_data = mbs,
         # test_data = 'knee_replacement_provider_subset.csv',
         # test_data = 'pathology_patient_subset.csv',
-        test_data = 'hip_21214_provider_subset_with_state.csv',
+        test_data = 'hip_21214_provider_subset_with_patient_state.csv',
         test_file_name = f'regional_variation',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]

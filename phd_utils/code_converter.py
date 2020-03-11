@@ -115,24 +115,38 @@ class CodeConverter:
 
         return self.rsp_table.loc[self.rsp_table['Label'] == str(rsp)]['SPR_RSP'].values.tolist()[0]
 
+    def convert_state_num(self, state):
+        state_id = str(state)
+        state_names = {
+            '1': 'ACT + NSW',
+            '2': 'VIC + TAS',
+            '3': 'NT + SA',
+            '4': 'QLD',
+            '5': 'WA'
+        }
+
+        return state_names.get(state_id, "Not a valid state")
+
     def get_mbs_item_fee(self, code):
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
-            return 500
+            return 500, "Not in dictionary"
 
+        fee_type = "ScheduleFee"
         if "ScheduleFee" not in item:
             derived_fee = item["DerivedFee"]
+            fee_type = "DerivedFee"
             try:
                 number = re.search(r'item\s(\d+)', derived_fee)[1]
             except TypeError:
                 if code == 51303 or code == '51303':
-                    return 113
+                    return 113, fee_type
                 else:
-                    return float(re.search(r'\$(\d+\.\d+)', derived_fee)[1])
+                    return float(re.search(r'\$(\d+\.\d+)', derived_fee)[1]), fee_type
 
             item = self.mbs_item_dict.get(str(number), None)
 
         dollar_fee = item["ScheduleFee"]
         fee = float(dollar_fee[1:])
 
-        return fee
+        return fee, fee_type

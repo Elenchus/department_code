@@ -90,11 +90,11 @@ class TestCase(ProposalTest):
         if rp.basket_header == "ITEM":
             fee_record = {int(x): {} for x in all_unique_items}
 
-            fees = [self.code_converter.get_mbs_item_fee(x) for x in all_unique_items]
+            fees  = [self.code_converter.get_mbs_item_fee(x)[0] for x in all_unique_items]
             max_fee = max(fees)
             min_fee = min(fees)
             for node in fee_record:
-                fee_record[node]['weight'] =  (self.code_converter.get_mbs_item_fee(node) - min_fee) / (max_fee - min_fee)
+                fee_record[node]['weight'] =  (self.code_converter.get_mbs_item_fee(node)[0] - min_fee) / (max_fee - min_fee)
 
         mba_funcs.create_graph(formatted_d, name, title, attrs)
 
@@ -159,7 +159,7 @@ class TestCase(ProposalTest):
                 (transaction_graph, attrs, _) = self.models.mba.convert_mbs_codes(transaction_graph)
                 for node in attrs:
                     item = '\n'.split(node)[-1]
-                    attrs[node]['weight'] =  (self.code_converter.get_mbs_item_fee(item) - min_fee) / (max_fee - min_fee)
+                    attrs[node]['weight'] =  (self.code_converter.get_mbs_item_fee(item)[0] - min_fee) / (max_fee - min_fee)
 
                 for i in missing_nodes:
                     if i == "No other items":
