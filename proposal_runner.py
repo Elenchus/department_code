@@ -111,22 +111,23 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     test_details = TestDetails(
         notes = "",
-        # params = {'basket_header': 'ITEM', 
-        #             'group_header':'PIN', 
-        #             'sub_group_header': None,
-        #             'filters': {
-        #                 'conviction': {'value': 1.1}
-        #                 },
-        #             'min_support': 0.33},
+        params = {'basket_header': 'ITEM', 
+                    'group_header':'SPR', 
+                    'sub_group_header': 'PIN',
+                    'state_group_header': 'SPRSTATE',
+                    'filters': {
+                        'conviction': {'value': 1.1}
+                        },
+                    'min_support': 0.005},
                     # 'scoring_method': 'ged',
                     # 'ged_support': 0.1},
-        params = None,
+        # params = None,
         proposal = 1,
-        test_data = mbs,
+        # test_data = mbs,
         # test_data = 'knee_replacement_provider_subset.csv',
         # test_data = 'pathology_patient_subset.csv',
-        # test_data = 'hip_21214_provider_subset_with_patient_state.csv',
-        test_file_name = f'data_extraction',
+        test_data = 'hip_21214_provider_subset_with_states.csv',
+        test_file_name = f'regional_variation',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]
     )
