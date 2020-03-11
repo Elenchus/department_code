@@ -11,8 +11,9 @@ class TestCase(ProposalTest):
     class RequiredParams:
         group_header:str = 'PIN'
         basket_header:str = 'ITEM'
+        state_group_header:str = 'PINSTATE'
         sub_group_header:str = None
-        min_support:float = 0.01
+        min_support:float = 0.33
         filters:dict = None
 
     FINAL_COLS = []
@@ -36,7 +37,7 @@ class TestCase(ProposalTest):
         self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
 
-        self.test_data = data.groupby('PINSTATE')
+        self.test_data = data.groupby(self.required_params.state_group_header)
 
     def run_test(self):
         super().run_test()
