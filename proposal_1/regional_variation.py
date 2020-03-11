@@ -4,7 +4,6 @@ from proposal_1.basic_mba import BasicMba
 from dataclasses import dataclass
 from enum import Enum
 from phd_utils.base_proposal_test import ProposalTest
-from phd_utils.file_utils import write_mbs_codes_to_csv, get_mbs_code_as_line
 from tqdm import tqdm
 
 class TestCase(ProposalTest):
@@ -98,7 +97,7 @@ class TestCase(ProposalTest):
                 f.write("Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
                 for item in s:
                     code = item.split('\n')[-1]
-                    line = ','.join(get_mbs_code_as_line(self.code_converter, code))
+                    line = ','.join(self.code_converter.get_mbs_code_as_line(code))
                     item_cost, fee_type = self.code_converter.get_mbs_item_fee(code)
                     total_cost += item_cost
                     item_cost = "${:.2f}".format(item_cost)
@@ -115,7 +114,7 @@ class TestCase(ProposalTest):
         # self.log(u)
         diff_file = self.logger.output_path / 'diff_file.csv'
 
-        write_mbs_codes_to_csv(self.code_converter, differences, diff_file)
+        self.code_converter.write_mbs_codes_to_csv(differences, diff_file)
         sames = set.intersection(*state_sets)
         same_file = self.logger.output_path / 'same_file.csv'
-        write_mbs_codes_to_csv(self.code_converter, sames, same_file)
+        self.code_converter.write_mbs_codes_to_csv(sames, same_file)

@@ -88,7 +88,10 @@ def get_mbs_code_as_line(code_converter, code):
 
 def write_mbs_codes_to_csv(code_converter, codes, filename):
     with open(filename, 'w+') as f:
+        f.write("Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
         for code in codes:
             mod_line = get_mbs_code_as_line(code_converter, code)
-            line = ','.join(mod_line) + '\r\n'
+            item_cost, fee_type = code_converter.get_mbs_item_fee(code)
+            item_cost = "${:.2f}".format(item_cost)
+            line = ','.join(mod_line) + f',{item_cost},{fee_type}\r\n'
             f.write(line)

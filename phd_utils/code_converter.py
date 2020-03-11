@@ -150,3 +150,25 @@ class CodeConverter:
         fee = float(dollar_fee[1:])
 
         return fee, fee_type
+
+    def get_mbs_code_as_line(self, code):
+        groups = self.convert_mbs_code_to_group_labels(code)
+        desc = self.convert_mbs_code_to_description(code)
+        mod_line = [f'"{x}"' for x in groups]
+        if len(mod_line) == 2:
+            mod_line.append('')
+
+        mod_line.append(str(code))
+        mod_line.append(f'"{desc}"')
+        
+        return mod_line
+
+    def write_mbs_codes_to_csv(self, codes, filename):
+        with open(filename, 'w+') as f:
+            f.write("Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
+            for code in codes:
+                mod_line = self.get_mbs_code_as_line(code)
+                item_cost, fee_type = self.get_mbs_item_fee(code)
+                item_cost = "${:.2f}".format(item_cost)
+                line = ','.join(mod_line) + f',{item_cost},{fee_type}\r\n'
+                f.write(line)
