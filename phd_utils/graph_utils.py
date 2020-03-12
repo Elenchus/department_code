@@ -402,7 +402,7 @@ class GraphUtils():
 
         A = pgv.AGraph(data={})
         if title is not None:
-            A.graph_attr['fontsize'] = 30
+            A.graph_attr['fontsize'] = 20
             A.graph_attr['label'] = title
             A.graph_attr['labelloc'] = 't'
 

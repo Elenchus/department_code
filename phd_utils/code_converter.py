@@ -147,7 +147,7 @@ class CodeConverter:
             item = self.mbs_item_dict.get(str(number), None)
 
         dollar_fee = item["ScheduleFee"]
-        fee = float(dollar_fee[1:])
+        fee = float(dollar_fee)
 
         return fee, fee_type
 
