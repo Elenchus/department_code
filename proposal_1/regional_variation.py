@@ -13,6 +13,7 @@ class TestCase(ProposalTest):
         basket_header:str = 'ITEM'
         state_group_header:str = 'PINSTATE'
         sub_group_header:str = None
+        colour_only:bool = True
         min_support:float = 0.33
         filters:dict = None
 
@@ -74,7 +75,11 @@ class TestCase(ProposalTest):
             else:
                 title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header} and in state {self.code_converter.convert_state_num(state)}'
 
-            formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
+            if rp.colour_only and rp.basket_header == "ITEM":
+                formatted_d, attrs, legend = self.models.mba.colour_mbs_codes(d)
+            else:
+                formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
+
             model_name = self.logger.output_path / f"model_state_{state}.pkl" 
             with open(model_name, "wb") as f:
                 pickle.dump(formatted_d, f)
@@ -119,3 +124,6 @@ class TestCase(ProposalTest):
         sames = set.intersection(*state_sets)
         same_file = self.logger.output_path / 'same_file.csv'
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
+
+        legend_file = self.logger.output_path / "Legend.png"
+        self.graphs.graph_legend(legend, legend_file, "Legend")

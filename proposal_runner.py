@@ -112,13 +112,13 @@ if __name__ == "__main__":
     test_details = TestDetails(
         notes = "",
         params = {'basket_header': 'ITEM', 
-                    'group_header':'SPR', 
-                    'sub_group_header': 'PIN',
-                    'state_group_header': 'SPRSTATE',
+                    'group_header':'PIN', 
+                    'sub_group_header': None,
+                    'state_group_header': 'PINSTATE',
                     'filters': {
                         'conviction': {'value': 1.1}
                         },
-                    'min_support': 0.005},
+                    'min_support': 0.33},
                     # 'scoring_method': 'ged',
                     # 'ged_support': 0.1},
         # params = None,

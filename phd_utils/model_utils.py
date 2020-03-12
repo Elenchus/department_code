@@ -22,7 +22,7 @@ class ModelUtils():
     def __init__(self, logger, graph_utils, code_converter):
         self.logger = logger
         self.graph_utils = graph_utils
-        self.mba = MbaUtils(code_converter)
+        self.mba = MbaUtils(code_converter, graph_utils)
 
     def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
         max_length=2

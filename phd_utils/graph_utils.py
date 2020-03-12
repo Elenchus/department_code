@@ -341,8 +341,9 @@ class GraphUtils():
 
     def visual_graph(self, data_dict, output_file, title=None, directed=True, node_attrs=None):
         max_len = 0
-        sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
-        full_list = set(list(str(x) for x in data_dict.keys()) + list(str(item) for elem in sub_list_of_lists for item in elem))
+        # sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
+        # full_list = set(list(str(x) for x in data_dict.keys()) + list(str(item) for elem in sub_list_of_lists for item in elem))
+        full_list = self.flatten_graph_dict(data_dict)
         for s in full_list:
             if len(s) > max_len:
                 max_len = len(s)
@@ -354,6 +355,7 @@ class GraphUtils():
 
         A = pgv.AGraph(data=data_dict, directed=directed)
         if title is not None:
+            A.graph_attr['fontsize'] = 30
             A.graph_attr['label'] = title
             A.graph_attr['labelloc'] = 't'
 
@@ -388,8 +390,7 @@ class GraphUtils():
 
     def graph_legend(self, data_dict, output_file, title=None):
         max_len = 0
-        sub_list_of_lists = [data_dict[key].keys() for key in data_dict.keys()]
-        full_list = set(list(str(x) for x in data_dict.keys()) + list(str(item) for elem in sub_list_of_lists for item in elem))
+        full_list = self.flatten_graph_dict(data_dict)
         for s in full_list:
             if len(s) > max_len:
                 max_len = len(s)
@@ -401,6 +402,7 @@ class GraphUtils():
 
         A = pgv.AGraph(data={})
         if title is not None:
+            A.graph_attr['fontsize'] = 30
             A.graph_attr['label'] = title
             A.graph_attr['labelloc'] = 't'
 
@@ -419,7 +421,7 @@ class GraphUtils():
             n = A.get_node(node)
             n.attr['shape'] = 'rectangle'
             n.attr['rank'] = 'max'
-            n.attr['fontsize'] = 20
+            n.attr['fontsize'] = 10
             for attr, val in data_dict[node].items():
                 n.attr[attr] = val
 

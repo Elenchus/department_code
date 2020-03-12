@@ -27,8 +27,9 @@ class MbaUtils:
         }
     }
 
-    def __init__(self, code_converter):
+    def __init__(self, code_converter, graphs):
         self.code_converter=code_converter
+        self.graphs = graphs
 
     def update_filters(self, filters):
         for k, v in filters.items():
@@ -150,6 +151,40 @@ class MbaUtils:
     def compare_items_to_model(self, items, model):
         pass
 
+    def colour_mbs_codes(self, d):
+        get_color = {
+            'I': 'tomato', # for item not in dictionary
+            '1': 'blue',
+            '2': 'green',
+            '3': 'red',
+            '4': 'yellow',
+            '5': 'cyan',
+            '6': 'khaki',
+            '7': 'orange',
+            '8': 'darkorchid' 
+        }
+
+        all_items = self.graphs.flatten_graph_dict(d)
+        attrs = {}
+        color_map = set()
+        for item in all_items:
+            if item == "No other items":
+                group_no = 'I'
+            else:
+                group_no = self.code_converter.convert_mbs_code_to_group_numbers(item)[0]
+
+            color = get_color[group_no]
+            attrs[item] = {'color': color}
+            color_map.add(group_no)
+
+        legend = {}
+        for color in color_map:
+            color_name = get_color[color]
+            color_label = self.code_converter.convert_mbs_category_number_to_label(color)
+            legend[color_name] = {'color': color_name, 'label': color_label.replace(' ','\n'), 'labeljust': ';', 'rank': 'max'}
+
+        return (d, attrs, legend)
+
     def convert_mbs_codes(self, d):
         get_color = {
             'I': 'tomato', # for item not in dictionary
@@ -211,7 +246,7 @@ class MbaUtils:
         for color in color_map:
             color_name = get_color[color]
             color_label = self.code_converter.convert_mbs_category_number_to_label(color)
-            legend[color_name] = {'color': color_name, 'label': color_label, 'labeljust': ';', 'rank': 'max'}
+            legend[color_name] = {'color': color_name, 'label': color_label.replace(' ','\n'), 'labeljust': ';', 'rank': 'max'}
 
         return (new_data, colors, legend)
 
