@@ -4,6 +4,8 @@ import unittest
 import numpy as np
 import pandas as pd
 import phd_utils.model_utils as model_utils
+from phd_utils.code_converter import CodeConverter
+from tests.mock_graph_utils import MockGraphUtils
 from tests.mock_logger import MockLogger
 from tests.mock_w2v import MockW2V
 
@@ -33,7 +35,7 @@ def create_mba_test_data():
 
 class ModelUtilsTest(unittest.TestCase):
     def setUp(self):
-        self.model = model_utils.ModelUtils(MockLogger())
+        self.model = model_utils.ModelUtils(MockLogger(), MockGraphUtils(), CodeConverter(2014))
 
     def tearDown(self):
         pass
@@ -138,24 +140,31 @@ class ModelUtilsTest(unittest.TestCase):
                         assert str(j) in d[str(i)]
 
     def test_pairwise_market_basket(self):
-        test_function = self.model.pairwise_market_basket
+        test_function = self.model.mba.pairwise_market_basket
         documents = create_mba_test_data()
         cat = [1000,999,900,899,700,10,9,1]
         names = [str(x) for x in range(8)]
         # test min_support
-        d = test_function(names, documents, min_support=0.01, min_confidence= 0, min_lift=0, min_conviction=0)
+        d = test_function(names, documents, min_support=0.01)
         assert len(d) == 6
         for i in d:
             assert len(d[i]) == 5
 
         # test min_confidence
-        d = test_function(names, documents, min_support=0.01, min_confidence=0.9, min_lift=0, min_conviction=0)
-        assert d['0']['1'] == None # {'color': '#0200fd'}
-        assert d['0']['2'] == None # {'color': '#0200fd'}
+        filters = {'confidence': {'value': 0.9}}
+        self.model.mba.update_filters(filters)
+        d = test_function(names, documents, min_support=0.01)
+        assert '1' in d['0'] # {'color': '#0200fd'}
+        assert '2' in d['0'] # {'color': '#0200fd'}
         assert len(d['0']) == 2 
 
         # test min_lift
-        d = test_function(names, documents, min_support=0.01, min_confidence= 0, min_lift=1.1, min_conviction=0)
+        filters = {
+            'confidence': {'value': 0.0},
+            'lift': {'value': 1.1}
+        }
+        self.model.mba.update_filters(filters)
+        d = test_function(names, documents, min_support=0.01)
 
         for i in range(len(cat)):
             for j in range(len(cat)):
@@ -173,7 +182,12 @@ class ModelUtilsTest(unittest.TestCase):
                         assert str(j) in d[str(i)]
 
         # test min conviction
-        d = test_function(names, documents, min_support=0.01, min_conviction=1.1, min_confidence=0, min_lift=0)
+        filters = {
+            'conviction': {'value': 1.1},
+            'lift': {'value': 0}
+        }
+        self.model.mba.update_filters(filters)
+        d = test_function(names, documents)
         for i in range(len(cat)):
             for j in range(len(cat)):
                 a = cat[i]
@@ -194,7 +208,12 @@ class ModelUtilsTest(unittest.TestCase):
                         assert str(j) in d[str(i)]
 
         # test min odds ratio - I believe all should go to infinity, denominator will always be 0. not a great test...
-        d = test_function(names, documents, min_support=0, min_confidence=0, min_conviction=0, min_lift=0, min_odds_ratio=9999)
+        filters = {
+            'conviction': {'value': 0},
+            'odds_ratio': {'value': 9999}
+        }
+        self.model.mba.update_filters(filters)
+        d = test_function(names, documents, min_support=0)
         assert len(d) == 8
         for v in d.values():
             assert len(v) == 7

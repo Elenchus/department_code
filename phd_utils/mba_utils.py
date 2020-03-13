@@ -1,6 +1,7 @@
 import operator
 import pandas as pd
 from enum import auto, Enum
+from numpy import nan
 from scipy.stats import fisher_exact
 
 class MbaUtils:
@@ -354,6 +355,8 @@ class MbaUtils:
                     f01 = reduced_items[b] - f11
                     f00 = group_len - (f10 + f01 + count)
                     odds_ratio, p_value = fisher_exact([[f11, f10], [f01, f00]], alternative='greater')
+                    if odds_ratio is nan:
+                        odds_ratio = 9999
 
                     if p_value > max_p_value:
                         continue
