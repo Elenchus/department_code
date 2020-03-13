@@ -57,6 +57,8 @@ class TestCase(ProposalTest):
             else:
                 documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
 
+            self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
+
             self.log("Creating model")
             d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
             # remove no other item:
