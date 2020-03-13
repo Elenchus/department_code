@@ -369,7 +369,7 @@ class MbaUtils:
                     if confidence > support_b:
                         certainty_factor = (confidence - support_b) / (1 - support_b) if support_b != 1 else 9999
                     elif confidence < support_b:
-                        certainty_factor = (confidence - support_b) / support_b
+                        certainty_factor = (confidence - support_b) / support_b if support_b != 0 else 9999
                     else:
                         certainty_factor = 0
 

@@ -37,6 +37,7 @@ class TestCase(ProposalTest):
         super().load_data()
         self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
+        data = data[~data['PIN'].isin([8170350857,8244084150,3891897366,1749401692,3549753440,6046213577])]
 
         self.test_data = data.groupby(self.required_params.state_group_header)
 

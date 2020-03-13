@@ -1,3 +1,4 @@
+import operator
 import pandas as pd
 from tqdm import tqdm
 
@@ -61,7 +62,7 @@ class BasicMba:
     def create_graph(self, d, name, title, attrs=None):
         filename = self.logger.output_path / name
         filters = self.model.mba.filters
-        if filters['conviction']['value'] == 0 and filters['confidence']['value'] == 0 and filters['certainty_factor']['value'] <= 0:
+        if filters['conviction']['value'] == 0 and filters['confidence']['value'] == 0 and (filters['certainty_factor']['value'] == 0 and filters['certainty_factor']['operator'] == operator.ge):
             directed = False
         else:
             directed = True

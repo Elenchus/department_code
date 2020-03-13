@@ -1,4 +1,5 @@
 '''Run tests from proposals'''
+import operator
 import pandas as pd
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -116,7 +117,10 @@ if __name__ == "__main__":
                     'sub_group_header': None,
                     'state_group_header': 'PINSTATE',
                     'filters': {
-                        'conviction': {'value': 1.1}
+                        'conviction': {
+                            'value': 1.1,
+                            'operator': operator.ge
+                        }
                         },
                     'min_support': 0.33},
                     # 'scoring_method': 'ged',

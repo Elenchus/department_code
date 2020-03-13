@@ -362,6 +362,7 @@ class GraphUtils():
         A.node_attr['style']='filled'
         A.node_attr['shape'] = 'circle'
         A.node_attr['fixedsize']='true'
+        A.node_attr['fontsize'] = 25
         A.node_attr['height']=width 
         A.node_attr['width']=width
         A.node_attr['fontcolor']='#000000'
@@ -402,7 +403,7 @@ class GraphUtils():
 
         A = pgv.AGraph(data={})
         if title is not None:
-            A.graph_attr['fontsize'] = 20
+            A.graph_attr['fontsize'] = 15
             A.graph_attr['label'] = title
             A.graph_attr['labelloc'] = 't'
 
@@ -421,7 +422,7 @@ class GraphUtils():
             n = A.get_node(node)
             n.attr['shape'] = 'rectangle'
             n.attr['rank'] = 'max'
-            n.attr['fontsize'] = 10
+            n.attr['fontsize'] = 15
             for attr, val in data_dict[node].items():
                 n.attr[attr] = val
 
