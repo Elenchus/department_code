@@ -187,7 +187,7 @@ class ModelUtilsTest(unittest.TestCase):
             'lift': {'value': 0}
         }
         self.model.mba.update_filters(filters)
-        d = test_function(names, documents)
+        d = test_function(names, documents, min_support=0.01)
         for i in range(len(cat)):
             for j in range(len(cat)):
                 a = cat[i]
