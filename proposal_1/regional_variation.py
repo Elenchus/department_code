@@ -130,3 +130,25 @@ class TestCase(ProposalTest):
 
         legend_file = self.logger.output_path / "Legend.png"
         self.graphs.graph_legend(legend, legend_file, "Legend")
+
+        for state, data in self.test_data:
+            patients = data.groupby('PIN')
+            communities = []
+            for name, group in patients:
+                community = set(group['SPR'].unique().tolist())
+                communities.append(community)
+
+            idx = list(range(len(communities)))
+            df = pd.DataFrame(0, columns=idx, index=idx)
+            for i, a in enumerate(communities):
+                for j, b in enumerate(communities):
+                    if i == j:
+                        continue
+
+                    length = len(a.union(b))
+                    similar = len(a.intersection(b))
+                    ratio = similar / length
+                    df.at[i,j] = ratio
+
+            x = df.to_numpy().sum()
+            self.log(f"Community similarity measure in {self.code_converter.convert_state_num(state)}: {x/2} / {len(idx)}")
