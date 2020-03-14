@@ -139,7 +139,7 @@ class TestCase(ProposalTest):
                 communities.append(community)
 
             idx = list(range(len(communities)))
-            df = pd.DataFrame(0, columns=idx, index=idx)
+            df = pd.DataFrame(0, columns=idx, index=idx, dtype=float)
             for i, a in enumerate(communities):
                 for j, b in enumerate(communities):
                     if i == j:
@@ -151,4 +151,4 @@ class TestCase(ProposalTest):
                     df.at[i,j] = ratio
 
             x = df.to_numpy().sum()
-            self.log(f"Community similarity measure in {self.code_converter.convert_state_num(state)}: {x/2} / {len(idx)}")
+            self.log(f"Community similarity measure in {self.code_converter.convert_state_num(state)}: {x/2} / {(len(idx)**2) / 2}")
