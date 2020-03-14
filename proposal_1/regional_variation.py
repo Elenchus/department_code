@@ -95,6 +95,54 @@ class TestCase(ProposalTest):
             states.append(d)
 
             mba_funcs.create_graph(formatted_d, name, title, attrs)
+            
+            if rp.group_header == 'PIN' and rp.basket_header == 'ITEM':
+                self.log("Finding suspicious providers")
+                all_graphs = {}
+                suspicious_transactions = {}
+                edit_graphs = {}
+                edit_attrs = {}
+                providers = data['SPR'].unique().tolist()
+                for provider in tqdm(providers):
+                    patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
+                    if len(patients) < 6:
+                        continue
+
+                    patient_data = data.loc[data['PIN'].isin(patients)]
+                    patient_data_groups = patient_data.groupby('PIN')
+                    provider_docs = []
+                    provider_items = patient_data['ITEM'].unique().tolist()
+                    for _, patient_data_group in patient_data_groups:
+                        doc = patient_data_group['ITEM'].unique().tolist()
+                        provider_docs.append(doc)
+
+                    provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.min_support)
+                    ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, None)
+                    suspicious_transactions[provider] = ged
+                    edit_attrs[provider] = edit_attr
+                    edit_graphs[provider] = edit_d
+                    all_graphs[provider] = provider_model
+
+                suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
+                self.log(suspicion_matrix.describe())
+                susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
+                for idx, s in enumerate(susp):
+                    group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s}'
+                    group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
+                    group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
+                    mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
+
+                    edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s}'
+                    edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
+                    converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
+                    for key in new_edit_attrs:
+                        code = key.split('\n')[-1]
+                        if s in edit_attrs:
+                            if code in edit_attrs[s]:
+                                if 'shape' in edit_attrs[s][code]:
+                                    new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
+
+                    mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
 
         state_sets = []
         for i, state in enumerate(states):
@@ -132,13 +180,13 @@ class TestCase(ProposalTest):
         legend_file = self.logger.output_path / "Legend.png"
         self.graphs.graph_legend(legend, legend_file, "Legend")
 
-        for state, data in self.test_data:
-            self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
-            patients = data.groupby('PIN')
-            communities = []
-            for name, group in patients:
-                community = set(str(x) for x in group['SPR'].unique())
-                communities.append(community)
+        # for state, data in self.test_data:
+        #     self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
+        #     patients = data.groupby('PIN')
+        #     communities = []
+        #     for name, group in patients:
+        #         community = set(str(x) for x in group['SPR'].unique())
+        #         communities.append(community)
 
             # idx = list(range(len(communities)))
             # df = pd.DataFrame(0, columns=idx, index=idx, dtype=float)
@@ -159,22 +207,22 @@ class TestCase(ProposalTest):
             # pca = self.models.pca_2d(patient_model[patient_model.wv.vocab])
             # self.models.k_means_cluster(pca, 10, 'Patient clusters', f"k_means_state_{state}")
 
-            provider_graph = {}
-            for community in communities:
-                for provider_a in community:
-                    if provider_a not in provider_graph:
-                        provider_graph[provider_a] = set()
+            # provider_graph = {}
+            # for community in communities:
+            #     for provider_a in community:
+            #         if provider_a not in provider_graph:
+            #             provider_graph[provider_a] = set()
 
-                    for provider_b in community:
-                        if provider_a == provider_b:
-                            continue
+            #         for provider_b in community:
+            #             if provider_a == provider_b:
+            #                 continue
 
-                        provider_graph[provider_a].add(provider_b)
+            #             provider_graph[provider_a].add(provider_b)
 
-            for k, v in provider_graph.items():
-                provider_graph[k] = {item: None for item in v}
+            # for k, v in provider_graph.items():
+            #     provider_graph[k] = {item: None for item in v}
 
-            converted_graph = self.graphs.contract_largest_maximum_cliques(provider_graph)
-            self.log("Graphing")
-            filename = self.logger.output_path / f"provider_communities_state_{state}.png"
-            self.graphs.visual_graph(converted_graph, filename, f"Provider communities in {self.code_converter.convert_state_num(state)}", directed=False)
+            # converted_graph = self.graphs.contract_largest_maximum_cliques(provider_graph)
+            # self.log("Graphing")
+            # filename = self.logger.output_path / f"provider_communities_state_{state}.png"
+            # self.graphs.visual_graph(converted_graph, filename, f"Provider communities in {self.code_converter.convert_state_num(state)}", directed=False)
