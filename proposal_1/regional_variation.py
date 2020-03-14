@@ -3,6 +3,7 @@ import pickle
 from proposal_1.basic_mba import BasicMba
 from dataclasses import dataclass
 from enum import Enum
+from gensim.models import Word2Vec
 from phd_utils.base_proposal_test import ProposalTest
 from tqdm import tqdm
 
@@ -132,23 +133,48 @@ class TestCase(ProposalTest):
         self.graphs.graph_legend(legend, legend_file, "Legend")
 
         for state, data in self.test_data:
+            self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
             patients = data.groupby('PIN')
             communities = []
             for name, group in patients:
-                community = set(group['SPR'].unique().tolist())
+                community = set(str(x) for x in group['SPR'].unique())
                 communities.append(community)
 
-            idx = list(range(len(communities)))
-            df = pd.DataFrame(0, columns=idx, index=idx, dtype=float)
-            for i, a in enumerate(communities):
-                for j, b in enumerate(communities):
-                    if i == j:
-                        continue
+            # idx = list(range(len(communities)))
+            # df = pd.DataFrame(0, columns=idx, index=idx, dtype=float)
+            # for i, a in enumerate(communities):
+            #     for j, b in enumerate(communities):
+            #         if i == j:
+            #             continue
 
-                    length = len(a.union(b))
-                    similar = len(a.intersection(b))
-                    ratio = similar / length
-                    df.at[i,j] = ratio
+            #         length = len(a.union(b))
+            #         similar = len(a.intersection(b))
+            #         ratio = similar / length
+            #         df.at[i,j] = ratio
 
-            x = df.to_numpy().sum()
-            self.log(f"Community similarity measure in {self.code_converter.convert_state_num(state)}: {x/2} / {(len(idx)**2) / 2}")
+            # x = df.to_numpy().sum()
+            # self.log(f"Community similarity measure in {self.code_converter.convert_state_num(state)}: {x/2} / {(len(idx)**2) / 2}")
+
+            # patient_model = Word2Vec(communities)
+            # pca = self.models.pca_2d(patient_model[patient_model.wv.vocab])
+            # self.models.k_means_cluster(pca, 10, 'Patient clusters', f"k_means_state_{state}")
+
+            provider_graph = {}
+            for community in communities:
+                for provider_a in community:
+                    if provider_a not in provider_graph:
+                        provider_graph[provider_a] = set()
+
+                    for provider_b in community:
+                        if provider_a == provider_b:
+                            continue
+
+                        provider_graph[provider_a].add(provider_b)
+
+            for k, v in provider_graph.items():
+                provider_graph[k] = {item: None for item in v}
+
+            converted_graph = self.graphs.contract_largest_maximum_cliques(provider_graph)
+            self.log("Graphing")
+            filename = self.logger.output_path / f"provider_communities_state_{state}.png"
+            self.graphs.visual_graph(converted_graph, filename, f"Provider communities in {self.code_converter.convert_state_num(state)}", directed=False)

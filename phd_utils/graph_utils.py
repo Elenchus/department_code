@@ -2,10 +2,12 @@
 from copy import deepcopy
 from datetime import datetime
 # from cuml import UMAP as umap
-import pandas as pd
 import numpy as np
+import pandas as pd
 import pygraphviz as pgv
+import random
 from matplotlib import pyplot as plt
+from tqdm import tqdm
 
 class GraphUtils():
     def __init__(self, logger):
@@ -20,7 +22,29 @@ class GraphUtils():
         ax.hist(data, n_bins)
         self.save_plt_fig(fig, filename)
         
+    def bron_kerbosch(self, graph):
+        def iterative_bk(P,R,X):
+            if not any((P, X)):
+                yield R
+            
+            try:
+                u = random.choice(list(P.union(X)))
+                S = P.difference(graph[u])
+            # if union of P and X is empty
+            except IndexError:
+                S = P
+            for v in S:
+                yield from iterative_bk(P.intersection(graph[v]), R.union([v]), X.intersection(graph[v]))
+                P.remove(v)
+                X.add(v)
 
+        P = self.flatten_graph_dict(graph)
+        graph = self.convert_pgv_to_simple(graph)
+        X = set()
+        R = set()
+
+        return list(iterative_bk(P,X,R))
+       
     def categorical_plot_group(self, x, y, legend_labels, title, filename, axis_labels=None):
         '''creates and saves a categorical plot'''
         self.logger.log(f"Plotting bar chart: {title}")
@@ -38,6 +62,40 @@ class GraphUtils():
             ax.set_ylabel(axis_labels[1])
 
         self.save_plt_fig(fig, filename, (lgd, ttl, ))
+
+    def contract_largest_maximum_cliques(self, graph):
+        nodes = self.flatten_graph_dict(graph)
+        maximum_cliques = self.bron_kerbosch(graph)
+        clique_conversion = {}
+        for node in nodes:
+            max_size = 0
+            max_id = None
+            for i, clique in enumerate(maximum_cliques):
+                if node in clique:
+                    size = len(clique)
+                    if size > max_size and size > 2:
+                        max_size = size
+                        max_id = i
+
+            clique_conversion[node] = f"clique_{max_id}"
+
+        converted_graph = {}
+        for key in tqdm(graph):
+            new_key = clique_conversion.get(key, None)
+            if new_key is None:
+                new_key = key
+
+            converted_graph[new_key] = set()
+            for node in graph[key]:
+                new_node = clique_conversion.get(node, None)
+                if new_node is None:
+                    new_node = node
+
+                converted_graph[new_key].add(new_node)
+
+        converted_graph = self.convert_simple_to_pgv(converted_graph)
+
+        return converted_graph
 
     def convert_adjacency_matrix_to_graph(self, a_m):
         items = a_m.columns
@@ -61,6 +119,20 @@ class GraphUtils():
                 a_m.at[ante, con] += 1
 
         return a_m
+
+    def convert_pgv_to_simple(self, graph):
+        ng = {}
+        for k, v in graph.items():
+            ng[k] = set(v.keys())
+
+        return ng
+
+    def convert_simple_to_pgv(self, graph):
+        ng = {}
+        for k, v in graph.items():
+            ng[k] = {x: {} for x in v}
+
+        return ng
 
     def create_boxplot(self, data, title, filename):
         '''creates and saves a single boxplot'''
@@ -117,6 +189,8 @@ class GraphUtils():
             legend = ax.legend(handles, legend_names, loc="upper left", title="Legend", bbox_to_anchor=(1, 0.5))
 
         ttl = fig.suptitle(title)
+
+        filename = self.logger.output_path / filename
 
         self.save_plt_fig(fig, filename, [ttl, legend])
 
@@ -180,10 +254,6 @@ class GraphUtils():
         edit_attrs = {}
         edit_history = deepcopy(test)
         for key in keys:
-            if key == '11700':
-                x = 1
-                y = 2
-
             if key not in possible_nodes:
                 if key in attrs:
                     ged_score += attrs[key].get('weight', 1) # fee
@@ -202,10 +272,6 @@ class GraphUtils():
         nodes_to_add = set()
         edges_to_add = {}
         for key in d.keys():
-            if key == '11700':
-                x = 1
-                y = 2
-
             if key not in expected:
                 continue
 
@@ -245,10 +311,6 @@ class GraphUtils():
 
             ignore_list = []
             node = nodes_to_add.pop()
-            if key == '11700':
-                x = 1
-                y = 2
-
             if node in attrs:
                 ged_score += attrs[node].get('weight', 1) # fee
             else:

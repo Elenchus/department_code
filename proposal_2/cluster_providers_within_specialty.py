@@ -16,7 +16,7 @@ class TestCase(ProposalTest):
 
     def process_dataframe(self, data):
         super().process_dataframe(data)
-        cdv = CodeConverter()
+        cdv = CodeConverter(2019)
         specialty = cdv.convert_rsp_str(self.required_params['specialty'])
         data = data[(data["NUMSERV"] == 1) & (data['SPR_RSP'] == specialty)]
         # data["SPR_RSP"] = data["SPR_RSP"].map(str) + data["INHOSPITAL"].map(str)
