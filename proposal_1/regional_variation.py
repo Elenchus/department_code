@@ -96,7 +96,7 @@ class TestCase(ProposalTest):
 
             mba_funcs.create_graph(formatted_d, name, title, attrs)
             
-            if rp.group_header == 'PIN' and rp.basket_header == 'ITEM':
+            if rp.basket_header == 'ITEM' and rp.group_header in ['PIN', 'SPR']:
                 self.log("Finding suspicious providers")
                 all_graphs = {}
                 suspicious_transactions = {}
@@ -104,13 +104,17 @@ class TestCase(ProposalTest):
                 edit_attrs = {}
                 providers = data['SPR'].unique().tolist()
                 for provider in tqdm(providers):
-                    patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
-                    if len(patients) < 6:
-                        continue
-
-                    patient_data = data.loc[data['PIN'].isin(patients)]
-                    patient_data_groups = patient_data.groupby('PIN')
                     provider_docs = []
+                    if rp.group_header == 'PIN': 
+                        patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
+                        if len(patients) < 6:
+                            continue
+
+                        patient_data = data.loc[data['PIN'].isin(patients)]
+                    else:
+                        patient_data = data.loc[data['SPR'] == provider]
+
+                    patient_data_groups = patient_data.groupby('PIN')
                     provider_items = patient_data['ITEM'].unique().tolist()
                     for _, patient_data_group in patient_data_groups:
                         doc = patient_data_group['ITEM'].unique().tolist()
@@ -180,13 +184,13 @@ class TestCase(ProposalTest):
         legend_file = self.logger.output_path / "Legend.png"
         self.graphs.graph_legend(legend, legend_file, "Legend")
 
-        # for state, data in self.test_data:
-        #     self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
-        #     patients = data.groupby('PIN')
-        #     communities = []
-        #     for name, group in patients:
-        #         community = set(str(x) for x in group['SPR'].unique())
-        #         communities.append(community)
+        for state, data in self.test_data:
+            self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
+            patients = data.groupby('PIN')
+            communities = []
+            for name, group in patients:
+                community = set(str(x) for x in group['SPR'].unique())
+                communities.append(community)
 
             # idx = list(range(len(communities)))
             # df = pd.DataFrame(0, columns=idx, index=idx, dtype=float)
@@ -207,17 +211,27 @@ class TestCase(ProposalTest):
             # pca = self.models.pca_2d(patient_model[patient_model.wv.vocab])
             # self.models.k_means_cluster(pca, 10, 'Patient clusters', f"k_means_state_{state}")
 
-            # provider_graph = {}
-            # for community in communities:
-            #     for provider_a in community:
-            #         if provider_a not in provider_graph:
-            #             provider_graph[provider_a] = set()
+            provider_graph = {}
+            for community in communities:
+                for provider_a in community:
+                    if provider_a not in provider_graph:
+                        provider_graph[provider_a] = set()
 
-            #         for provider_b in community:
-            #             if provider_a == provider_b:
-            #                 continue
+                    for provider_b in community:
+                        if provider_a == provider_b:
+                            continue
 
-            #             provider_graph[provider_a].add(provider_b)
+                        provider_graph[provider_a].add(provider_b)
+
+            for i, provider, connections in enumerate(sorted(provider_graph.items(), key=lambda x: x[1])):
+                if i >=10:
+                    break
+
+                self.log(f"Provider {provider} has {connections} connections and has the following RSPs")
+                rsps = data.loc[data['SPR'] == provider, 'SPR_RSP'].unique().tolist()
+                for rsp in rsps:
+                    self.log(self.code_converter.convert_rsp_num(rsp))
+
 
             # for k, v in provider_graph.items():
             #     provider_graph[k] = {item: None for item in v}
