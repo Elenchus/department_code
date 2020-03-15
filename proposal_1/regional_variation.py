@@ -131,6 +131,11 @@ class TestCase(ProposalTest):
                 self.log(suspicion_matrix.describe())
                 susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
                 for idx, s in enumerate(susp):
+                    self.log(f"Rank {idx} provider {s} has the following RSPs")
+                    rsps = data.loc[data['SPR'] == s, 'SPR_RSP'].unique().tolist()
+                    for rsp in rsps:
+                        self.log(self.code_converter.convert_rsp_num(rsp))
+
                     group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s}'
                     group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
                     group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
@@ -223,12 +228,14 @@ class TestCase(ProposalTest):
 
                         provider_graph[provider_a].add(provider_b)
 
-            for i, provider, connections in enumerate(sorted(provider_graph.items(), key=lambda x: x[1])):
+            for x in enumerate(sorted(provider_graph.items(), key=lambda x: len(x[1]), reverse=True)):
+                i, (provider, connections) = x
+                connections = len(connections)
                 if i >=10:
                     break
 
                 self.log(f"Provider {provider} has {connections} connections and has the following RSPs")
-                rsps = data.loc[data['SPR'] == provider, 'SPR_RSP'].unique().tolist()
+                rsps = data.loc[data['SPR'] == int(provider), 'SPR_RSP'].unique().tolist()
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
 
