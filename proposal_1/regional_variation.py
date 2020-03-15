@@ -203,7 +203,7 @@ class TestCase(ProposalTest):
         self.graphs.graph_legend(legend, legend_file, "Legend")
 
         for state, data in self.test_data:
-            self.log("Getting suspicious provider neighbours")
+            self.log(f"Getting suspicious provider neighbours for {self.code_converter.convert_state_num(state)}")
             idx = state_order.index(state)
             state_providers = suspicious_transaction_list[idx]
             for provider in suspicious_provider_list[idx]:
