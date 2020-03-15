@@ -48,6 +48,7 @@ class TestCase(ProposalTest):
         states = []
         state_order = []
         suspicious_provider_list = []
+        suspicious_transaction_list = []
         for state, data in self.test_data:
             state_order.append(state)
             rp = self.required_params
@@ -134,21 +135,24 @@ class TestCase(ProposalTest):
                     edit_graphs[provider] = edit_d
                     all_graphs[provider] = provider_model
 
+                suspicious_transaction_list.append(suspicious_transactions)
                 suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
                 self.log(suspicion_matrix.describe())
                 susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
+                state_suspicious_providers = []
                 for idx, s in enumerate(susp):
+                    state_suspicious_providers.append(s)
                     self.log(f"Rank {idx} provider {s} has the following RSPs")
                     rsps = data.loc[data['SPR'] == s, 'SPR_RSP'].unique().tolist()
                     for rsp in rsps:
                         self.log(self.code_converter.convert_rsp_num(rsp))
 
-                    group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s}'
+                    group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]}'
                     group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
                     group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
                     mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
-                    edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s}'
+                    edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]}'
                     edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
                     converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
                     for key in new_edit_attrs:
@@ -159,6 +163,8 @@ class TestCase(ProposalTest):
                                     new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
                     mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
+
+                suspicious_provider_list.append(state_suspicious_providers)
 
         state_sets = []
         for i, state in enumerate(states):
@@ -197,6 +203,18 @@ class TestCase(ProposalTest):
         self.graphs.graph_legend(legend, legend_file, "Legend")
 
         for state, data in self.test_data:
+            self.log("Getting suspicious provider neighbours")
+            idx = state_order.index(state)
+            state_providers = suspicious_transaction_list[idx]
+            for provider in suspicious_provider_list[idx]:
+                self.log(f"Suspicious provider {provider} has score {state_providers[provider]}")
+                claims = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
+                neighbour_providers = data.loc[data['PIN'].isin(claims), 'SPR'].unique().tolist()
+                neighbour_providers.remove(provider)
+                for neighbour in neighbour_providers:
+                    neighbour_score = state_providers.get(neighbour, "below patient threshold") 
+                    self.log(f"Neighbour {neighbour} has score {neighbour_score}")
+
             self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
             patients = data.groupby('PIN')
             communities = []
