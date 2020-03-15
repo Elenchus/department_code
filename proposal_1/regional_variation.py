@@ -17,6 +17,7 @@ class TestCase(ProposalTest):
         colour_only:bool = True
         min_support:float = 0.33
         filters:dict = None
+        ignore_providers_with_less_than_x_patients:int = 10
 
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -46,6 +47,7 @@ class TestCase(ProposalTest):
         super().run_test()
         states = []
         state_order = []
+        suspicious_provider_list = []
         for state, data in self.test_data:
             state_order.append(state)
             rp = self.required_params
@@ -93,11 +95,16 @@ class TestCase(ProposalTest):
                 pickle.dump(attrs, f)
 
             states.append(d)
-
             mba_funcs.create_graph(formatted_d, name, title, attrs)
             
             if rp.basket_header == 'ITEM' and rp.group_header in ['PIN', 'SPR']:
                 self.log("Finding suspicious providers")
+                fee_record = None
+                if rp.basket_header == 'ITEM':
+                    fee_record = {int(x): {} for x in all_unique_items}
+                    for node in fee_record:
+                        fee_record[node]['weight'] =  self.code_converter.get_mbs_item_fee(node)[0]
+                        
                 all_graphs = {}
                 suspicious_transactions = {}
                 edit_graphs = {}
@@ -107,7 +114,7 @@ class TestCase(ProposalTest):
                     provider_docs = []
                     if rp.group_header == 'PIN': 
                         patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
-                        if len(patients) < 6:
+                        if len(patients) < rp.ignore_providers_with_less_than_x_patients:
                             continue
 
                         patient_data = data.loc[data['PIN'].isin(patients)]
