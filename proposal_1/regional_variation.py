@@ -102,7 +102,7 @@ class TestCase(ProposalTest):
                 self.log("Finding suspicious providers")
                 fee_record = None
                 if rp.basket_header == 'ITEM':
-                    fee_record = {int(x): {} for x in all_unique_items}
+                    fee_record = {x: {} for x in all_unique_items}
                     for node in fee_record:
                         fee_record[node]['weight'] =  self.code_converter.get_mbs_item_fee(node)[0]
                         
@@ -129,7 +129,7 @@ class TestCase(ProposalTest):
                         provider_docs.append(doc)
 
                     provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.min_support)
-                    ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, None)
+                    ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, fee_record)
                     suspicious_transactions[provider] = ged
                     edit_attrs[provider] = edit_attr
                     edit_graphs[provider] = edit_d
@@ -147,12 +147,12 @@ class TestCase(ProposalTest):
                     for rsp in rsps:
                         self.log(self.code_converter.convert_rsp_num(rsp))
 
-                    group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]}'
+                    group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                     group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
                     group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
                     mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
-                    edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]}'
+                    edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                     edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
                     converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
                     for key in new_edit_attrs:
@@ -207,12 +207,14 @@ class TestCase(ProposalTest):
             idx = state_order.index(state)
             state_providers = suspicious_transaction_list[idx]
             for provider in suspicious_provider_list[idx]:
-                self.log(f"Suspicious provider {provider} has score {state_providers[provider]}")
+                self.log(f"Suspicious provider {provider} has score {state_providers[provider]:.2f}")
                 claims = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
                 neighbour_providers = data.loc[data['PIN'].isin(claims), 'SPR'].unique().tolist()
                 neighbour_providers.remove(provider)
                 for neighbour in neighbour_providers:
                     neighbour_score = state_providers.get(neighbour, "below patient threshold") 
+                    if isinstance(neighbour_score, float):
+                        neighbour_score = f'{neighbour_score:.2f}'
                     self.log(f"Neighbour {neighbour} has score {neighbour_score}")
 
             self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
