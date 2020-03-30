@@ -154,7 +154,12 @@ class TestCase(ProposalTest):
 
                     edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                     edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
-                    converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
+                    if (state == 3 or state == "3") and idx == 2:
+                        converted_edit_graph = edit_graphs[s]
+                        _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(converted_edit_graph)
+                    else:
+                        converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
+
                     for key in new_edit_attrs:
                         code = key.split('\n')[-1]
                         if s in edit_attrs:

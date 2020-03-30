@@ -157,6 +157,14 @@ class GraphUtils():
 
         self.save_plt_fig(fig, filename)
 
+    def create_feature_matrix_from_graph(self, graph):
+        idx = self.flatten_graph_dict(graph)
+        mat = pd.DataFrame(0, index=idx, columns=idx)
+        for item in idx:
+            mat.at[idx, idx] = 1
+
+        return mat
+
     def create_grouped_barchart(self, data, bar_labels, group_labels, title, filename, axis_labels):
         bar_width = 0.25
         r = []

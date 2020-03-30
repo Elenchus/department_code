@@ -141,11 +141,11 @@ class MbaUtils:
             c = '{:02x}'.format(color)
             a = '{:02x}'.format(anti_col)
 
-            colour_table[col] = {'color': f"#{a}{c}{0}"}
+            colour_table[str(col)] = {'color': f"#{a}{c}{0}"}
 
         colors = {}
         for k, v in lookup.items():
-            colors[k] = colour_table[v]
+            colors[str(k)] = colour_table[str(v)]
 
         return colors, colour_table
 
