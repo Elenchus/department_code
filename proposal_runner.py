@@ -131,7 +131,7 @@ if __name__ == "__main__":
         # test_data = 'knee_replacement_provider_subset.csv',
         # test_data = 'pathology_patient_subset.csv',
         test_data = 'hip_21214_provider_subset_with_states.csv',
-        test_file_name = f'community_detection',
+        test_file_name = f'bipartite_ar',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]
     )
