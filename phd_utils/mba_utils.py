@@ -105,7 +105,7 @@ class MbaUtils:
 
         return improper, proper
             
-    def color_providers(self, d, data):
+    def color_providers(self, d, data, colour_keys=True, colour_vals=True):
         def get_provider_val(spr):
             spr = int(spr)
             rows = data[data['SPR'] == spr]
@@ -123,15 +123,17 @@ class MbaUtils:
 
         used_colors = set()
         for k, v in d.items():
-            if lookup[k] not in lookup:
-                color = get_provider_val(k)
-                lookup[k] = color
-                used_colors.add(color)
-            for key in v.keys():
-                if key not in lookup:
-                    color = get_provider_val(key)
-                    lookup[key] = color
+            if colour_keys:
+                if lookup[k] not in lookup:
+                    color = get_provider_val(k)
+                    lookup[k] = color
                     used_colors.add(color)
+            if colour_vals:
+                for key in v.keys():
+                    if key not in lookup:
+                        color = get_provider_val(key)
+                        lookup[key] = color
+                        used_colors.add(color)
 
         colour_table = {}
         for i, col in enumerate(used_colors):

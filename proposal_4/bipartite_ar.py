@@ -6,7 +6,7 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        min_support:float = 0.001
+        min_support:float = 0.005
         # filters:dict = None
 
     FINAL_COLS = []
@@ -40,27 +40,41 @@ class TestCase(ProposalTest):
         all_unique_items = [str(x) for x in data["SPR_E"].unique().tolist()] + [str(x) for x in data["ITEM_E"].unique().tolist()]
         documents = []
         patient_order = []
-        groups = data.groupby("PIN")
-        self.log("Creating documents")
-        for patient, group in tqdm(groups):
-            doc = group["SPR_E"].unique().tolist() + group["ITEM_E"].unique().tolist()
-            documents.append(doc)
-            patient_order.append(patient)
+        # groups = data.groupby("PIN")
+        # self.log("Creating documents")
+        # for patient, group in tqdm(groups):
+        #     doc = group["SPR_E"].unique().tolist() + group["ITEM_E"].unique().tolist()
+        #     documents.append(doc)
+        #     patient_order.append(patient)
 
 
-        self.log("Creating graph")
-        d = self.models.mba.pairwise_market_basket(all_unique_items,
-                                                documents,
-                                                min_support=self.required_params.min_support,
-                                                max_p_value=1)
+        # self.log("Creating graph")
+        # d = self.models.mba.pairwise_market_basket(all_unique_items,
+        #                                         documents,
+        #                                         min_support=self.required_params.min_support,
+        #                                         max_p_value=1)
 
-        attrs = {}
-        for key in self.graphs.flatten_graph_dict(d):
-            if key[0:2] == "SPR":
-                attrs[key] = {'shape': 'triangle'}
-            else:
-                attrs[key] = {'shape': 'star'}
+        # attrs = {}
+        # for key in self.graphs.flatten_graph_dict(d):
+        #     if key[0:2] == "SPR":
+        #         attrs[key] = {'shape': 'triangle'}
+        #     else:
+        #         attrs[key] = {'shape': 'star'}
 
-        self.log("Graphing")
-        filename = self.logger.output_path / "bigraph.png"
-        self.graphs.visual_graph(d, filename, "Normal item and spr connections", directed=True, node_attrs=attrs)
+        # self.log("Graphing")
+        # filename = self.logger.output_path / "bigraph.png"
+        # self.graphs.visual_graph(d, filename, "Normal item and spr connections", directed=True, node_attrs=attrs)
+
+        d = {}
+        groups = data.groupby("SPR")
+        for spr, group in groups:
+            items = group["ITEM"].unique().tolist()
+            d[str(spr)] = {}
+            for item in items:
+                d[str(spr)][str(item)] = None
+
+        attrs, legend = self.models.mba.color_providers(d, data, colour_vals = False)
+        filename  = self.logger.output_path / "Birpartite.png"
+        self.graphs.visual_graph(d, filename, "SPR Item connections", directed=True, node_attrs=attrs)
+        l_name  = self.logger.output_path / "Legend.png"
+        self.graphs.graph_legend(legend, l_name, "Legend")
