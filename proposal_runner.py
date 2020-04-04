@@ -126,12 +126,12 @@ if __name__ == "__main__":
                     # 'scoring_method': 'ged',
                     # 'ged_support': 0.1},
         params = None,
-        proposal = 4,
+        proposal = 1,
         # test_data = mbs,
         # test_data = 'knee_replacement_provider_subset.csv',
         # test_data = 'pathology_patient_subset.csv',
         test_data = 'hip_21214_provider_subset_with_states.csv',
-        test_file_name = f'bipartite_ar',
+        test_file_name = f'investigate_discrepancies',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]
     )
