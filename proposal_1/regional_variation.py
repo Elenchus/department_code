@@ -18,6 +18,7 @@ class TestCase(ProposalTest):
         min_support:float = 0.33
         filters:dict = None
         ignore_providers_with_less_than_x_patients:int = 10
+        human_readable_suspicious_items:bool = False
 
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -43,6 +44,45 @@ class TestCase(ProposalTest):
 
         self.test_data = data.groupby(self.required_params.state_group_header)
 
+    def write_model_to_file(self, d, filename):
+        header = "Item is claimed for at least 1/3 of unliateral hip replacements in the state within 2 weeks before or after the anaesthesia date of service,If the item is claimed for a patient these items were also likely to be claimed for that patient\n"
+        with open(filename, 'w+') as f:
+            f.write(header)
+            for node in d:
+                nodes = list(d[node].keys())
+                line = f"{node}," + '; '.join(nodes) + '\n'
+                f.write(line)
+
+    def write_suspicions_to_file(self, d, attrs, filename):
+        too_much = []
+        too_little = []
+        ok = []
+        for node in attrs:
+            try:
+                shape = attrs[node]['shape']
+            except:
+                shape = 'ok'
+            
+            if shape == 'house':
+                too_much.append(node)
+            elif shape == 'invhouse':
+                too_little.append(node)
+            else:
+                ok.append(node)
+
+        with open(filename, 'w+') as f:
+            header = 'Appears in at least 1/3 of patients for this provider but not at least 1/3 of patients in the state,If item is claimed the patients for that provider probably also had these items claimed\n'
+            f.write(header)
+            for node in too_much:
+                nodes = list(d[node].keys())
+                line = f"{node}," + '; '.join(nodes) + '\n'
+                f.write(line)
+
+            for (section, header) in [(too_little, "Expected items in the model which do not commonly appear in the providers claims,\n"),(ok, "Items expected in the model which the provider does claim,\n")]:
+                f.write(f'\n{header}')
+                for node in section:
+                    f.write(f"{node}\n")
+
     def run_test(self):
         super().run_test()
         states = []
@@ -65,6 +105,8 @@ class TestCase(ProposalTest):
 
             self.log("Creating model")
             d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
+            model_dict_csv = self.logger.output_path / f"state_{state}_model.csv"
+            self.write_model_to_file(d, model_dict_csv)
             # remove no other item:
             if "No other items" in d:
                 for k in d["No other items"]:
@@ -154,11 +196,11 @@ class TestCase(ProposalTest):
 
                     edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                     edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
-                    if (state == 3 or state == "3") and idx == 2:
+                    if rp.human_readable_suspicious_items:
+                        converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
+                    else:
                         converted_edit_graph = edit_graphs[s]
                         _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(converted_edit_graph)
-                    else:
-                        converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
 
                     for key in new_edit_attrs:
                         code = key.split('\n')[-1]
@@ -168,6 +210,8 @@ class TestCase(ProposalTest):
                                     new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
                     mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
+                    suspicious_filename = self.logger.output_path / f"suspicious_provider_{idx}_in_state_{state}.csv"
+                    self.write_suspicions_to_file(converted_edit_graph, new_edit_attrs, suspicious_filename)
 
                 suspicious_provider_list.append(state_suspicious_providers)
 
