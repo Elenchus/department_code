@@ -59,7 +59,7 @@ class BasicMba:
 
         return d
 
-    def create_graph(self, d, name, title, attrs=None):
+    def create_graph(self, d, name, title, attrs=None, graph_style='fdp'):
         filename = self.logger.output_path / name
         filters = self.model.mba.filters
         if filters['conviction']['value'] == 0 and filters['confidence']['value'] == 0 and (filters['certainty_factor']['value'] == 0 and filters['certainty_factor']['operator'] == operator.ge):
@@ -68,7 +68,7 @@ class BasicMba:
             directed = True
 
         self.log(f"Graphing {title}")
-        self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs)
+        self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs, graph_style=graph_style)
 
     def create_groups(self):
         self.group_data = self.test_data.groupby(self.group_header)

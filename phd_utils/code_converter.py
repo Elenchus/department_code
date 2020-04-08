@@ -163,12 +163,26 @@ class CodeConverter:
         
         return mod_line
 
-    def write_mbs_codes_to_csv(self, codes, filename):
+    def write_mbs_codes_to_csv(self, codes, filename, additional_cols=None, additional_headers=[]):
         with open(filename, 'w+') as f:
-            f.write("Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
-            for code in codes:
+            line = "Group,Category,Sub-Category,Item,Description,Cost,FeeType"
+            if additional_cols is not None:
+                for col in additional_cols:
+                    assert len(col) == len(codes)
+
+                for header in additional_headers:
+                    line += f",{header}"
+
+            line += "\r\n"
+            f.write(line)
+            for idx, code in enumerate(codes):
                 mod_line = self.get_mbs_code_as_line(code)
                 item_cost, fee_type = self.get_mbs_item_fee(code)
                 item_cost = "${:.2f}".format(item_cost)
-                line = ','.join(mod_line) + f',{item_cost},{fee_type}\r\n'
+                line = ','.join(mod_line) + f',{item_cost},{fee_type}'
+                if additional_cols is not None:
+                    for col in additional_cols:
+                        line += f",{col[idx]}"
+                        
+                line += '\r\n'
                 f.write(line)

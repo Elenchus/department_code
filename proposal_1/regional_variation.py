@@ -19,6 +19,7 @@ class TestCase(ProposalTest):
         filters:dict = None
         ignore_providers_with_less_than_x_patients:int = 10
         human_readable_suspicious_items:bool = False
+        graph_style:str = 'neato'
 
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -89,11 +90,50 @@ class TestCase(ProposalTest):
         state_order = []
         suspicious_provider_list = []
         suspicious_transaction_list = []
+        self.log(f"Descriptive stats for nation")
+        self.log(f"{len(self.test_data['ITEM'])} items claimed")
+        self.log(f"{len(self.test_data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
+        self.log(f"{len(self.test_data['PIN'].unique())} patients")
+
+        top_items_file = self.logger.output_path / f'top_items_nation.csv'
+        top_items = self.test_data['ITEM'].value_counts()
+        top_codes = top_items.index.tolist()
+        top_code_counts = top_items.values.tolist()
+        self.log("Item stats")
+        self.log(f"{top_items.describe()}")
+        self.code_converter.write_mbs_codes_to_csv(top_codes, top_items_file, [top_code_counts], ["No of occurrences"])
+
+        top_providers = self.test_data['SPR'].value_counts()
+        self.log("Provider stats")
+        self.log(f"{top_providers.describe()}")
+        top_patients = self.test_data['PIN'].value_counts()
+        self.log("Patient stats")
+        self.log(f"{top_patients.describe()}")
         for state, data in self.test_data:
             state_order.append(state)
             rp = self.required_params
 
             all_unique_items = [str(x) for x in data[rp.basket_header].unique().tolist()]
+            self.log(f"Descriptive stats for state {state}")
+            self.log(f"{len(data['ITEM'])} items claimed")
+            self.log(f"{len(data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
+            self.log(f"{len(data['PIN'].unique())} patients")
+
+            top_items_file = self.logger.output_path / f'top_items_state_{state}.csv'
+            top_items = data['ITEM'].value_counts()
+            top_codes = top_items.index.tolist()
+            top_code_counts = top_items.values.tolist()
+            self.log("Item stats")
+            self.log(f"{top_items.describe()}")
+            self.code_converter.write_mbs_codes_to_csv(top_codes, top_items_file, [top_code_counts], ["No of occurrences"])
+
+            top_providers = data['SPR'].value_counts()
+            self.log("Provider stats")
+            self.log(f"{top_providers.describe()}")
+            top_patients = data['PIN'].value_counts()
+            self.log("Patient stats")
+            self.log(f"{top_patients.describe()}")
+
             mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
             if rp.sub_group_header is None:
@@ -138,7 +178,7 @@ class TestCase(ProposalTest):
                 pickle.dump(attrs, f)
 
             states.append(d)
-            mba_funcs.create_graph(formatted_d, name, title, attrs)
+            mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
             
             if rp.basket_header == 'ITEM' and rp.group_header in ['PIN', 'SPR']:
                 self.log("Finding suspicious providers")
@@ -192,7 +232,7 @@ class TestCase(ProposalTest):
                     group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                     group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
                     group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
-                    mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
+                    mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
 
                     edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                     edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
@@ -209,7 +249,7 @@ class TestCase(ProposalTest):
                                 if 'shape' in edit_attrs[s][code]:
                                     new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
-                    mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
+                    mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
                     suspicious_filename = self.logger.output_path / f"suspicious_provider_{idx}_in_state_{state}.csv"
                     self.write_suspicions_to_file(converted_edit_graph, new_edit_attrs, suspicious_filename)
 
