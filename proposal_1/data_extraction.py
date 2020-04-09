@@ -17,6 +17,9 @@ class TestCase(ProposalTest):
         codes_of_interest:list = field(default_factory=lambda: ['21214']) 
         code_type:str = 'hip'
         output_name:str = '21214_provider_subset_with_states'
+        before_days:int = 14
+        after_days:int = 14
+        year_start:dt = None
 
     FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', 'SPRSTATE', 'PINSTATE']
     INITIAL_COLS = FINAL_COLS
@@ -35,7 +38,8 @@ class TestCase(ProposalTest):
 
         claims['DOS'] = pd.to_datetime(claims['DOS'])
         dates_of_interest = [dt.strptime(x, "%d%b%Y") for x in dates_of_interest]
-        mask_list = [(claims['DOS'] > x - timedelta(days = 14)) & (claims['DOS'] < x + timedelta(days = 14)) for x in dates_of_interest]
+        mask_list = [(claims['DOS'] > x - timedelta(days = self.required_params.before_days)) & 
+                    (claims['DOS'] < x + timedelta(days = self.required_params.after_days)) for x in dates_of_interest]
         mask = mask_list[0]
         for i in range(1, len(mask_list)):
             mask = mask | mask_list[i]
@@ -54,6 +58,12 @@ class TestCase(ProposalTest):
         self.processed_data['ITEM'] = self.processed_data['ITEM'].astype(str)
         patients = self.processed_data.groupby("PIN")
         self.test_data = patients
+
+        if self.required_params.before_days is None:
+            self.required_params.before_days = dt.strptime(f"0101{self.test_year}", "%d%b%Y")
+
+        if self.required_params.after_days is None:
+            self.required_params.after_days = dt.strptime(f"3112{self.test_year}", "%d%b%Y")
 
     def run_test(self):
         super().run_test()
