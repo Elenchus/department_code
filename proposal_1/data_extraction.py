@@ -17,8 +17,8 @@ class TestCase(ProposalTest):
         codes_of_interest:list = field(default_factory=lambda: ['21214']) 
         code_type:str = 'hip'
         output_name:str = '21214_provider_subset_with_states'
-        before_days:int = 14
-        after_days:int = 14
+        before_days:int = 42
+        after_days:int = 21
         year_start:dt = None
 
     FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', 'SPRSTATE', 'PINSTATE']
