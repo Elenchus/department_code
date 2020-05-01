@@ -38,15 +38,21 @@ class TestCase(ProposalTest):
 
         claims['DOS'] = pd.to_datetime(claims['DOS'])
         dates_of_interest = [dt.strptime(x, "%d%b%Y") for x in dates_of_interest]
-        mask_list = [(claims['DOS'] > x - timedelta(days = self.required_params.before_days)) & 
-                    (claims['DOS'] < x + timedelta(days = self.required_params.after_days)) for x in dates_of_interest]
-        mask = mask_list[0]
-        for i in range(1, len(mask_list)):
-            mask = mask | mask_list[i]
+        all_claims = None
+        for idx, x in enumerate(dates_of_interest):
+            mask_list = [(claims['DOS'] > x - timedelta(days = self.required_params.before_days)) & 
+                        (claims['DOS'] < x + timedelta(days = self.required_params.after_days))]
+            for i in range(1, len(mask_list)):
+                mask = mask | mask_list[i]
+            
+            current_claims = claims.loc[mask]
+            current_claims['PIN'] = current_claims['PIN'] + f"_{idx}"
+            if all_claims is None:
+                all_claims = current_claims
+            else:
+                all_claims.concat(current_claims)
 
-        x = claims.loc[mask]
-
-        return x
+        return all_claims
 
     def process_dataframe(self, data):
         super().process_dataframe(data)

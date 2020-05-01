@@ -19,7 +19,7 @@ class TestCase(ProposalTest):
         filters:dict = None
         ignore_providers_with_less_than_x_patients:int = 10
         human_readable_suspicious_items:bool = False
-        graph_style:str = 'neato'
+        graph_style:str = 'fdp'
 
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
