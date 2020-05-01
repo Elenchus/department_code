@@ -16,7 +16,7 @@ class TestCase(ProposalTest):
     class RequiredParams:
         codes_of_interest:list = field(default_factory=lambda: ['21214']) 
         code_type:str = 'hip'
-        output_name:str = '21214_provider_subset_with_states'
+        output_name:str = '21214_provider_subset_with_states_longer_time'
         before_days:int = 42
         after_days:int = 21
         year_start:dt = None
@@ -40,17 +40,15 @@ class TestCase(ProposalTest):
         dates_of_interest = [dt.strptime(x, "%d%b%Y") for x in dates_of_interest]
         all_claims = None
         for idx, x in enumerate(dates_of_interest):
-            mask_list = [(claims['DOS'] > x - timedelta(days = self.required_params.before_days)) & 
-                        (claims['DOS'] < x + timedelta(days = self.required_params.after_days))]
-            for i in range(1, len(mask_list)):
-                mask = mask | mask_list[i]
+            mask = [(claims['DOS'] > x - timedelta(days = self.required_params.before_days)) & 
+                        (claims['DOS'] < x + timedelta(days = self.required_params.after_days))][0]
             
             current_claims = claims.loc[mask]
             current_claims['PIN'] = current_claims['PIN'] + f"_{idx}"
             if all_claims is None:
                 all_claims = current_claims
             else:
-                all_claims.concat(current_claims)
+                all_claims = pd.concat([all_claims, current_claims], ignore_index=True)
 
         return all_claims
 
@@ -62,6 +60,7 @@ class TestCase(ProposalTest):
     def get_test_data(self):
         super().get_test_data()
         self.processed_data['ITEM'] = self.processed_data['ITEM'].astype(str)
+        self.processed_data['PIN'] = self.processed_data['PIN'].astype(str)
         patients = self.processed_data.groupby("PIN")
         self.test_data = patients
 

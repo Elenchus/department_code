@@ -10,7 +10,7 @@ class TestCase(ProposalTest):
     class RequiredParams:
         days_before:int = 42
         days_after:int = 21
-        filters:dict = None
+        code_for_day_0:int = 21214
 
 
     FINAL_COLS = []
@@ -31,7 +31,6 @@ class TestCase(ProposalTest):
 
     def load_data(self, data):
         super().load_data()
-        self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
         data = data[~data['PIN'].isin([8170350857,8244084150,3891897366,1749401692,3549753440,6046213577])]
 
@@ -46,11 +45,13 @@ class TestCase(ProposalTest):
         length_to_check = 1 + rp.days_after + rp.days_before
         distribution_matrix = [0] * length_to_check
         multiple_visits = 0
+        multiple_visit_list = []
         for idx, (patient, group) in tqdm(enumerate(data)):
             patient_distribution_matrix = [0] * length_to_check
-            anaesthesia = group.loc[group['ITEM'] == 21214, 'DOS']
+            anaesthesia = group.loc[group['ITEM'] == rp.code_for_day_0, 'DOS']
             if len(anaesthesia) > 1:
                 multiple_visits += 1
+                multiple_visit_list.append(patient)
                 continue
 
             start_date = anaesthesia.iloc[0] - np.timedelta64(rp.days_before, 'D')
@@ -71,3 +72,4 @@ class TestCase(ProposalTest):
         output_path = self.logger.output_path / "Distribution.png"
         plt.savefig(output_path)
         self.log(f"{multiple_visits} repeat patients")
+        self.log(multiple_visit_list)
