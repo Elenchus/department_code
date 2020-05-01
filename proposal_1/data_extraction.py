@@ -14,7 +14,7 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        codes_of_interest:list = field(default_factory=lambda: ['21214']) 
+        codes_of_interest:list = field(default_factory=lambda: [21214]) 
         code_type:str = 'hip'
         output_name:str = '21214_provider_subset_with_states_longer_time'
         before_days:int = 42
@@ -59,7 +59,6 @@ class TestCase(ProposalTest):
 
     def get_test_data(self):
         super().get_test_data()
-        self.processed_data['ITEM'] = self.processed_data['ITEM'].astype(str)
         self.processed_data['PIN'] = self.processed_data['PIN'].astype(str)
         patients = self.processed_data.groupby("PIN")
         self.test_data = patients
