@@ -16,9 +16,9 @@ class TestCase(ProposalTest):
     class RequiredParams:
         codes_of_interest:list = field(default_factory=lambda: [21214]) 
         code_type:str = 'hip'
-        output_name:str = '21214_provider_subset_with_states_longer_time'
-        before_days:int = 63
-        after_days:int = 42
+        output_name:str = '21214_provider_subset_with_states_final'
+        before_days:int = 21
+        after_days:int = 15
         year_start:dt = None
 
     FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', 'SPRSTATE', 'PINSTATE']
