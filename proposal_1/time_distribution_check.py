@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from matplotlib import pyplot as plt
 from phd_utils.base_proposal_test import ProposalTest
 from tqdm import tqdm
@@ -11,7 +11,7 @@ class TestCase(ProposalTest):
         days_before:int = 63
         days_after:int = 42
         code_for_day_0:int = 21214
-        item_codes:List[int] = field(default_factory=[49315, 49318, 49319, 49321, 49324, 49327, 49330, 49333, 49336, 49339, 49342, 49345, 49346])
+        item_codes:list = field(default_factory=lambda: [49315, 49318, 49319, 49321, 49324, 49327, 49330, 49333, 49336, 49339, 49342, 49345, 49346])
 
 
     FINAL_COLS = []
@@ -85,7 +85,7 @@ class TestCase(ProposalTest):
     def get_procedure_codes(self, patient, data):
         patient_info = data.get_group(patient)
         item_codes = self.required_params.item_codes
-        patient_procedures = patient_info[patient_info["ITEM"].isin(item_codes)].value_counts()
+        patient_procedures = patient_info[patient_info["ITEM"].isin(item_codes)]["ITEM"].value_counts()
         procs = patient_procedures.keys().tolist()
         counts = patient_procedures.tolist()
 
