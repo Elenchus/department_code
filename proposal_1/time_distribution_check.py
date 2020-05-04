@@ -11,6 +11,7 @@ class TestCase(ProposalTest):
         days_before:int = 63
         days_after:int = 42
         code_for_day_0:int = 21214
+        item_codes:List[int] = field(default_factory=[49315, 49318, 49319, 49321, 49324, 49327, 49330, 49333, 49336, 49339, 49342, 49345, 49346])
 
 
     FINAL_COLS = []
@@ -32,7 +33,7 @@ class TestCase(ProposalTest):
     def load_data(self, data):
         super().load_data()
         data = pd.read_csv(data)
-        data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|1749401692|3549753440|6046213577|5658556685|2024239461|8833088492")]
+        # data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|1749401692|3549753440|6046213577|5658556685|2024239461|8833088492")]
 
         # self.test_data = data.groupby(self.required_params.state_group_header)
         data['DOS'] = pd.to_datetime(data['DOS'])
@@ -79,13 +80,37 @@ class TestCase(ProposalTest):
         self.log(f"{multiple_visits} repeat patients")
         self.log(multiple_visit_list)
 
+        return multiple_visit_list
+
+    def get_procedure_codes(self, patient, data):
+        patient_info = data.get_group(patient)
+        item_codes = self.required_params.item_codes
+        patient_procedures = patient_info[patient_info["ITEM"].isin(item_codes)].value_counts()
+        procs = patient_procedures.keys().tolist()
+        counts = patient_procedures.tolist()
+
+        return procs, counts
+        
     def run_test(self):
         super().run_test()
         self.log("Getting national data")
         data = self.test_data.groupby('PIN')
         rp = self.required_params
         length_to_check = 1 + rp.days_after + rp.days_before
-        self.check_distribution(data, length_to_check, "nation")
+        patients_to_check = self.check_distribution(data, length_to_check, "nation")
+
+        multiplicity_matrix = pd.DataFrame(0, index=rp.item_codes, columns=rp.item_codes)
+        for patient in patients_to_check:
+            procs, counts = self.get_procedure_codes(patient, data) 
+            for idx, item_1 in enumerate(procs):
+                for item_2 in procs:
+                    multiplicity_matrix.at[item_1, item_2] += counts[idx]
+
+        for item in rp.item_codes:
+            multiplicity_matrix.at[item, item] = multiplicity_matrix.at[item, item] / 2
+
+        self.log(multiplicity_matrix)
+
         groups = self.test_data.groupby("PINSTATE")
         for name, group in groups:
             test_name = f"{self.code_converter.convert_state_num(name)}"
