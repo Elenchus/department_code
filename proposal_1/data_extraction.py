@@ -40,8 +40,8 @@ class TestCase(ProposalTest):
         dates_of_interest = [dt.strptime(x, "%d%b%Y") for x in dates_of_interest]
         all_claims = None
         for idx, x in enumerate(dates_of_interest):
-            mask = [(claims['DOS'] > x - timedelta(days = self.required_params.before_days)) & 
-                        (claims['DOS'] < x + timedelta(days = self.required_params.after_days))][0]
+            mask = [(claims['DOS'] >= x - timedelta(days = self.required_params.before_days)) & 
+                        (claims['DOS'] <= x + timedelta(days = self.required_params.after_days))][0]
             
             current_claims = claims.loc[mask]
             current_claims['PIN'] = current_claims['PIN'] + f"_{idx}"
