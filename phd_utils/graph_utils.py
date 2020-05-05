@@ -140,7 +140,7 @@ class GraphUtils():
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.boxplot(data)
-        ax.suptitle(title)
+        fig.suptitle(title)
         self.save_plt_fig(fig, filename)
 
     def create_boxplot_group(self, data, labels, title, filename, axis_labels=None):

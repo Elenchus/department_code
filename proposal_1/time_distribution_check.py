@@ -8,8 +8,8 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        days_before:int = 21
-        days_after:int = 15
+        days_before:int = 63
+        days_after:int = 42
         code_for_day_0:int = 21214
         item_codes:list = field(default_factory=lambda: [49315, 49318, 49319, 49321, 49324, 49327, 49330, 49333, 49336, 49339, 49342, 49345, 49346])
 
@@ -33,8 +33,8 @@ class TestCase(ProposalTest):
     def load_data(self, data):
         super().load_data()
         data = pd.read_csv(data)
-        # data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|1749401692|3549753440|6046213577|5658556685|2024239461|8833088492")]
-        data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|5658556685|1749401692|2024239461|3549753440|6046213577")]
+        data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|1749401692|3549753440|6046213577|5658556685|2024239461|8833088492")]
+        # data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|5658556685|1749401692|2024239461|3549753440|6046213577")]
 
         # self.test_data = data.groupby(self.required_params.state_group_header)
         data['DOS'] = pd.to_datetime(data['DOS'])
@@ -42,11 +42,15 @@ class TestCase(ProposalTest):
 
     def check_distribution(self, data, length_to_check, test_name):
         rp = self.required_params
-        distribution_matrix = [0] * length_to_check
+        distribution_vector = [0] * length_to_check
+        distribution_matrix = [[] for i in range(length_to_check)]
         multiple_visits = 0
         multiple_visit_list = []
+        total_days = []
+        days_before = []
+        days_after = []
         for idx, (patient, group) in tqdm(enumerate(data)):
-            patient_distribution_matrix = [0] * length_to_check
+            patient_distribution_vector = [0] * length_to_check
             anaesthesia = group.loc[group['ITEM'] == rp.code_for_day_0, 'DOS']
             if len(anaesthesia) > 1:
                 multiple_visits += 1
@@ -57,29 +61,49 @@ class TestCase(ProposalTest):
             delta = group['DOS'].apply(lambda x: int((x - start_date)/np.timedelta64(1, 'D')))
             counts = delta.value_counts()
             for day in counts.index:
-                patient_distribution_matrix[day] += counts[day]
+                patient_distribution_vector[day] += counts[day]
 
             for i in range(length_to_check):
-                new_total = ((distribution_matrix[i] * idx) + patient_distribution_matrix[i])/(idx + 1) 
-                distribution_matrix[i] = new_total
+                new_total = ((distribution_vector[i] * idx) + patient_distribution_vector[i])/(idx + 1) 
+                distribution_vector[i] = new_total
+                distribution_matrix[i].append(patient_distribution_vector[i])
+
+            days = (group['DOS'].max() - group['DOS'].min()).days
+            before = abs(delta.min() - rp.days_before)
+            after = delta.max() - rp.days_before
+            total_days.append(days)
+            days_before.append(before)
+            days_after.append(after)
 
         x_axis = [0] * length_to_check
         for i in range(length_to_check):
             x_axis[i] = i - rp.days_before
-            self.log(f"{x_axis[i]}: {distribution_matrix[i]}")
-
+            self.log(f"{x_axis[i]}: {distribution_vector[i]}")
+            
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.scatter(x_axis, distribution_matrix, label="Average claims per patient")
+        ax.scatter(x_axis, distribution_vector, label="Average claims per patient")
         ax.plot(x_axis, [0.4]*len(x_axis), 'C1', label="Marker for 0.4 claims per patient")
-        ax.set_xlabel("Days around the surgical procedure")
-        ax.set_ylabel("Average number of claims per patient")
+        xlabel = "Days around the surgical procedure"
+        ylabel = "Average number of claims per patient"
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         ttl = fig.suptitle(f"Change in average claims per day near hip replacement in {test_name}")
         output_path = self.logger.output_path / f"Distribution_{test_name}"
         self.graphs.save_plt_fig(fig,output_path, (lgd, ttl,))
         self.log(f"{multiple_visits} repeat patients")
         self.log(multiple_visit_list)
+
+        matrix_name = self.logger.output_path / f"{test_name}_matrix"
+        self.graphs.create_boxplot_group(distribution_matrix, x_axis, f"Claims per patient per day near hip replacement in {test_name}", matrix_name,[xlabel, ylabel])
+
+        days_name = self.logger.output_path / f"{test_name}_days"
+        before_name = self.logger.output_path / f"{test_name}_days_before"
+        after_name = self.logger.output_path / f"{test_name}_days_after"
+        self.graphs.create_boxplot(total_days, f"Day range of claims in {test_name}", days_name)
+        self.graphs.create_boxplot(days_before, f"Day range of claims before surgery in {test_name}", before_name)
+        self.graphs.create_boxplot(days_after, f"Day range of claims after surgery in {test_name}", after_name)
 
         return multiple_visit_list
 
