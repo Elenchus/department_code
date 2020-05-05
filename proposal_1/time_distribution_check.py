@@ -70,9 +70,7 @@ class TestCase(ProposalTest):
                 distribution_matrix[i].append(patient_distribution_vector[i])
 
             min_date_group = delta[group["ITEM"].isin([104,105,"104","105"])]
-            if len(min_date_group) == 0:
-                min_dates.append(delta.min() - rp.days_before)
-            else:
+            if len(min_date_group) != 0:
                 min_dates.append(min_date_group.min() - rp.days_before)
 
             days = (group['DOS'].max() - group['DOS'].min()).days
