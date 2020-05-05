@@ -49,6 +49,7 @@ class TestCase(ProposalTest):
         total_days = []
         days_before = []
         days_after = []
+        min_dates = []
         for idx, (patient, group) in tqdm(enumerate(data)):
             patient_distribution_vector = [0] * length_to_check
             anaesthesia = group.loc[group['ITEM'] == rp.code_for_day_0, 'DOS']
@@ -67,6 +68,12 @@ class TestCase(ProposalTest):
                 new_total = ((distribution_vector[i] * idx) + patient_distribution_vector[i])/(idx + 1) 
                 distribution_vector[i] = new_total
                 distribution_matrix[i].append(patient_distribution_vector[i])
+
+            min_date_group = delta[group["ITEM"].isin([104,105,"104","105"])]
+            if len(min_date_group) == 0:
+                min_dates.append(delta.min() - rp.days_before)
+            else:
+                min_dates.append(min_date_group.min() - rp.days_before)
 
             days = (group['DOS'].max() - group['DOS'].min()).days
             before = abs(delta.min() - rp.days_before)
@@ -104,6 +111,9 @@ class TestCase(ProposalTest):
         self.graphs.create_boxplot(total_days, f"Day range of claims in {test_name}", days_name)
         self.graphs.create_boxplot(days_before, f"Day range of claims before surgery in {test_name}", before_name)
         self.graphs.create_boxplot(days_after, f"Day range of claims after surgery in {test_name}", after_name)
+
+        min_name = self.logger.output_path / f"{test_name}_specialist_appointment"
+        self.graphs.create_boxplot(min_dates, f"Day of specialist consultation in {test_name}", min_name)
 
         return multiple_visit_list
 
