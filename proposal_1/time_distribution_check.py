@@ -8,8 +8,8 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        days_before:int = 63
-        days_after:int = 42
+        days_before:int = 84
+        days_after:int = 84
         code_for_day_0:int = 21214
         item_codes:list = field(default_factory=lambda: [49315, 49318, 49319, 49321, 49324, 49327, 49330, 49333, 49336, 49339, 49342, 49345, 49346])
 
@@ -69,7 +69,7 @@ class TestCase(ProposalTest):
                 distribution_vector[i] = new_total
                 distribution_matrix[i].append(patient_distribution_vector[i])
 
-            min_date_group = delta[group["ITEM"].isin([104,105,"104","105"])]
+            min_date_group = delta[(group["ITEM"].isin([104,105,"104","105"])) & (group["SPR_RSP"] == 35)]
             if len(min_date_group) != 0:
                 min_dates.append(min_date_group.min() - rp.days_before)
 
@@ -112,6 +112,7 @@ class TestCase(ProposalTest):
 
         min_name = self.logger.output_path / f"{test_name}_specialist_appointment"
         self.graphs.create_boxplot(min_dates, f"Day of specialist consultation in {test_name}", min_name)
+        self.log(f"95th percentile of earliest specialist appointment in {test_name}: {np.percentile(np.array(min_dates),5)}")
 
         return multiple_visit_list
 

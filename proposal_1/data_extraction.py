@@ -16,9 +16,9 @@ class TestCase(ProposalTest):
     class RequiredParams:
         codes_of_interest:list = field(default_factory=lambda: [21214]) 
         code_type:str = 'hip'
-        output_name:str = '21214_provider_subset_with_states_final'
-        before_days:int = 21
-        after_days:int = 15
+        output_name:str = '21214_provider_subset_with_states_super_duper_long'
+        before_days:int = 84
+        after_days:int = 84
         year_start:dt = None
 
     FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', 'SPRSTATE', 'PINSTATE']
@@ -40,6 +40,11 @@ class TestCase(ProposalTest):
         dates_of_interest = [dt.strptime(x, "%d%b%Y") for x in dates_of_interest]
         all_claims = None
         for idx, x in enumerate(dates_of_interest):
+            if idx > 0 \
+            or x - timedelta(days = self.required_params.before_days) < dt.strptime(f"0101{self.test_year}", "%d%m%Y") \
+            or x + timedelta(days = self.required_params.after_days) > dt.strptime(f"3112{self.test_year}", "%d%m%Y"):
+                break
+
             mask = [(claims['DOS'] >= x - timedelta(days = self.required_params.before_days)) & 
                         (claims['DOS'] <= x + timedelta(days = self.required_params.after_days))][0]
             
