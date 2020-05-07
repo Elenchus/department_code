@@ -8,8 +8,8 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        days_before:int = 84
-        days_after:int = 84
+        days_before:int = 1
+        days_after:int = 10
         code_for_day_0:int = 21214
         item_codes:list = field(default_factory=lambda: [49315, 49318, 49319, 49321, 49324, 49327, 49330, 49333, 49336, 49339, 49342, 49345, 49346])
 
@@ -34,7 +34,7 @@ class TestCase(ProposalTest):
         super().load_data()
         data = pd.read_csv(data)
         # data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|1749401692|3549753440|6046213577|5658556685|2024239461|8833088492")]
-        # data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|5658556685|1749401692|2024239461|3549753440|6046213577")]
+        data = data[~data['PIN'].str.contains("8244084150|6046213577|3891897366|3549753440")]
 
         # self.test_data = data.groupby(self.required_params.state_group_header)
         data['DOS'] = pd.to_datetime(data['DOS'])

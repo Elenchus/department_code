@@ -41,7 +41,9 @@ class TestCase(ProposalTest):
         super().load_data()
         self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
-        data = data[~data['PIN'].isin([8170350857,8244084150,3891897366,1749401692,3549753440,6046213577])]
+        # data = data[~data['PIN'].isin([8170350857,8244084150,3891897366,1749401692,3549753440,6046213577])]
+        data = data[~data['PIN'].str.contains("8244084150|6046213577|3891897366|358753440")]
+        self.processed_data = data
 
         self.test_data = data.groupby(self.required_params.state_group_header)
 
@@ -96,7 +98,7 @@ class TestCase(ProposalTest):
         self.log(f"{len(self.test_data['PIN'].unique())} patients")
 
         top_items_file = self.logger.output_path / f'top_items_nation.csv'
-        top_items = self.test_data['ITEM'].value_counts()
+        top_items = self.processed_data['ITEM'].value_counts()
         top_codes = top_items.index.tolist()
         top_code_counts = top_items.values.tolist()
         self.log("Item stats")
