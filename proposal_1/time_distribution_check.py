@@ -33,7 +33,7 @@ class TestCase(ProposalTest):
     def load_data(self, data):
         super().load_data()
         data = pd.read_csv(data)
-        data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|1749401692|3549753440|6046213577|5658556685|2024239461|8833088492")]
+        # data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|1749401692|3549753440|6046213577|5658556685|2024239461|8833088492")]
         # data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|5658556685|1749401692|2024239461|3549753440|6046213577")]
 
         # self.test_data = data.groupby(self.required_params.state_group_header)
