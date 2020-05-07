@@ -39,11 +39,17 @@ class TestCase(ProposalTest):
         claims['DOS'] = pd.to_datetime(claims['DOS'])
         dates_of_interest = [dt.strptime(x, "%d%b%Y") for x in dates_of_interest]
         all_claims = None
+        used_dates = []
         for idx, x in enumerate(dates_of_interest):
-            if idx > 0 \
-            or x - timedelta(days = self.required_params.before_days) < dt.strptime(f"0101{self.test_year}", "%d%m%Y") \
+            if x - timedelta(days = self.required_params.before_days) < dt.strptime(f"0101{self.test_year}", "%d%m%Y") \
             or x + timedelta(days = self.required_params.after_days) > dt.strptime(f"3112{self.test_year}", "%d%m%Y"):
-                break
+                continue
+
+            if len(used_dates) > 0:
+                if x - timedelta(days = self.required_params.before_days) <= used_dates[-1] + timedelta(days = self.required_params.after_days):
+                    continue
+
+            used_dates.append(x)
 
             mask = [(claims['DOS'] >= x - timedelta(days = self.required_params.before_days)) & 
                         (claims['DOS'] <= x + timedelta(days = self.required_params.after_days))][0]
