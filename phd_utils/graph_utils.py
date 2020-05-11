@@ -2,12 +2,17 @@
 from copy import deepcopy
 from datetime import datetime
 # from cuml import UMAP as umap
+import holoviews as hv
 import numpy as np
+import networkx as nx
 import pandas as pd
 import pygraphviz as pgv
 import random
 from matplotlib import pyplot as plt
+from nxviz.plots import CircosPlot
 from tqdm import tqdm
+
+hv.extension('bokeh')
 
 class GraphUtils():
     def __init__(self, logger):
@@ -119,6 +124,41 @@ class GraphUtils():
                 a_m.at[ante, con] += 1
 
         return a_m
+
+    def convert_pgv_to_hv_chord(self, graph):
+        source = []
+        target = []
+        node_map = {}
+        x = 0
+        for s in graph:
+            for t in graph[s]:
+                if s not in node_map:
+                    node_map[s] = x
+                    x += 1
+                
+                if t not in node_map:
+                    node_map[t] = x
+                    x += 1
+
+                s_n = node_map[s]
+                t_n = node_map[t]
+                source.append(s_n)
+                target.append(t_n)
+
+        node_name = []
+        node_index = []
+        for k, v in node_map.items():
+            node_name.append(k)
+            node_index.append(v)
+
+        node_list = [x for _,x in sorted(zip(node_index, node_name))]
+
+        # dset = hv.Dataset(pd.DataFrame(node_list), 'index')
+        chord = hv.Chord(((source,target),))
+        # chord.opts(hv.opts.Chord(cmap='Category20', edge_cmap='Category20', edge_color=hv.dim('source').str(), 
+        #        labels='name', node_color=hv.dim('index').str()))
+
+        return chord
 
     def convert_pgv_to_simple(self, graph):
         ng = {}
@@ -344,6 +384,18 @@ class GraphUtils():
 
         return ged_score, edit_history, edit_attrs
 
+    def plot_circos_graph(self, graph, attrs, filename):
+        G = self.convert_pgv_to_simple(graph)
+        formatted = nx.DiGraph(G)
+        if attrs is not None:
+            for node in attrs:
+                formatted.node[node]["color"] = attrs[node]['color']
+
+        c = CircosPlot(formatted, node_labels=True, node_color="color")
+
+        c.draw()
+        plt.savefig(filename)
+
     def plot_tsne(self, new_values, labels, title):
         '''Create and save a t-SNE plot'''
         self.logger.log(f"Plotting TSNE figure")
@@ -372,6 +424,14 @@ class GraphUtils():
         path = self.logger.output_path / name
         self.logger.log(f"Saving TSNE figure to {path}")
         fig.savefig(path)
+
+    def save_hv_fig(self, fig, filename):
+        current = datetime.now().strftime("%Y%m%dT%H%M%S")
+        output_path = f"{filename}_{current}.png"
+        if self.logger is not None:
+            output_path = self.logger.output_path / output_path
+
+        hv.save(fig, output_path)
 
     def save_plt_fig(self, fig, filename, bbox_extra_artists=None):
         '''Save a plot figure to file with timestamp'''
