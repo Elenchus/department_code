@@ -125,7 +125,7 @@ class GraphUtils():
 
         return a_m
 
-    def convert_pgv_to_hv_chord(self, graph):
+    def convert_pgv_to_hv(self, graph):
         source = []
         target = []
         node_map = {}
@@ -153,12 +153,7 @@ class GraphUtils():
 
         node_list = [x for _,x in sorted(zip(node_index, node_name))]
 
-        # dset = hv.Dataset(pd.DataFrame(node_list), 'index')
-        chord = hv.Chord(((source,target),))
-        # chord.opts(hv.opts.Chord(cmap='Category20', edge_cmap='Category20', edge_color=hv.dim('source').str(), 
-        #        labels='name', node_color=hv.dim('index').str()))
-
-        return chord
+        return source, target
 
     def convert_pgv_to_simple(self, graph):
         ng = {}
@@ -224,6 +219,21 @@ class GraphUtils():
         ttl = fig.suptitle(title)
         self.save_plt_fig(fig, filename, (lgd, ttl, ))
 
+    def create_hv_chord(self, source, target):
+        # dset = hv.Dataset(pd.DataFrame(node_list), 'index')
+        chord = hv.Chord(((source,target),))
+        # chord.opts(hv.opts.Chord(cmap='Category20', edge_cmap='Category20', edge_color=hv.dim('source').str(), 
+        #        labels='name', node_color=hv.dim('index').str()))
+
+        return chord
+
+    def create_hv_graph(self, source, target):
+        graph = hv.Graph(((source,target),))
+        graph.opts(xaxis=None,yaxis=None, directed=True,arrowhead_length=0.1)
+        graph = hv.element.graphs.layout_nodes(graph, layout=nx.drawing.layout.shell_layout) 
+
+        return graph
+    
     def create_scatter_plot(self, data, labels, title, filename, legend_names=None):
         '''creates and saves a scatter plot'''
         fig = plt.figure()
