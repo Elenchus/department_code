@@ -187,7 +187,8 @@ class TestCase(ProposalTest):
             # self.graphs.save_hv_fig(not_chord, "hv_test")
             # circo_filename = self.logger.output_path / f"{state}_circos"
             # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename) 
-            self.graphs.create_visnetwork(formatted_d, name, title, attrs)
+            # self.graphs.create_visnetwork(formatted_d, name, title, attrs)
+            self.graphs.create_rchord(formatted_d,name,title)
 
             if rp.basket_header == 'ITEM' and rp.group_header in ['PIN', 'SPR']:
                 self.log("Finding suspicious providers")

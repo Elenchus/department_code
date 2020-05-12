@@ -238,6 +238,16 @@ class GraphUtils():
 
         return graph
     
+    def create_rchord(self, graph, name, title):
+        am = self.convert_graph_to_adjacency_matrix(graph)
+        circlize = importr('circlize')
+        r_am = pandas2ri.py2ri(am)
+        rDevices = importr('grDevices')
+        filename = self.logger.output_path / f'{name}.png'
+        rDevices.png(str(filename), width=800, height=800)
+        circlize.chordDiagram(r_am)
+        rDevices.dev_off()
+
     def create_scatter_plot(self, data, labels, title, filename, legend_names=None):
         '''creates and saves a scatter plot'''
         fig = plt.figure()
