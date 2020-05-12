@@ -160,7 +160,8 @@ class TestCase(ProposalTest):
             for k in d.keys():
                 d[k].pop("No other items", None)
 
-            name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_state_{state}_graph.png"
+            name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_state_{state}_graph"
+            # name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_state_{state}_graph.png"
             if rp.sub_group_header is None:
                 title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and in state {self.code_converter.convert_state_num(state)}'
             else:
@@ -180,13 +181,13 @@ class TestCase(ProposalTest):
                 pickle.dump(attrs, f)
 
             states.append(d)
-            mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
+            # mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
             # source, target = self.graphs.convert_pgv_to_hv(formatted_d)
             # not_chord = self.graphs.create_hv_graph(source, target)
             # self.graphs.save_hv_fig(not_chord, "hv_test")
             # circo_filename = self.logger.output_path / f"{state}_circos"
             # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename) 
-            self.graphs.create_visnetwork(formatted_d, f"{state}_visnet")
+            self.graphs.create_visnetwork(formatted_d, name, title, attrs)
 
             if rp.basket_header == 'ITEM' and rp.group_header in ['PIN', 'SPR']:
                 self.log("Finding suspicious providers")

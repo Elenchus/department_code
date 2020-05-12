@@ -3,6 +3,7 @@ from copy import deepcopy
 from datetime import datetime
 # from cuml import UMAP as umap
 import holoviews as hv
+import imgkit
 import numpy as np
 import networkx as nx
 import pandas as pd
@@ -255,27 +256,41 @@ class GraphUtils():
 
         self.save_plt_fig(fig, filename, [ttl, legend])
 
-    def create_visnetwork(self, graph, name, attrs=None):
-        nodes = pd.DataFrame(self.flatten_graph_dict(graph), columns=['id'])
+    def create_visnetwork(self, graph, name, title, attrs=None):
+        if attrs:
+            nodes = pd.DataFrame(attrs)
+            nodes = nodes.transpose()
+            nodes['id'] = nodes.index
+            nodes['label'] = nodes.index
+        else:
+            nodes = pd.DataFrame(self.flatten_graph_dict(graph), columns=['id'])
+
         from_nodes = []
         to_nodes = []
+        colors = []
         for key, val in graph.items():
             for k in val.keys():
                 from_nodes.append(key)
                 to_nodes.append(k)
+                color = graph[key][k].get('color', 'black')
+                colors.append(color)
 
-        edges = pd.DataFrame([from_nodes, to_nodes])
+        edges = pd.DataFrame([from_nodes, to_nodes, colors])
         edges = edges.transpose()
-        edges.columns=['from', 'to']
+        edges.columns=['from', 'to', 'color']
 
         visnet = importr('visNetwork')
         r_nodes = pandas2ri.py2ri(nodes)
         r_edges = pandas2ri.py2ri(edges)
 
-        net = visnet.visNetwork(r_nodes, r_edges, width = "100%")
+        net = visnet.visNetwork(r_nodes, r_edges, main = title, width = "100%", improvedLayout=False)
         net = visnet.visEdges(net, arrows = 'to') 
-        vispath = self.logger.output_path / f"{name}.html"
-        visnet.visSave(net, str(vispath))
+        net = visnet.visNodes(net, shape='circle')
+        vispath = self.logger.output_path / f"{name}"
+        vishtml = f"{vispath}.html"
+        visnet.visSave(net, vishtml)
+        vispng = f"{vispath}.png"
+        imgkit.from_file(vishtml, vispng)
 
     def flatten_graph_dict(self, dictionary):
         temp = set()
