@@ -239,13 +239,30 @@ class GraphUtils():
         return graph
     
     def create_rchord(self, graph, name, title):
-        am = self.convert_graph_to_adjacency_matrix(graph)
+        # am = self.convert_graph_to_adjacency_matrix(graph)
+        from_nodes = []
+        to_nodes = []
+        values = []
+        for key, val in graph.items():
+            for k in val.keys():
+                from_nodes.append(key)
+                to_nodes.append(k)
+                # color = graph[key][k].get('color', 'black')
+                # colors.append(color)
+                values.append(10)
+
+        edges = pd.DataFrame([from_nodes, to_nodes, values])
+        edges = edges.transpose()
+        edges.columns=['from', 'to', 'value']
+
+        aplot = importr('graphics')
         circlize = importr('circlize')
-        r_am = pandas2ri.py2ri(am)
         rDevices = importr('grDevices')
+        r_am = pandas2ri.py2ri(edges)
         filename = self.logger.output_path / f'{name}.png'
         rDevices.png(str(filename), width=800, height=800)
-        circlize.chordDiagram(r_am)
+        circlize.chordDiagram(r_am, directional=1, direction_type = "arrows", link_arr_type = "big.arrow")
+        aplot.title(title, cex=0.8)
         rDevices.dev_off()
 
     def create_scatter_plot(self, data, labels, title, filename, legend_names=None):
