@@ -10,9 +10,12 @@ import pygraphviz as pgv
 import random
 from matplotlib import pyplot as plt
 from nxviz.plots import CircosPlot
+from rpy2.robjects import pandas2ri
+from rpy2.robjects.packages import importr
 from tqdm import tqdm
 
-hv.extension('bokeh')
+hv.extension('matplotlib')
+pandas2ri.activate()
 
 class GraphUtils():
     def __init__(self, logger):
@@ -251,6 +254,28 @@ class GraphUtils():
         filename = self.logger.output_path / filename
 
         self.save_plt_fig(fig, filename, [ttl, legend])
+
+    def create_visnetwork(self, graph, name, attrs=None):
+        nodes = pd.DataFrame(self.flatten_graph_dict(graph), columns=['id'])
+        from_nodes = []
+        to_nodes = []
+        for key, val in graph.items():
+            for k in val.keys():
+                from_nodes.append(key)
+                to_nodes.append(k)
+
+        edges = pd.DataFrame([from_nodes, to_nodes])
+        edges = edges.transpose()
+        edges.columns=['from', 'to']
+
+        visnet = importr('visNetwork')
+        r_nodes = pandas2ri.py2ri(nodes)
+        r_edges = pandas2ri.py2ri(edges)
+
+        net = visnet.visNetwork(r_nodes, r_edges, width = "100%")
+        net = visnet.visEdges(net, arrows = 'to') 
+        vispath = self.logger.output_path / f"{name}.html"
+        visnet.visSave(net, str(vispath))
 
     def flatten_graph_dict(self, dictionary):
         temp = set()
