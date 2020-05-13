@@ -60,7 +60,7 @@ class BasicMba:
         return d
 
     def create_graph(self, d, name, title, attrs=None, graph_style='fdp'):
-        filename = self.logger.output_path / name
+        filename = self.logger.output_path / f"{name}.png"
         filters = self.model.mba.filters
         if filters['conviction']['value'] == 0 and filters['confidence']['value'] == 0 and (filters['certainty_factor']['value'] == 0 and filters['certainty_factor']['operator'] == operator.ge):
             directed = False

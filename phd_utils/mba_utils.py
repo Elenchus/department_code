@@ -156,15 +156,15 @@ class MbaUtils:
 
     def colour_mbs_codes(self, d):
         get_color = {
-            'I': 'tomato', # for item not in dictionary
-            '1': 'blue',
-            '2': 'green',
-            '3': 'red',
-            '4': 'yellow',
-            '5': 'cyan',
-            '6': 'khaki',
-            '7': 'orange',
-            '8': 'darkorchid' 
+            'I': 'red', # for item not in dictionary
+            '1': '#1c8fbd',
+            '2': '#00a2c5',
+            '3': '#00b3be',
+            '4': '#00c3a8',
+            '5': '#00cf87',
+            '6': '#75d860',
+            '7': '#badc37',
+            '8': '#ffd912' 
         }
 
         all_items = self.graphs.flatten_graph_dict(d)
@@ -190,15 +190,15 @@ class MbaUtils:
 
     def convert_mbs_codes(self, d):
         get_color = {
-            'I': 'tomato', # for item not in dictionary
-            '1': 'blue',
-            '2': 'green',
-            '3': 'red',
-            '4': 'yellow',
-            '5': 'cyan',
-            '6': 'khaki',
-            '7': 'orange',
-            '8': 'darkorchid' 
+            'I': 'red', # for item not in dictionary
+            '1': '#1c8fbd',
+            '2': '#00a2c5',
+            '3': '#00b3be',
+            '4': '#00c3a8',
+            '5': '#00cf87',
+            '6': '#75d860',
+            '7': '#badc37',
+            '8': '#ffd912' 
         }
 
         lookup = {}

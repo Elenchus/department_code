@@ -312,12 +312,12 @@ class GraphUtils():
 
         net = visnet.visNetwork(r_nodes, r_edges, main = title, width = "100%", improvedLayout=False)
         net = visnet.visEdges(net, arrows = 'to') 
-        net = visnet.visNodes(net, shape='circle')
+        net = visnet.visNodes(net, shape='circle', widthConstraint=50)
         vispath = self.logger.output_path / f"{name}"
         vishtml = f"{vispath}.html"
         visnet.visSave(net, vishtml)
         vispng = f"{vispath}.png"
-        imgkit.from_file(vishtml, vispng)
+        # imgkit.from_file(vishtml, vispng)
 
     def flatten_graph_dict(self, dictionary):
         temp = set()

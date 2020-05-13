@@ -187,8 +187,8 @@ class TestCase(ProposalTest):
             # self.graphs.save_hv_fig(not_chord, "hv_test")
             # circo_filename = self.logger.output_path / f"{state}_circos"
             # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename) 
-            # self.graphs.create_visnetwork(formatted_d, name, title, attrs)
-            self.graphs.create_rchord(formatted_d,name,title)
+            self.graphs.create_visnetwork(formatted_d, name, title, attrs)
+            # self.graphs.create_rchord(formatted_d,name,title)
 
             if rp.basket_header == 'ITEM' and rp.group_header in ['PIN', 'SPR']:
                 self.log("Finding suspicious providers")
@@ -242,7 +242,8 @@ class TestCase(ProposalTest):
                     group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                     group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
                     group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
-                    mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
+                    # mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
+                    self.graphs.create_visnetwork(group_graph,group_graph_name,group_graph_title,attrs=group_attrs)
 
                     edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                     edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
@@ -259,7 +260,8 @@ class TestCase(ProposalTest):
                                 if 'shape' in edit_attrs[s][code]:
                                     new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
-                    mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
+                    # mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
+                    self.graphs.create_visnetwork(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
                     suspicious_filename = self.logger.output_path / f"suspicious_provider_{idx}_in_state_{state}.csv"
                     self.write_suspicions_to_file(converted_edit_graph, new_edit_attrs, suspicious_filename)
 
