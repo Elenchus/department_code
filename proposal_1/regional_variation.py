@@ -93,9 +93,10 @@ class TestCase(ProposalTest):
         suspicious_provider_list = []
         suspicious_transaction_list = []
         self.log(f"Descriptive stats for nation")
-        self.log(f"{len(self.test_data['ITEM'])} items claimed")
-        self.log(f"{len(self.test_data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
-        self.log(f"{len(self.test_data['PIN'].unique())} patients")
+        self.log(f"{len(self.processed_data)} claims")
+        self.log(f"{len(self.processed_data['ITEM'].unique())} items claimed")
+        self.log(f"{len(self.processed_data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
+        self.log(f"{len(self.processed_data['PIN'].unique())} patients")
 
         top_items_file = self.logger.output_path / f'top_items_nation.csv'
         top_items = self.processed_data['ITEM'].value_counts()
@@ -105,19 +106,36 @@ class TestCase(ProposalTest):
         self.log(f"{top_items.describe()}")
         self.code_converter.write_mbs_codes_to_csv(top_codes, top_items_file, [top_code_counts], ["No of occurrences"])
 
-        top_providers = self.test_data['SPR'].value_counts()
+        top_providers = self.processed_data['SPR'].value_counts()
         self.log("Provider stats")
         self.log(f"{top_providers.describe()}")
-        top_patients = self.test_data['PIN'].value_counts()
+        top_patients = self.processed_data['PIN'].value_counts()
         self.log("Patient stats")
         self.log(f"{top_patients.describe()}")
+
+        no_of_hips = self.processed_data.loc[(self.processed_data["ITEM"] >= 49300) & (self.processed_data["ITEM"] < 49500), "ITEM"].value_counts()
+        all_hip_claims = no_of_hips.index
+        nation_hip_dict = {}
+        for pat, g in self.processed_data.groupby("PIN"):
+            claimed_items = "None"
+            for item in all_hip_claims:
+                un = g["ITEM"].unique().tolist()
+                if item in un:
+                    claimed_items = f"{claimed_items}+{item}"
+            
+            count = nation_hip_dict.get(claimed_items, 0) + 1
+            nation_hip_dict[claimed_items] = count
+
+        state_hip_dicts = []
+
         for state, data in self.test_data:
             state_order.append(state)
             rp = self.required_params
 
             all_unique_items = [str(x) for x in data[rp.basket_header].unique().tolist()]
             self.log(f"Descriptive stats for state {state}")
-            self.log(f"{len(data['ITEM'])} items claimed")
+            self.log(f"{len(data)} claims")
+            self.log(f"{len(data['ITEM'].unique())} items claimed")
             self.log(f"{len(data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
             self.log(f"{len(data['PIN'].unique())} patients")
 
@@ -130,11 +148,25 @@ class TestCase(ProposalTest):
             self.code_converter.write_mbs_codes_to_csv(top_codes, top_items_file, [top_code_counts], ["No of occurrences"])
 
             top_providers = data['SPR'].value_counts()
-            self.log("Provider stats")
+            # self.log("Provider stats")
             self.log(f"{top_providers.describe()}")
             top_patients = data['PIN'].value_counts()
             self.log("Patient stats")
             self.log(f"{top_patients.describe()}")
+
+            no_of_hips = data.loc[data["ITEM"].isin(all_hip_claims), "ITEM"].value_counts()
+            hip_dict = {}
+            for pat, g in data.groupby("PIN"):
+                claimed_items = "None"
+                for item in all_hip_claims:
+                    un = g["ITEM"].unique().tolist()
+                    if item in un:
+                        claimed_items = f"{claimed_items}+{item}"
+                
+                count = hip_dict.get(claimed_items, 0) + 1
+                hip_dict[claimed_items] = count
+
+            state_hip_dicts.append(hip_dict)
 
             mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
@@ -223,6 +255,8 @@ class TestCase(ProposalTest):
                         doc = patient_data_group['ITEM'].unique().tolist()
                         provider_docs.append(doc)
 
+
+
                     provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.min_support)
                     ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, fee_record)
                     suspicious_transactions[provider] = ged
@@ -302,6 +336,25 @@ class TestCase(ProposalTest):
         sames = set.intersection(*state_sets)
         same_file = self.logger.output_path / 'same_file.csv'
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
+
+        hip_dicts = [nation_hip_dict] + state_hip_dicts
+        header = "Item,Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA\n"
+        filename = self.logger.output_path / "hip_item_counts.csv"
+        with open(filename, 'w+') as f:
+            f.write(header)
+            keys = list(nation_hip_dict.keys())
+            for sd in state_hip_dicts:
+                for key in list(sd.keys()):
+                    assert key in keys
+
+            for item in sorted(keys):
+                line = f"{item}"
+                for i in range(len(hip_dicts)):
+                    count = hip_dicts[i].get(item, 0)
+                    line = f"{line},{count}"
+
+                line = f"{line}\n"
+                f.write(line)
 
         for state, data in self.test_data:
             self.log(f"Getting suspicious provider neighbours for {self.code_converter.convert_state_num(state)}")
