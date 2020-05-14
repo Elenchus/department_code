@@ -180,6 +180,9 @@ class TestCase(ProposalTest):
             with open(attrs_name, "wb") as f:
                 pickle.dump(attrs, f)
 
+            legend_file = self.logger.output_path / f"Legend_{state}.png"
+            self.graphs.graph_legend(legend, legend_file, "Legend")
+
             states.append(d)
             # mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
             # source, target = self.graphs.convert_pgv_to_hv(formatted_d)
@@ -299,9 +302,6 @@ class TestCase(ProposalTest):
         sames = set.intersection(*state_sets)
         same_file = self.logger.output_path / 'same_file.csv'
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
-
-        legend_file = self.logger.output_path / "Legend.png"
-        self.graphs.graph_legend(legend, legend_file, "Legend")
 
         for state, data in self.test_data:
             self.log(f"Getting suspicious provider neighbours for {self.code_converter.convert_state_num(state)}")
