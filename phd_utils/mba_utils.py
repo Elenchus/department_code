@@ -156,14 +156,14 @@ class MbaUtils:
 
     def colour_mbs_codes(self, d):
         get_color = {
-            'I': 'red', # for item not in dictionary
-            '1': '#1c8fbd',
-            '2': '#00a2c5',
-            '3': '#00b3be',
-            '4': '#00c3a8',
-            '5': '#00cf87',
-            '6': '#75d860',
-            '7': '#badc37',
+            'I': 'red', # for item not in dictionary. Colours mostly from https://serialmentor.com/dataviz/color-pitfalls.html
+            '1': '#E69F00',
+            '2': '#56B4E9',
+            '3': '#009E73',
+            '4': '#F0E442',
+            '5': '#0072B2',
+            '6': '#D55E00',
+            '7': '#CC79A7',
             '8': '#ffd912' 
         }
 
@@ -191,13 +191,13 @@ class MbaUtils:
     def convert_mbs_codes(self, d):
         get_color = {
             'I': 'red', # for item not in dictionary
-            '1': '#1c8fbd',
-            '2': '#00a2c5',
-            '3': '#00b3be',
-            '4': '#00c3a8',
-            '5': '#00cf87',
-            '6': '#75d860',
-            '7': '#badc37',
+            '1': '#E69F00',
+            '2': '#56B4E9',
+            '3': '#009E73',
+            '4': '#F0E442',
+            '5': '#0072B2',
+            '6': '#D55E00',
+            '7': '#CC79A7',
             '8': '#ffd912' 
         }
 

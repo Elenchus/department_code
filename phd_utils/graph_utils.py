@@ -3,7 +3,7 @@ from copy import deepcopy
 from datetime import datetime
 # from cuml import UMAP as umap
 import holoviews as hv
-import imgkit
+# import imgkit
 import numpy as np
 import networkx as nx
 import pandas as pd
@@ -291,6 +291,7 @@ class GraphUtils():
             nodes['label'] = nodes.index
         else:
             nodes = pd.DataFrame(self.flatten_graph_dict(graph), columns=['id'])
+            nodes['label'] = nodes['id']
 
         from_nodes = []
         to_nodes = []
@@ -389,10 +390,13 @@ class GraphUtils():
                     edges = test[key]
                     # ged_score += sum([test[key][x].get('weight', 1) for x in edges]) # confidence
                     for k in edges:
-                        edit_history[key][k]['color'] = 'red'
+                        edit_history[key][k]['color'] = '#D55E00'
 
-                edit_attrs[key] = {'shape': 'house'}
+                edit_attrs[key] = {'shape': 'database'}
+                # edit_attrs[key] = {'shape': 'house'}
                 d.pop(key)
+            else:
+                edit_attrs[key] = {'shape': 'circle'}
 
         nodes_to_add = set()
         edges_to_add = {}
@@ -421,14 +425,14 @@ class GraphUtils():
             nodes_to_add.update(missing_nodes)
             # ged_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) + sum([test[key][x].get('weight', 1) for x in should_not_have]) # confidence
             for k in should_not_have:
-                edit_history[key][k]['color'] = 'red'
+                edit_history[key][k]['color'] = '#D55E00'
 
         for key in edges_to_add:
             for k in edges_to_add[key]:
                 if key not in edit_history:
                     edit_history[key] = {}
 
-                edit_history[key][k] = {'color': 'blue'}
+                edit_history[key][k] = {'color': '#F0E442'}
                 
         while True:# infinite loop!
             if len(nodes_to_add) == 0:
@@ -441,7 +445,8 @@ class GraphUtils():
             else:
                 ged_score += 1
 
-            edit_attrs[node] = {'shape': 'invhouse'}
+            edit_attrs[node] = {'shape': 'box'}
+            # edit_attrs[node] = {'shape': 'invhouse'}
 
             if node not in expected:
                 ignore_list.append(node)
@@ -453,7 +458,7 @@ class GraphUtils():
             d[node] = edges
             edit_history[node] = edges
             for k in edit_history[node]:
-                edit_history[node][k]['color'] = 'blue'
+                edit_history[node][k]['color'] = '#F0E442'
 
             for new_node in edges:
                 if new_node not in d and new_node not in ignore_list:
