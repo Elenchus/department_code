@@ -116,7 +116,9 @@ class TestCase(ProposalTest):
         no_of_hips = self.processed_data.loc[(self.processed_data["ITEM"] >= 49300) & (self.processed_data["ITEM"] < 49500), "ITEM"].value_counts()
         all_hip_claims = no_of_hips.index
         nation_hip_dict = {}
-        for pat, g in self.processed_data.groupby("PIN"):
+        nation_groups = self.processed_data.groupby("PIN")
+        no_hip_claim_patients = []
+        for pat, g in nation_groups:
             claimed_items = "None"
             for item in all_hip_claims:
                 un = g["ITEM"].unique().tolist()
@@ -125,8 +127,27 @@ class TestCase(ProposalTest):
             
             count = nation_hip_dict.get(claimed_items, 0) + 1
             nation_hip_dict[claimed_items] = count
+            if claimed_items == 'None':
+                no_hip_claim_patients.append(pat)
 
+        knee_claims = 0
+        for name in no_hip_claim_patients:
+            g = nation_groups.get_group(name)
+            items = g.loc[(g["ITEM"] >= 49500) & (g["ITEM"] < 50000), "ITEM"].unique()
+            if len(items) > 0:
+                knee_claims += 1
+
+        self.log(f"{knee_claims} of {len(no_hip_claim_patients)} had a knee surgery")
         state_hip_dicts = []
+        
+        provider_episodes = []
+        for n, g in self.processed_data.groupby("SPR"):
+            episodes = len(g["PIN"].unique())
+            provider_episodes.append(episodes)
+
+        provider_episodes = pd.DataFrame(provider_episodes)
+        self.log("Surgical episodes per provider")
+        self.log(provider_episodes.describe())
 
         for state, data in self.test_data:
             state_order.append(state)
@@ -168,6 +189,15 @@ class TestCase(ProposalTest):
 
             state_hip_dicts.append(hip_dict)
 
+            provider_episodes = []
+            for n, g in data.groupby("SPR"):
+                episodes = len(g["PIN"].unique())
+                provider_episodes.append(episodes)
+            
+            provider_episodes = pd.DataFrame(provider_episodes)
+
+            self.log("Surgical episodes per provider")
+            self.log(provider_episodes.describe())
             mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
             if rp.sub_group_header is None:

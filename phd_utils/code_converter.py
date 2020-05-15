@@ -141,8 +141,13 @@ class CodeConverter:
             except TypeError:
                 if code == 51303 or code == '51303':
                     return 113, fee_type
+                elif code == 31340 or code == '31340':
+                    return 544.43, fee_type
                 else:
-                    return float(re.search(r'\$(\d+\.\d+)', derived_fee)[1]), fee_type
+                    try:
+                        return float(re.search(r'\$(\d+\.\d+)', derived_fee)[1]), fee_type
+                    except TypeError:
+                        raise KeyError(f"{code} does not have an easily accessible fee")
 
             item = self.mbs_item_dict.get(str(number), None)
 
