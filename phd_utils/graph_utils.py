@@ -289,6 +289,7 @@ class GraphUtils():
             nodes = nodes.transpose()
             nodes['id'] = nodes.index
             nodes['label'] = nodes.index
+            nodes['groupname'] = nodes['color']
         else:
             nodes = pd.DataFrame(self.flatten_graph_dict(graph), columns=['id'])
             nodes['label'] = nodes['id']
@@ -314,6 +315,8 @@ class GraphUtils():
         net = visnet.visNetwork(r_nodes, r_edges, main = title, width = "100%", improvedLayout=False)
         net = visnet.visEdges(net, arrows = 'to') 
         net = visnet.visNodes(net, shape='circle', widthConstraint=50)
+        # net = visnet.visLegend(net)
+
         vispath = self.logger.output_path / f"{name}"
         vishtml = f"{vispath}.html"
         visnet.visSave(net, vishtml)

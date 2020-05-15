@@ -330,9 +330,20 @@ class TestCase(ProposalTest):
                 differences.update(state_sets[i].difference(state_sets[j]))
         # u = set.difference(*state_sets)
         # self.log(u)
-        diff_file = self.logger.output_path / 'diff_file.csv'
+        differences = list(differences)
+        states = []
+        for item in differences:
+            item_states = []
+            for i, state in enumerate(state_sets):
+                if item in state:
+                    item_states.append(i)
 
-        self.code_converter.write_mbs_codes_to_csv(differences, diff_file)
+            item_states = '; '.join([self.code_converter.convert_state_num(x+1) for x in item_states])
+            states.append(item_states)
+
+        diff_file = self.logger.output_path / 'diff_file.csv'
+        self.code_converter.write_mbs_codes_to_csv(differences, diff_file, additional_headers=['States'], additional_cols=[states])
+
         sames = set.intersection(*state_sets)
         same_file = self.logger.output_path / 'same_file.csv'
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
