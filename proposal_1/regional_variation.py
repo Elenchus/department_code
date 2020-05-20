@@ -103,9 +103,9 @@ class TestCase(ProposalTest):
             except:
                 shape = 'ok'
             
-            if shape == 'house':
+            if shape == 'database':
                 too_much.append(node)
-            elif shape == 'invhouse':
+            elif shape == 'box':
                 too_little.append(node)
             else:
                 ok.append(node)
