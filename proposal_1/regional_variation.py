@@ -27,6 +27,11 @@ class TestCase(ProposalTest):
     processed_data: pd.DataFrame = None
     test_data = None
 
+    item_stats = []
+    provider_stats = []
+    patient_stats = []
+    provider_episode_stats = []
+
     def process_dataframe(self, data):
         raise NotImplementedError("Use load data")
         # super().process_dataframe(data)
@@ -46,6 +51,41 @@ class TestCase(ProposalTest):
         self.processed_data = data
 
         self.test_data = data.groupby(self.required_params.state_group_header)
+
+    def get_exploratory_stats(self, data, region):
+        self.log(f"Descriptive stats for {region}")
+        self.log(f"{len(data)} claims")
+        self.log(f"{len(data['ITEM'].unique())} items claimed")
+        self.log(f"{len(data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
+        self.log(f"{len(data['PIN'].unique())} patients")
+
+        top_items_file = self.logger.output_path / f'top_items_{region}.csv'
+        top_items = data['ITEM'].value_counts()
+        self.item_stats.append(data['ITEM'].tolist())
+        top_codes = top_items.index.tolist()
+        top_code_counts = top_items.values.tolist()
+        self.log(f"Item stats {region}")
+        self.log(f"{top_items.describe()}")
+        self.code_converter.write_mbs_codes_to_csv(top_codes, top_items_file, [top_code_counts], ["No of occurrences"])
+
+        top_providers = data['SPR'].value_counts()
+        self.log(f"Provider stats {region}")
+        self.log(f"{top_providers.describe()}")
+        self.provider_stats.append(data['SPR'].tolist())
+        top_patients = data['PIN'].value_counts()
+        self.log(f"Patient stats {region}")
+        self.log(f"{top_patients.describe()}")
+        self.patient_stats.append(self.processed_data['PIN'].tolist())
+
+        provider_episodes = []
+        for n, g in data.groupby("SPR"):
+            episodes = len(g["PIN"].unique())
+            provider_episodes.append(episodes)
+
+        provider_episodes = pd.DataFrame(provider_episodes)
+        self.provider_episode_stats.append(provider_episodes)
+        self.log(f"Surgical episodes per provider in {region}")
+        self.log(provider_episodes.describe())
 
     def write_model_to_file(self, d, filename):
         header = "Item is claimed for at least 1/3 of unliateral hip replacements in the state within 2 weeks before or after the anaesthesia date of service,If the item is claimed for a patient these items were also likely to be claimed for that patient\n"
@@ -92,27 +132,8 @@ class TestCase(ProposalTest):
         state_order = []
         suspicious_provider_list = []
         suspicious_transaction_list = []
-        self.log(f"Descriptive stats for nation")
-        self.log(f"{len(self.processed_data)} claims")
-        self.log(f"{len(self.processed_data['ITEM'].unique())} items claimed")
-        self.log(f"{len(self.processed_data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
-        self.log(f"{len(self.processed_data['PIN'].unique())} patients")
 
-        top_items_file = self.logger.output_path / f'top_items_nation.csv'
-        top_items = self.processed_data['ITEM'].value_counts()
-        top_codes = top_items.index.tolist()
-        top_code_counts = top_items.values.tolist()
-        self.log("Item stats")
-        self.log(f"{top_items.describe()}")
-        self.code_converter.write_mbs_codes_to_csv(top_codes, top_items_file, [top_code_counts], ["No of occurrences"])
-
-        top_providers = self.processed_data['SPR'].value_counts()
-        self.log("Provider stats")
-        self.log(f"{top_providers.describe()}")
-        top_patients = self.processed_data['PIN'].value_counts()
-        self.log("Patient stats")
-        self.log(f"{top_patients.describe()}")
-
+        self.get_exploratory_stats(self.processed_data, "nation")
         no_of_hips = self.processed_data.loc[(self.processed_data["ITEM"] >= 49300) & (self.processed_data["ITEM"] < 49500), "ITEM"].value_counts()
         all_hip_claims = no_of_hips.index
         nation_hip_dict = {}
@@ -140,41 +161,12 @@ class TestCase(ProposalTest):
         self.log(f"{knee_claims} of {len(no_hip_claim_patients)} had a knee surgery")
         state_hip_dicts = []
         
-        provider_episodes = []
-        for n, g in self.processed_data.groupby("SPR"):
-            episodes = len(g["PIN"].unique())
-            provider_episodes.append(episodes)
-
-        provider_episodes = pd.DataFrame(provider_episodes)
-        self.log("Surgical episodes per provider")
-        self.log(provider_episodes.describe())
-
         for state, data in self.test_data:
             state_order.append(state)
             rp = self.required_params
 
             all_unique_items = [str(x) for x in data[rp.basket_header].unique().tolist()]
-            self.log(f"Descriptive stats for state {state}")
-            self.log(f"{len(data)} claims")
-            self.log(f"{len(data['ITEM'].unique())} items claimed")
-            self.log(f"{len(data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
-            self.log(f"{len(data['PIN'].unique())} patients")
-
-            top_items_file = self.logger.output_path / f'top_items_state_{state}.csv'
-            top_items = data['ITEM'].value_counts()
-            top_codes = top_items.index.tolist()
-            top_code_counts = top_items.values.tolist()
-            self.log("Item stats")
-            self.log(f"{top_items.describe()}")
-            self.code_converter.write_mbs_codes_to_csv(top_codes, top_items_file, [top_code_counts], ["No of occurrences"])
-
-            top_providers = data['SPR'].value_counts()
-            # self.log("Provider stats")
-            self.log(f"{top_providers.describe()}")
-            top_patients = data['PIN'].value_counts()
-            self.log("Patient stats")
-            self.log(f"{top_patients.describe()}")
-
+            self.get_exploratory_stats(data, self.code_converter.convert_state_num(state))
             no_of_hips = data.loc[data["ITEM"].isin(all_hip_claims), "ITEM"].value_counts()
             hip_dict = {}
             for pat, g in data.groupby("PIN"):
@@ -193,7 +185,8 @@ class TestCase(ProposalTest):
             for n, g in data.groupby("SPR"):
                 episodes = len(g["PIN"].unique())
                 provider_episodes.append(episodes)
-            
+
+            provider_episode_stats.append(provider_episodes)
             provider_episodes = pd.DataFrame(provider_episodes)
 
             self.log("Surgical episodes per provider")
@@ -284,8 +277,6 @@ class TestCase(ProposalTest):
                     for _, patient_data_group in patient_data_groups:
                         doc = patient_data_group['ITEM'].unique().tolist()
                         provider_docs.append(doc)
-
-
 
                     provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.min_support)
                     ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, fee_record)
@@ -460,8 +451,7 @@ class TestCase(ProposalTest):
                 rsps = data.loc[data['SPR'] == int(provider), 'SPR_RSP'].unique().tolist()
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
-
-
+            
             # for k, v in provider_graph.items():
             #     provider_graph[k] = {item: None for item in v}
 
@@ -469,3 +459,9 @@ class TestCase(ProposalTest):
             # self.log("Graphing")
             # filename = self.logger.output_path / f"provider_communities_state_{state}.png"
             # self.graphs.visual_graph(converted_graph, filename, f"Provider communities in {self.code_converter.convert_state_num(state)}", directed=False)
+
+        labels = ["Nation"] + [self.code_converter.convert_state_num(x) for x in states]
+        self.graphs.create_boxplot_group(self.item_stats, labels, "Claims per item", "claims_items")
+        self.graphs.create_boxplot_group(self.provider_stats, labels, "Claims per provider", "claims_providers")
+        self.graphs.create_boxplot_group(self.patient_stats, labels, "Claims per episode", "claims_episodes")
+        self.graphs.create_boxplot_group(self.provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
