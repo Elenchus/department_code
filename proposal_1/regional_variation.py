@@ -27,10 +27,12 @@ class TestCase(ProposalTest):
     processed_data: pd.DataFrame = None
     test_data = None
 
-    item_stats = []
-    provider_stats = []
-    patient_stats = []
-    provider_episode_stats = []
+    def __init__(self, logger, params, year):
+        self.item_stats = []
+        self.provider_stats = []
+        self.patient_stats = []
+        self.provider_episode_stats = []
+        super().__init__(logger, params, year)
 
     def process_dataframe(self, data):
         raise NotImplementedError("Use load data")
