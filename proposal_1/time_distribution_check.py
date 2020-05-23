@@ -8,10 +8,10 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        days_before:int = 1
-        days_after:int = 10
-        code_for_day_0:int = 21214
-        item_codes:list = field(default_factory=lambda: [49315, 49318, 49319, 49321, 49324, 49327, 49330, 49333, 49336, 49339, 49342, 49345, 49346])
+        days_before:int = 84
+        days_after:int = 84
+        code_for_day_0:int = 49318
+        item_codes:list = field(default_factory=lambda: [21214, 49315, 49318, 49319, 49321, 49324, 49327, 49330, 49333, 49336, 49339, 49342, 49345, 49346])
 
 
     FINAL_COLS = []
@@ -34,7 +34,7 @@ class TestCase(ProposalTest):
         super().load_data()
         data = pd.read_csv(data)
         # data = data[~data['PIN'].str.contains("8170350857|8244084150|3891897366|1749401692|3549753440|6046213577|5658556685|2024239461|8833088492")]
-        data = data[~data['PIN'].str.contains("8244084150|6046213577|3891897366|3549753440")]
+        data = data[~data['PIN'].str.contains("8244084150|6046213577|3891897366|3549753440|5658556685|1749401692|8833088492")]
 
         # self.test_data = data.groupby(self.required_params.state_group_header)
         data['DOS'] = pd.to_datetime(data['DOS'])
@@ -49,7 +49,8 @@ class TestCase(ProposalTest):
         total_days = []
         days_before = []
         days_after = []
-        min_dates = []
+        min_dates_104 = []
+        min_dates_104_105 = []
         for idx, (patient, group) in tqdm(enumerate(data)):
             patient_distribution_vector = [0] * length_to_check
             anaesthesia = group.loc[group['ITEM'] == rp.code_for_day_0, 'DOS']
@@ -69,9 +70,15 @@ class TestCase(ProposalTest):
                 distribution_vector[i] = new_total
                 distribution_matrix[i].append(patient_distribution_vector[i])
 
-            min_date_group = delta[(group["ITEM"].isin([104,105,"104","105"])) & (group["SPR_RSP"] == 35)]
+            min_date_group = delta[(group["ITEM"].isin([104,105,"104","105"])) & (group["SPR"].isin(self.providers))]
+            # min_date_group = delta[(group["ITEM"].isin([104,105,"104","105"])) & (group["SPR_RSP"] == 35)]
             if len(min_date_group) != 0:
-                min_dates.append(min_date_group.min() - rp.days_before)
+                min_dates_104_105.append(min_date_group.min() - rp.days_before)
+
+            min_date_group = delta[(group["ITEM"].isin([104,"104"])) & (group["SPR"].isin(self.providers))]
+            # min_date_group = delta[(group["ITEM"].isin([104,"104"])) & (group["SPR_RSP"] == 35)]
+            if len(min_date_group) != 0:
+                min_dates_104.append(min_date_group.min() - rp.days_before)
 
             days = (group['DOS'].max() - group['DOS'].min()).days
             before = abs(delta.min() - rp.days_before)
@@ -111,8 +118,12 @@ class TestCase(ProposalTest):
         self.graphs.create_boxplot(days_after, f"Day range of claims after surgery in {test_name}", after_name)
 
         min_name = self.logger.output_path / f"{test_name}_specialist_appointment"
-        self.graphs.create_boxplot(min_dates, f"Day of specialist consultation in {test_name}", min_name)
-        self.log(f"95th percentile of earliest specialist appointment in {test_name}: {np.percentile(np.array(min_dates),5)}")
+        self.graphs.create_boxplot(min_dates_104_105, f"Day of specialist consultation in {test_name}", min_name)
+        self.log(f"95th percentile of earliest specialist appointment in {test_name}: {np.percentile(np.array(min_dates_104_105),5)}")
+
+        min_name = self.logger.output_path / f"{test_name}_104_appointment"
+        self.graphs.create_boxplot(min_dates_104, f"Day of first specialist consultation in {test_name}", min_name)
+        self.log(f"95th percentile of earliest 104 appointment in {test_name}: {np.percentile(np.array(min_dates_104),5)}")
 
         return multiple_visit_list
 
@@ -130,6 +141,7 @@ class TestCase(ProposalTest):
         self.log("Getting national data")
         data = self.test_data.groupby('PIN')
         rp = self.required_params
+        self.providers=self.test_data.loc[self.test_data["ITEM"]==rp.code_for_day_0, "SPR"].unique().tolist()
         length_to_check = 1 + rp.days_after + rp.days_before
         patients_to_check = self.check_distribution(data, length_to_check, "nation")
 

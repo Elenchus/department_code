@@ -117,27 +117,27 @@ if __name__ == "__main__":
     # for x in [0.2, 0.4, 0.6, 0.8]:
     test_details = TestDetails(
         notes = "",
-        params = {'basket_header': 'ITEM', 
-                    'group_header':'PIN', 
-                    'sub_group_header': None,
-                    'state_group_header': 'PINSTATE',
-                    'filters': {
-                        'conviction': {
-                            'value': 1.1,
-                            'operator': operator.ge
-                        }
-                        },
-                    'min_support': 0.33},
+        # params = {'basket_header': 'ITEM', 
+        #             'group_header':'PIN', 
+        #             'sub_group_header': None,
+        #             'state_group_header': 'PINSTATE',
+        #             'filters': {
+        #                 'conviction': {
+        #                     'value': 1.1,
+        #                     'operator': operator.ge
+        #                 }
+        #                 },
+        #             'min_support': 0.33},
                     # 'scoring_method': 'ged',
                     # 'ged_support': 0.1},
-        # params = None,
+        params = None,
         proposal = 1,
         # test_data = mbs,
         # test_data = 'knee_replacement_provider_subset.csv',
         # test_data = 'pathology_patient_subset.csv',
-        test_data = 'hip_49318_provider_subset_with_states_one_ten.csv',
+        test_data = 'hip_49318_provider_subset_with_states_super_long.csv',
         # test_data = None,
-        test_file_name = f'regional_variation',
+        test_file_name = f'time_distribution_check',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]
     )
