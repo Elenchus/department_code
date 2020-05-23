@@ -32,6 +32,8 @@ class TestCase(ProposalTest):
         self.provider_stats = []
         self.patient_stats = []
         self.provider_episode_stats = []
+        self.hip_dicts = []
+        self.providers_per_patient = []
         super().__init__(logger, params, year)
 
     def process_dataframe(self, data):
@@ -84,6 +86,48 @@ class TestCase(ProposalTest):
                 top_codes = top_selection.index.tolist()
                 self.code_converter.write_mbs_codes_to_csv(top_codes, top_file, [top_code_counts], ["No of occurrences"])
 
+        # get hip surgery items per patient in the data
+        no_of_hips = data.loc[(self.processed_data["ITEM"] >= 49300) & (self.processed_data["ITEM"] < 49500), "ITEM"].value_counts()
+        all_hip_claims = no_of_hips.index
+        patient_hip_dict = {}
+        patient_groups = data.groupby("PIN")
+        no_hip_claim_patients = []
+        for pat, g in patient_groups:
+            claimed_items = "None"
+            for item in all_hip_claims:
+                un = g["ITEM"].unique().tolist()
+                if item in un:
+                    claimed_items = f"{claimed_items}+{item}"
+            
+            count = patient_hip_dict.get(claimed_items, 0) + 1
+            patient_hip_dict[claimed_items] = count
+            if claimed_items == 'None':
+                no_hip_claim_patients.append(pat)
+
+        self.hip_dicts.append(patient_hip_dict)
+
+        # get knee surgery items per patient in the data
+        knee_claims = 0
+        for name in no_hip_claim_patients:
+            g = patient_groups.get_group(name)
+            items = g.loc[(g["ITEM"] >= 49500) & (g["ITEM"] < 50000), "ITEM"].unique()
+            if len(items) > 0:
+                knee_claims += 1
+
+        self.log(f"{knee_claims} of {len(no_hip_claim_patients)} had a knee surgery")
+
+        providers_per_patient = []
+        providers_of_interest = data.loc[data["ITEM"] == 49318, "SPR"].unique().tolist()
+        provider_claims = data[data["SPR"].isin(providers_of_interest)].groupby("SPR")
+        for _, claims in provider_claims:
+            patients = claims["PIN"].unique()
+            providers_per_patient.append(len(patients))
+
+        self.providers_per_patient.append(providers_per_patient)
+        df = pd.DataFrame(providers_per_patient)
+        self.log(f"Providers per patient in {region}")
+        self.log(df.describe())
+
     def write_model_to_file(self, d, filename):
         header = "Item is claimed for at least 1/3 of unliateral hip replacements in the state within 2 weeks before or after the anaesthesia date of service,If the item is claimed for a patient these items were also likely to be claimed for that patient\n"
         with open(filename, 'w+') as f:
@@ -131,32 +175,6 @@ class TestCase(ProposalTest):
         suspicious_transaction_list = []
 
         self.get_exploratory_stats(self.processed_data, "nation")
-        no_of_hips = self.processed_data.loc[(self.processed_data["ITEM"] >= 49300) & (self.processed_data["ITEM"] < 49500), "ITEM"].value_counts()
-        all_hip_claims = no_of_hips.index
-        nation_hip_dict = {}
-        nation_groups = self.processed_data.groupby("PIN")
-        no_hip_claim_patients = []
-        for pat, g in nation_groups:
-            claimed_items = "None"
-            for item in all_hip_claims:
-                un = g["ITEM"].unique().tolist()
-                if item in un:
-                    claimed_items = f"{claimed_items}+{item}"
-            
-            count = nation_hip_dict.get(claimed_items, 0) + 1
-            nation_hip_dict[claimed_items] = count
-            if claimed_items == 'None':
-                no_hip_claim_patients.append(pat)
-
-        knee_claims = 0
-        for name in no_hip_claim_patients:
-            g = nation_groups.get_group(name)
-            items = g.loc[(g["ITEM"] >= 49500) & (g["ITEM"] < 50000), "ITEM"].unique()
-            if len(items) > 0:
-                knee_claims += 1
-
-        self.log(f"{knee_claims} of {len(no_hip_claim_patients)} had a knee surgery")
-        state_hip_dicts = []
         
         for state, data in self.test_data:
             state_order.append(state)
@@ -164,20 +182,6 @@ class TestCase(ProposalTest):
 
             all_unique_items = [str(x) for x in data[rp.basket_header].unique().tolist()]
             self.get_exploratory_stats(data, self.code_converter.convert_state_num(state))
-            no_of_hips = data.loc[data["ITEM"].isin(all_hip_claims), "ITEM"].value_counts()
-            hip_dict = {}
-            for pat, g in data.groupby("PIN"):
-                claimed_items = "None"
-                for item in all_hip_claims:
-                    un = g["ITEM"].unique().tolist()
-                    if item in un:
-                        claimed_items = f"{claimed_items}+{item}"
-                
-                count = hip_dict.get(claimed_items, 0) + 1
-                hip_dict[claimed_items] = count
-
-            state_hip_dicts.append(hip_dict)
-
             mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
 
             if rp.sub_group_header is None:
@@ -247,7 +251,7 @@ class TestCase(ProposalTest):
                 suspicious_transactions = {}
                 edit_graphs = {}
                 edit_attrs = {}
-                providers = data['SPR'].unique().tolist()
+                providers = data.loc[data["ITEM"] == 49318, "SPR"].unique().tolist()
                 for provider in tqdm(providers):
                     provider_docs = []
                     if rp.group_header == 'PIN': 
@@ -362,17 +366,13 @@ class TestCase(ProposalTest):
         same_file = self.logger.output_path / 'same_file.csv'
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
 
-        hip_dicts = [nation_hip_dict] + state_hip_dicts
-        header = "Item,Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA\n"
+        hip_dicts = self.hip_dicts
+        regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
+        header = f"Item,{regions}\n"
         filename = self.logger.output_path / "hip_item_counts.csv"
         with open(filename, 'w+') as f:
             f.write(header)
-            keys = list(nation_hip_dict.keys())
-            for sd in state_hip_dicts:
-                for key in list(sd.keys()):
-                    assert key in keys
-
-            for item in sorted(keys):
+            for item in sorted(hip_dicts[0].keys()):
                 line = f"{item}"
                 for i in range(len(hip_dicts)):
                     count = hip_dicts[i].get(item, 0)
@@ -381,6 +381,8 @@ class TestCase(ProposalTest):
                 line = f"{line}\n"
                 f.write(line)
 
+        ppp_filename = self.logger.output_path / "patients_per_provider"
+        self.graphs.create_boxplot_group(self.providers_per_patient, regions.rsplit(','), "Providers per patient per region", ppp_filename)
 
         for state, data in self.test_data:
             self.log(f"Getting suspicious provider neighbours for {self.code_converter.convert_state_num(state)}")
@@ -445,6 +447,8 @@ class TestCase(ProposalTest):
                 rsps = data.loc[data['SPR'] == int(provider), 'SPR_RSP'].unique().tolist()
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
+
+
             
             # for k, v in provider_graph.items():
             #     provider_graph[k] = {item: None for item in v}
