@@ -20,8 +20,9 @@ class TestCase(ProposalTest):
         ignore_providers_with_less_than_x_patients:int = 10
         human_readable_suspicious_items:bool = False
         graph_style:str = 'fdp'
+        code_of_interest:int = 49318
 
-    FINAL_COLS = []
+    FINAL_COLS = ["PIN", "ITEM", "PINSTATE", "SPR", "SPR_RSP", "DOS"]
     INITIAL_COLS = FINAL_COLS
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
@@ -36,21 +37,37 @@ class TestCase(ProposalTest):
         super().__init__(logger, params, year)
 
     def process_dataframe(self, data):
-        raise NotImplementedError("Use load data")
-        # super().process_dataframe(data)
+        super().process_dataframe(data)
+        rp = self.required_params
+        patients_of_interest = data.loc[data["ITEM"] == rp.code_of_interest, "PIN"].unique().tolist()
+        patient_data = data[data["PIN"].isin(patients_of_interest)]
+        patient_data.reset_index(inplace=True)
+        groups = patient_data.groupby("PIN")
+        final_data = pd.DataFrame(columns=patient_data.columns)
+        exclusions = 0
+        for patient, group in tqdm(groups):
+            dos = group.loc[group["ITEM"] == rp.code_of_interest, "DOS"].unique().tolist()
+            if len(dos) == 1:
+                indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
+                final_data = final_data.append(patient_data[patient_data["index"].isin(indices)], ignore_index=True)
+            else:
+                self.log(f"Patient {patient} has {len(dos)} claims for {rp.code_of_interest} and was excluded")
+                exclusions += 1
+                continue
 
-        # return data
+        self.log(f"{exclusions} patients excluded")
+        return final_data.drop("index", axis=1)
 
     def get_test_data(self):
-        raise NotImplementedError("Use load data")
-        # super().get_test_data()
+        super().get_test_data()
+        self.test_data = self.processed_data.groupby(self.required_params.state_group_header)
 
     def load_data(self, data):
         super().load_data()
         self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
         # data = data[~data['PIN'].isin([8170350857,8244084150,3891897366,1749401692,3549753440,6046213577])]
-        data = data[~data['PIN'].str.contains("8244084150|6046213577|3891897366|358753440")]
+        data = data[~data['PIN'].str.contains("8244084150|6046213577|3891897366|358753440")] # this is not generalised...
         self.processed_data = data
 
         self.test_data = data.groupby(self.required_params.state_group_header)
@@ -335,6 +352,7 @@ class TestCase(ProposalTest):
         same_file = self.logger.output_path / 'same_file.csv'
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
 
+        regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
         ppp_filename = self.logger.output_path / "patients_per_provider"
         self.graphs.create_boxplot_group(self.providers_per_patient, regions.rsplit(','), "Providers per patient per region", ppp_filename)
 

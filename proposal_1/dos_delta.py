@@ -33,14 +33,16 @@ class TestCase(ProposalTest):
         all_patients = anaesthesia_patients.union(surgery_patients)
         patient_groups = data.groupby("PIN")
         self.log(f"{len(all_patients)} patients")
-        incomplete_matches = []
+        incomplete_matches = 0
         timedelta = []
         for patient in tqdm(all_patients):
             patient_data = patient_groups.get_group(patient)
             anaesthesia_dates = patient_data.loc[patient_data["ITEM"] == rp.anaesthesia_code, "DOS"].unique().tolist()
             surgery_dates = patient_data.loc[patient_data["ITEM"] == rp.surgery_code, "DOS"].unique().tolist()
             if len(anaesthesia_dates) != len(surgery_dates):
-                incomplete_matches.append(len(anaesthesia_dates) - len(surgery_dates))
+                difference = len(anaesthesia_dates) - len(surgery_dates)
+                if difference < 0:
+                    incomplete_matches += 1
                 continue
 
             for idx, date in enumerate(anaesthesia_dates):
@@ -48,11 +50,9 @@ class TestCase(ProposalTest):
                 y = pd.to_datetime(surgery_dates[idx])
                 timedelta.append((x - y).days)
 
-        self.log(f"{len(incomplete_matches)} incomplete matches")
+        self.log(f"{incomplete_matches} incomplete matches")
         filename = self.logger.output_path / "difference_plot"
-        incomplete_filename = self.logger.output_path / "incomplete_numbers_plot"
         self.graphs.create_boxplot(timedelta, f"Difference between DOS for {rp.anaesthesia_code} and {rp.surgery_code}", filename)
-        self.graphs.create_boxplot(incomplete_matches, f"Number of anaesthesias - surgeries for incomplete matches in {rp.anaesthesia_code} and {rp.surgery_code}", incomplete_filename)
             
 
             

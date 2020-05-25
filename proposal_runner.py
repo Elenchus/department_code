@@ -34,11 +34,8 @@ class TestDetails():
 
 def run_combined_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
-        # test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}", 
-        #                         fromlist=['TestCase'])
         test_file = import_module(f"proposal_{test_details.proposal}.{test_details.test_file_name}")
         test_case_class = getattr(test_file, "TestCase")
-        # test_case = test_file.TestCase(logger, test_details.params, test_details.years[-1])
         test_case = test_case_class(logger, test_details.params, test_details.years[-1])
         test_details.params = test_case.required_params
     
@@ -117,27 +114,27 @@ if __name__ == "__main__":
     # for x in [0.2, 0.4, 0.6, 0.8]:
     test_details = TestDetails(
         notes = "",
-        # params = {'basket_header': 'ITEM', 
-        #             'group_header':'PIN', 
-        #             'sub_group_header': None,
-        #             'state_group_header': 'PINSTATE',
-        #             'filters': {
-        #                 'conviction': {
-        #                     'value': 1.1,
-        #                     'operator': operator.ge
-        #                 }
-        #                 },
-        #             'min_support': 0.33},
+        params = {'basket_header': 'ITEM', 
+                    'group_header':'PIN', 
+                    'sub_group_header': None,
+                    'state_group_header': 'PINSTATE',
+                    'filters': {
+                        'conviction': {
+                            'value': 1.1,
+                            'operator': operator.ge
+                            }
+                        },
+                    'min_support': 0.33},
                     # 'scoring_method': 'ged',
                     # 'ged_support': 0.1},
-        params = None,
+        # params = None,
         proposal = 1,
         test_data = mbs,
         # test_data = 'knee_replacement_provider_subset.csv',
         # test_data = 'pathology_patient_subset.csv',
         # test_data = 'hip_49318_provider_subset_with_states_super_long.csv',
         # test_data = None,
-        test_file_name = f'dos_delta',
+        test_file_name = f'regional_variation',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]
     )
