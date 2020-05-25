@@ -10,14 +10,10 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        group_header:str = 'PIN'
-        basket_header:str = 'ITEM'
-        state_group_header:str = 'PINSTATE'
-        sub_group_header:str = None
         colour_only:bool = True
         min_support:float = 0.33
         filters:dict = None
-        ignore_providers_with_less_than_x_patients:int = 10
+        ignore_providers_with_less_than_x_patients:int = 0
         human_readable_suspicious_items:bool = False
         graph_style:str = 'fdp'
         code_of_interest:int = 49318
@@ -60,7 +56,7 @@ class TestCase(ProposalTest):
 
     def get_test_data(self):
         super().get_test_data()
-        self.test_data = self.processed_data.groupby(self.required_params.state_group_header)
+        self.test_data = self.processed_data.groupby("PINSTATE")
 
     def load_data(self, data):
         super().load_data()
@@ -70,7 +66,7 @@ class TestCase(ProposalTest):
         data = data[~data['PIN'].str.contains("8244084150|6046213577|3891897366|358753440")] # this is not generalised...
         self.processed_data = data
 
-        self.test_data = data.groupby(self.required_params.state_group_header)
+        self.test_data = data.groupby("PINSTATE")
 
     def get_exploratory_stats(self, data, region):
         self.log(f"Descriptive stats for {region}")
@@ -78,6 +74,8 @@ class TestCase(ProposalTest):
         self.log(f"{len(data['ITEM'].unique())} items claimed")
         self.log(f"{len(data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
         self.log(f"{len(data['PIN'].unique())} patients")
+        no_providers_of_interest = len(data.loc[data["ITEM"] == self.required_params.code_of_interest, "SPR"].unique())
+        self.log(f"{no_providers_of_interest} surgical providers for {region}")
 
         provider_episodes = []
         for _, g in data.groupby("SPR"):
@@ -103,7 +101,7 @@ class TestCase(ProposalTest):
                 self.code_converter.write_mbs_codes_to_csv(top_codes, top_file, [top_code_counts], ["No of occurrences"])
 
         providers_per_patient = []
-        providers_of_interest = data.loc[data["ITEM"] == 49318, "SPR"].unique().tolist()
+        providers_of_interest = data.loc[data["ITEM"] == self.required_params.code_of_interest, "SPR"].unique().tolist()
         provider_claims = data[data["SPR"].isin(providers_of_interest)].groupby("SPR")
         for _, claims in provider_claims:
             patients = claims["PIN"].unique()
@@ -167,14 +165,10 @@ class TestCase(ProposalTest):
             state_order.append(state)
             rp = self.required_params
 
-            all_unique_items = [str(x) for x in data[rp.basket_header].unique().tolist()]
+            all_unique_items = [str(x) for x in data["ITEM"].unique().tolist()]
             self.get_exploratory_stats(data, self.code_converter.convert_state_num(state))
-            mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, rp.basket_header, rp.group_header, rp.sub_group_header)
-
-            if rp.sub_group_header is None:
-                documents = mba_funcs.create_documents(mba_funcs.group_data)
-            else:
-                documents = mba_funcs.create_documents(mba_funcs.subgroup_data)
+            mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN")
+            documents = mba_funcs.create_documents(mba_funcs.group_data)
 
             self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
 
@@ -193,14 +187,10 @@ class TestCase(ProposalTest):
             for k in d.keys():
                 d[k].pop("No other items", None)
 
-            name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_state_{state}_graph"
-            # name = f"{rp.group_header}_{rp.sub_group_header}_{rp.basket_header}_state_{state}_graph.png"
-            if rp.sub_group_header is None:
-                title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and in state {self.code_converter.convert_state_num(state)}'
-            else:
-                title = f'Connections between {rp.basket_header} when grouped by {rp.group_header} and sub-grouped by {rp.sub_group_header} and in state {self.code_converter.convert_state_num(state)}'
+            name = f"PIN_ITEM_state_{state}_graph"
+            title = f'Connections between ITEM when grouped by PIN and in state {self.code_converter.convert_state_num(state)}'
 
-            if rp.colour_only and rp.basket_header == "ITEM":
+            if rp.colour_only and "ITEM" == "ITEM":
                 formatted_d, attrs, legend = self.models.mba.colour_mbs_codes(d)
             else:
                 formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
@@ -226,85 +216,79 @@ class TestCase(ProposalTest):
             self.graphs.create_visnetwork(formatted_d, name, title, attrs)
             # self.graphs.create_rchord(formatted_d,name,title)
 
-            if rp.basket_header == 'ITEM' and rp.group_header in ['PIN', 'SPR']:
-                self.log("Finding suspicious providers")
-                fee_record = None
-                if rp.basket_header == 'ITEM':
-                    fee_record = {x: {} for x in all_unique_items}
-                    for node in fee_record:
-                        fee_record[node]['weight'] =  self.code_converter.get_mbs_item_fee(node)[0]
-                        
-                all_graphs = {}
-                suspicious_transactions = {}
-                suspicion_scores = []
-                edit_graphs = {}
-                edit_attrs = {}
-                providers = data.loc[data["ITEM"] == 49318, "SPR"].unique().tolist()
-                for provider in tqdm(providers):
-                    provider_docs = []
-                    if rp.group_header == 'PIN': 
-                        patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
-                        if len(patients) < rp.ignore_providers_with_less_than_x_patients:
-                            continue
+            self.log("Finding suspicious providers")
+            fee_record = None
+            fee_record = {x: {} for x in all_unique_items}
+            for node in fee_record:
+                fee_record[node]['weight'] =  self.code_converter.get_mbs_item_fee(node)[0]
+                    
+            all_graphs = {}
+            suspicious_transactions = {}
+            suspicion_scores = []
+            edit_graphs = {}
+            edit_attrs = {}
+            providers = data.loc[data["ITEM"] == rp.code_of_interest, "SPR"].unique().tolist() # this is no longer generalised
+            for provider in tqdm(providers):
+                provider_docs = []
+                patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
+                if len(patients) < rp.ignore_providers_with_less_than_x_patients:
+                    continue
+                patient_data = data.loc[data['PIN'].isin(patients)]
 
-                        patient_data = data.loc[data['PIN'].isin(patients)]
-                    else:
-                        patient_data = data.loc[data['SPR'] == provider]
+                patient_data_groups = patient_data.groupby('PIN')
+                provider_items = patient_data['ITEM'].unique().tolist()
+                for _, patient_data_group in patient_data_groups:
+                    doc = patient_data_group['ITEM'].unique().tolist()
+                    provider_docs.append(doc)
 
-                    patient_data_groups = patient_data.groupby('PIN')
-                    provider_items = patient_data['ITEM'].unique().tolist()
-                    for _, patient_data_group in patient_data_groups:
-                        doc = patient_data_group['ITEM'].unique().tolist()
-                        provider_docs.append(doc)
+                provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.min_support)
+                ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, fee_record)
+                suspicious_transactions[provider] = ged
+                suspicion_scores.append(ged)
+                edit_attrs[provider] = edit_attr
+                edit_graphs[provider] = edit_d
+                all_graphs[provider] = provider_model
 
-                    provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.min_support)
-                    ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, fee_record)
-                    suspicious_transactions[provider] = ged
-                    suspicion_scores.append(ged)
-                    edit_attrs[provider] = edit_attr
-                    edit_graphs[provider] = edit_d
-                    all_graphs[provider] = provider_model
+            suspicious_transaction_list.append(suspicious_transactions)
+            all_suspicion_scores.append(suspicion_scores)
+            suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
+            self.log(suspicion_matrix.describe())
+            susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
+            state_suspicious_providers = []
+            for idx, s in enumerate(susp):
+                state_suspicious_providers.append(s)
+                self.log(f"Rank {idx} provider {s} has the following RSPs")
+                rsps = data.loc[data['SPR'] == s, 'SPR_RSP'].unique().tolist()
+                for rsp in rsps:
+                    self.log(self.code_converter.convert_rsp_num(rsp))
 
-                suspicious_transaction_list.append(suspicious_transactions)
-                all_suspicion_scores.append(suspicion_scores)
-                suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
-                self.log(suspicion_matrix.describe())
-                susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
-                state_suspicious_providers = []
-                for idx, s in enumerate(susp):
-                    state_suspicious_providers.append(s)
-                    self.log(f"Rank {idx} provider {s} has the following RSPs")
-                    rsps = data.loc[data['SPR'] == s, 'SPR_RSP'].unique().tolist()
-                    for rsp in rsps:
-                        self.log(self.code_converter.convert_rsp_num(rsp))
+                group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket ITEM for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
+                group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
+                group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
+                # mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
+                self.graphs.create_visnetwork(group_graph,group_graph_name,group_graph_title,attrs=group_attrs)
 
-                    group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
-                    group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
-                    group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
-                    # mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
-                    self.graphs.create_visnetwork(group_graph,group_graph_name,group_graph_title,attrs=group_attrs)
+                edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket ITEM for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
+                edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
+                if rp.human_readable_suspicious_items:
+                    converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
+                else:
+                    converted_edit_graph = edit_graphs[s]
+                    _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(converted_edit_graph)
 
-                    edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket {rp.basket_header} for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
-                    edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
-                    if rp.human_readable_suspicious_items:
-                        converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
-                    else:
-                        converted_edit_graph = edit_graphs[s]
-                        _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(converted_edit_graph)
+                for key in new_edit_attrs:
+                    code = key.split('\n')[-1]
+                    if s in edit_attrs:
+                        if code in edit_attrs[s]:
+                            if 'shape' in edit_attrs[s][code]:
+                                new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
-                    for key in new_edit_attrs:
-                        code = key.split('\n')[-1]
-                        if s in edit_attrs:
-                            if code in edit_attrs[s]:
-                                if 'shape' in edit_attrs[s][code]:
-                                    new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
+                # mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
+                self.graphs.create_visnetwork(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
+                suspicious_filename = self.logger.output_path / f"suspicious_provider_{idx}_in_state_{state}.csv"
+                self.write_suspicions_to_file(converted_edit_graph, new_edit_attrs, suspicious_filename)
 
-                    # mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
-                    self.graphs.create_visnetwork(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
-                    suspicious_filename = self.logger.output_path / f"suspicious_provider_{idx}_in_state_{state}.csv"
-                    self.write_suspicions_to_file(converted_edit_graph, new_edit_attrs, suspicious_filename)
-
-                suspicious_provider_list.append(state_suspicious_providers)
+            suspicious_provider_list.append(state_suspicious_providers)
 
         labels = ["Nation"] + [self.code_converter.convert_state_num(x) for x in range(1,6)]
         self.graphs.create_boxplot_group(self.item_stats, labels, "Claims per item", "claims_items")
@@ -326,10 +310,10 @@ class TestCase(ProposalTest):
                     line = ','.join(self.code_converter.get_mbs_code_as_line(code))
                     item_cost, fee_type = self.code_converter.get_mbs_item_fee(code)
                     total_cost += item_cost
-                    item_cost = "${:.2f}".format(item_cost)
+                    item_cost = "${:.2f.format(item_cost)}"
                     f.write(f"{line},{item_cost},{fee_type}\r\n")
 
-                total_cost = "${:.2f}".format(total_cost)
+                total_cost = "${:.2f.format(total_cost)}"
                 self.log(f"Cost for {self.code_converter.convert_state_num(state_order[i])}: {total_cost}")
 
         differences = set()
@@ -397,11 +381,11 @@ class TestCase(ProposalTest):
             #         df.at[i,j] = ratio
 
             # x = df.to_numpy().sum()
-            # self.log(f"Community similarity measure in {self.code_converter.convert_state_num(state)}: {x/2} / {(len(idx)**2) / 2}")
+            # self.log(f"Community similarity measure in {self.code_converter.convert_state_num(state)}: {x/2} / {(len(idx)**2) / 2)
 
             # patient_model = Word2Vec(communities)
             # pca = self.models.pca_2d(patient_model[patient_model.wv.vocab])
-            # self.models.k_means_cluster(pca, 10, 'Patient clusters', f"k_means_state_{state}")
+            # self.models.k_means_cluster(pca, 10, 'Patient clusters', f"k_means_state_{state)
 
             provider_graph = {}
             for community in communities:
@@ -426,7 +410,6 @@ class TestCase(ProposalTest):
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
 
-
             
             # for k, v in provider_graph.items():
             #     provider_graph[k] = {item: None for item in v}
@@ -434,4 +417,4 @@ class TestCase(ProposalTest):
             # converted_graph = self.graphs.contract_largest_maximum_cliques(provider_graph)
             # self.log("Graphing")
             # filename = self.logger.output_path / f"provider_communities_state_{state}.png"
-            # self.graphs.visual_graph(converted_graph, filename, f"Provider communities in {self.code_converter.convert_state_num(state)}", directed=False)
+            # self.graphs.visual_graph(converted_graph, filename, f"Provider communities in {self.code_converter.convert_state_num(state), directed=False)

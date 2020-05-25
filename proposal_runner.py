@@ -114,10 +114,7 @@ if __name__ == "__main__":
     # for x in [0.2, 0.4, 0.6, 0.8]:
     test_details = TestDetails(
         notes = "",
-        params = {'basket_header': 'ITEM', 
-                    'group_header':'PIN', 
-                    'sub_group_header': None,
-                    'state_group_header': 'PINSTATE',
+        params = {
                     'filters': {
                         'conviction': {
                             'value': 1.1,
@@ -125,8 +122,6 @@ if __name__ == "__main__":
                             }
                         },
                     'min_support': 0.33},
-                    # 'scoring_method': 'ged',
-                    # 'ged_support': 0.1},
         # params = None,
         proposal = 1,
         test_data = mbs,
