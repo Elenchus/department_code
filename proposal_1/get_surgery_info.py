@@ -32,8 +32,12 @@ class TestCase(ProposalTest):
         super().run_test()
         rp = self.RequiredParams
         data = self.test_data
-        patient_ids = data.loc[data["ITEM"] == rp.anaesthetic_code, "PIN"].unique().tolist()
-        patient_claims = data[data["PIN"].isin(patient_ids)]
+        if rp.anaesthetic_code is None:
+            patient_claims = data
+        else:
+            patient_ids = data.loc[data["ITEM"] == rp.anaesthetic_code, "PIN"].unique().tolist()
+            patient_claims = data[data["PIN"].isin(patient_ids)]
+
         patient_groups = patient_claims.groupby("PIN")
         all_patient_surgery_dicts = []
         patient_surgery_claims = data.loc[(data["ITEM"] >= rp.surgery_code_start) & (data["ITEM"] < rp.surgery_code_end), "ITEM"].value_counts()
