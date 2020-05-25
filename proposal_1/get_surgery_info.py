@@ -6,9 +6,10 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        anaesthetic_code:int = 21214
-        surgery_code_start:int = 49300
-        surgery_code_end:int = 49500
+        anaesthetic_code:int = 21402
+        surgery_code_start:int = 49500
+        surgery_code_end:int = 49700
+        surgery_description:str = "knee"
         alternate_code_check_start:int = None
         alternate_code_check_end:int = None
 
@@ -58,14 +59,17 @@ class TestCase(ProposalTest):
         # header = f"Item,{regions}\n"
         regions = "Nation"
         header = f"Item,{regions}\n"
-        filename = self.logger.output_path / "surgery_item_counts.csv"
+        filename = self.logger.output_path / f"{rp.surgery_description}_surgery_item_counts.csv"
         with open(filename, 'w+') as f:
             f.write(header)
             for item in sorted(all_patient_surgery_dicts[0].keys()):
                 line = item.rsplit('+')
-                line = [x for x in line if x != "None"]
-                line.sort()
+                if len(line) > 1:
+                    line = [x for x in line if x != "None"]
+                    line.sort()
+
                 line = ' and '.join(line)
+
                 for i in range(len(all_patient_surgery_dicts)):
                     count = all_patient_surgery_dicts[i].get(item, 0)
                     line = f"{line},{count}"
