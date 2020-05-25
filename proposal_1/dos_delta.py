@@ -1,6 +1,7 @@
 import pandas as pd
 from dataclasses import dataclass
 from phd_utils.base_proposal_test import ProposalTest
+from tqdm import tqdm
 
 class TestCase(ProposalTest):
     @dataclass
@@ -32,22 +33,26 @@ class TestCase(ProposalTest):
         all_patients = anaesthesia_patients.union(surgery_patients)
         patient_groups = data.groupby("PIN")
         self.log(f"{len(all_patients)} patients")
-        incomplete_matches = 0
+        incomplete_matches = []
         timedelta = []
-        for patient in all_patients:
+        for patient in tqdm(all_patients):
             patient_data = patient_groups.get_group(patient)
-            anaesthesia_dates = pd.to_datetime(patient_data.loc[patient_data["ITEM"] == rp.anaesthesia_code, "DOS"]).unique().tolist()
-            surgery_dates = pd.to_datetime(patient_data.loc[patient_data["ITEM"] == rp.surgery_code, "DOS"]).unique().tolist()
+            anaesthesia_dates = patient_data.loc[patient_data["ITEM"] == rp.anaesthesia_code, "DOS"].unique().tolist()
+            surgery_dates = patient_data.loc[patient_data["ITEM"] == rp.surgery_code, "DOS"].unique().tolist()
             if len(anaesthesia_dates) != len(surgery_dates):
-                incomplete_matches += 1
+                incomplete_matches.append(len(anaesthesia_dates) - len(surgery_dates))
                 continue
 
-            for idx, x in anaesthesia_dates:
-                timedelta.append(x - surgery_dates[idx])
+            for idx, date in enumerate(anaesthesia_dates):
+                x = pd.to_datetime(date)
+                y = pd.to_datetime(surgery_dates[idx])
+                timedelta.append((x - y).days)
 
-        self.log(f"{incomplete_matches} incomplete matches")
+        self.log(f"{len(incomplete_matches)} incomplete matches")
         filename = self.logger.output_path / "difference_plot"
+        incomplete_filename = self.logger.output_path / "incomplete_numbers_plot"
         self.graphs.create_boxplot(timedelta, f"Difference between DOS for {rp.anaesthesia_code} and {rp.surgery_code}", filename)
+        self.graphs.create_boxplot(incomplete_matches, f"Number of anaesthesias - surgeries for incomplete matches in {rp.anaesthesia_code} and {rp.surgery_code}", incomplete_filename)
             
 
             
