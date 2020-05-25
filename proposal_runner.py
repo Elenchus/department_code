@@ -137,7 +137,7 @@ if __name__ == "__main__":
         # test_data = 'pathology_patient_subset.csv',
         # test_data = 'hip_49318_provider_subset_with_states_super_long.csv',
         # test_data = None,
-        test_file_name = f'get_surgery_info',
+        test_file_name = f'dos_delta',
         test_format = TestFormat.CombineYears,
         years = [str(x) for x in [2014]]
     )
