@@ -32,7 +32,6 @@ class TestCase(ProposalTest):
         self.provider_stats = []
         self.patient_stats = []
         self.provider_episode_stats = []
-        self.hip_dicts = []
         self.providers_per_patient = []
         super().__init__(logger, params, year)
 
@@ -85,7 +84,6 @@ class TestCase(ProposalTest):
             if description == "Item":
                 top_codes = top_selection.index.tolist()
                 self.code_converter.write_mbs_codes_to_csv(top_codes, top_file, [top_code_counts], ["No of occurrences"])
-
 
         providers_per_patient = []
         providers_of_interest = data.loc[data["ITEM"] == 49318, "SPR"].unique().tolist()
@@ -336,21 +334,6 @@ class TestCase(ProposalTest):
         sames = set.intersection(*state_sets)
         same_file = self.logger.output_path / 'same_file.csv'
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
-
-        hip_dicts = self.hip_dicts
-        regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
-        header = f"Item,{regions}\n"
-        filename = self.logger.output_path / "hip_item_counts.csv"
-        with open(filename, 'w+') as f:
-            f.write(header)
-            for item in sorted(hip_dicts[0].keys()):
-                line = f"{item}"
-                for i in range(len(hip_dicts)):
-                    count = hip_dicts[i].get(item, 0)
-                    line = f"{line},{count}"
-
-                line = f"{line}\n"
-                f.write(line)
 
         ppp_filename = self.logger.output_path / "patients_per_provider"
         self.graphs.create_boxplot_group(self.providers_per_patient, regions.rsplit(','), "Providers per patient per region", ppp_filename)
