@@ -86,35 +86,6 @@ class TestCase(ProposalTest):
                 top_codes = top_selection.index.tolist()
                 self.code_converter.write_mbs_codes_to_csv(top_codes, top_file, [top_code_counts], ["No of occurrences"])
 
-        # get hip surgery items per patient in the data
-        no_of_hips = data.loc[(self.processed_data["ITEM"] >= 49300) & (self.processed_data["ITEM"] < 49500), "ITEM"].value_counts()
-        all_hip_claims = no_of_hips.index
-        patient_hip_dict = {}
-        patient_groups = data.groupby("PIN")
-        no_hip_claim_patients = []
-        for pat, g in patient_groups:
-            claimed_items = "None"
-            for item in all_hip_claims:
-                un = g["ITEM"].unique().tolist()
-                if item in un:
-                    claimed_items = f"{claimed_items}+{item}"
-            
-            count = patient_hip_dict.get(claimed_items, 0) + 1
-            patient_hip_dict[claimed_items] = count
-            if claimed_items == 'None':
-                no_hip_claim_patients.append(pat)
-
-        self.hip_dicts.append(patient_hip_dict)
-
-        # get knee surgery items per patient in the data
-        knee_claims = 0
-        for name in no_hip_claim_patients:
-            g = patient_groups.get_group(name)
-            items = g.loc[(g["ITEM"] >= 49500) & (g["ITEM"] < 50000), "ITEM"].unique()
-            if len(items) > 0:
-                knee_claims += 1
-
-        self.log(f"{knee_claims} of {len(no_hip_claim_patients)} had a knee surgery")
 
         providers_per_patient = []
         providers_of_interest = data.loc[data["ITEM"] == 49318, "SPR"].unique().tolist()
