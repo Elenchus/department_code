@@ -12,14 +12,15 @@ class TestCase(ProposalTest):
     class RequiredParams:
         colour_only:bool = True
         min_support:float = 0.33
+        provider_min_support_count:float = 3
         filters:dict = None
-        ignore_providers_with_less_than_x_patients:int = 0
+        ignore_providers_with_less_than_x_patients:int = 4
         human_readable_suspicious_items:bool = False
         graph_style:str = 'fdp'
         code_of_interest:int = 49318
-
+        
     FINAL_COLS = ["PIN", "ITEM", "PINSTATE", "SPR", "SPR_RSP", "DOS"]
-    INITIAL_COLS = FINAL_COLS
+    INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
     test_data = None
@@ -32,27 +33,82 @@ class TestCase(ProposalTest):
         self.providers_per_patient = []
         super().__init__(logger, params, year)
 
+    def check_claim_validity(self, indexed_data):
+        self.log("Checking patient claim validity")
+        patients_to_check = indexed_data.loc[indexed_data["MDV_NUMSERV"] != 1, "PIN"].unique().tolist()
+        patient_groups = indexed_data.groupby("PIN")
+        items_to_remove = []
+        for patient_id in tqdm(patients_to_check):
+            patient = patient_groups.get_group(patient_id)
+            items_to_check = patient.loc[indexed_data["MDV_NUMSERV"] != 1, "ITEM"].unique().tolist()
+            item_groups = patient[patient["ITEM"].isin(items_to_check)].groupby("ITEM")
+            for item, item_group in item_groups:
+                dos_groups = item_group.groupby("DOS")
+                zero_date_indices = item_group.loc[item_group["MDV_NUMSERV"] == 0, "index"].unique().tolist()
+                items_to_remove.extend(zero_date_indices)
+
+                neg_date = item_group.loc[item_group["MDV_NUMSERV"] == -1, "DOS"].unique().tolist()
+                for date in neg_date:
+                    date_claims = dos_groups.get_group(date)
+                    date_total = date_claims["MDV_NUMSERV"].sum()
+                    indices = date_claims["index"].tolist()
+                    if date_total == 0:
+                        items_to_remove.extend(indices)
+                    elif date_total < 0:
+                        raise ValueError(f"Patient {patient_id} has unusual claim reversals")
+                    else:
+                        mdvs = date_claims["MDV_NUMSERV"].tolist()
+                        ex = []
+                        continue # need to come back to this to complete, but will work for now because number of claims per day is unimportant
+                        # for i in range(len(mdvs) -1):                    
+                        #     if mdvs[i + 1] == -1:
+                        #         if mdvs[i] == -1:
+                        #             raise ValueError("Unexpected MDV_NUMSERV behaviour")
+
+                        #         ex.append(indices[i])
+                        #         ex.append(indices[i+1])
+
+        return indexed_data[~indexed_data["index"].isin(items_to_remove)]
+
     def process_dataframe(self, data):
         super().process_dataframe(data)
         rp = self.required_params
         patients_of_interest = data.loc[data["ITEM"] == rp.code_of_interest, "PIN"].unique().tolist()
         patient_data = data[data["PIN"].isin(patients_of_interest)]
         patient_data.reset_index(inplace=True)
+        patient_data = self.check_claim_validity(patient_data)
+        assert all(patient_data["MDV_NUMSERV"].tolist())
+
+        patient_data["PIN"] = patient_data["PIN"].astype(str)
         groups = patient_data.groupby("PIN")
         final_data = pd.DataFrame(columns=patient_data.columns)
         exclusions = 0
+        splits = 0
         for patient, group in tqdm(groups):
             dos = group.loc[group["ITEM"] == rp.code_of_interest, "DOS"].unique().tolist()
-            if len(dos) == 1:
+            number_of_surgeries = len(dos)
+            if number_of_surgeries == 1:
                 indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
                 final_data = final_data.append(patient_data[patient_data["index"].isin(indices)], ignore_index=True)
-            else:
+            elif number_of_surgeries == 0:
                 self.log(f"Patient {patient} has {len(dos)} claims for {rp.code_of_interest} and was excluded")
                 exclusions += 1
                 continue
+            else:
+                if number_of_surgeries > 2:
+                    self.log(f"Patient {patient} had {number_of_surgeries} surgeries")
+
+                splits += 1
+                for i in range(len(dos)):
+                    indices = group.loc[group["DOS"] == dos[i], "index"].tolist()
+                    temp_df = patient_data[patient_data["index"].isin(indices)]
+                    temp_df["PIN"] = temp_df["PIN"] + f"{i}"
+                    final_data = final_data.append(temp_df, ignore_index=True)
 
         self.log(f"{exclusions} patients excluded")
-        return final_data.drop("index", axis=1)
+        self.log(f"{splits} patients split")
+
+        return final_data.drop(["index", "MDV_NUMSERV"], axis=1)
 
     def get_test_data(self):
         super().get_test_data()
@@ -227,7 +283,7 @@ class TestCase(ProposalTest):
             suspicion_scores = []
             edit_graphs = {}
             edit_attrs = {}
-            providers = data.loc[data["ITEM"] == rp.code_of_interest, "SPR"].unique().tolist() # this is no longer generalised
+            providers = data.loc[data["ITEM"] == rp.code_of_interest, "SPR"].unique().tolist() 
             for provider in tqdm(providers):
                 provider_docs = []
                 patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
@@ -241,7 +297,7 @@ class TestCase(ProposalTest):
                     doc = patient_data_group['ITEM'].unique().tolist()
                     provider_docs.append(doc)
 
-                provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.min_support)
+                provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.provider_min_support_count)
                 ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, fee_record)
                 suspicious_transactions[provider] = ged
                 suspicion_scores.append(ged)
@@ -355,10 +411,10 @@ class TestCase(ProposalTest):
                 neighbour_providers = data.loc[data['PIN'].isin(claims), 'SPR'].unique().tolist()
                 neighbour_providers.remove(provider)
                 for neighbour in neighbour_providers:
-                    neighbour_score = state_providers.get(neighbour, "below patient threshold") 
+                    neighbour_score = state_providers.get(neighbour, "- unscored") 
                     if isinstance(neighbour_score, float):
                         neighbour_score = f'{neighbour_score:.2f}'
-                    self.log(f"Neighbour {neighbour} has score {neighbour_score}")
+                        self.log(f"Neighbour {neighbour} has score {neighbour_score}")
 
             self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
             patients = data.groupby('PIN')
