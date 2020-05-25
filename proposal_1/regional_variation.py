@@ -155,6 +155,7 @@ class TestCase(ProposalTest):
 
     def run_test(self):
         super().run_test()
+        all_suspicion_scores = []
         state_records = []
         state_order = []
         suspicious_provider_list = []
@@ -235,6 +236,7 @@ class TestCase(ProposalTest):
                         
                 all_graphs = {}
                 suspicious_transactions = {}
+                suspicion_scores = []
                 edit_graphs = {}
                 edit_attrs = {}
                 providers = data.loc[data["ITEM"] == 49318, "SPR"].unique().tolist()
@@ -258,11 +260,13 @@ class TestCase(ProposalTest):
                     provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.min_support)
                     ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, fee_record)
                     suspicious_transactions[provider] = ged
+                    suspicion_scores.append(ged)
                     edit_attrs[provider] = edit_attr
                     edit_graphs[provider] = edit_d
                     all_graphs[provider] = provider_model
 
                 suspicious_transaction_list.append(suspicious_transactions)
+                all_suspicion_scores.append(suspicion_scores)
                 suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
                 self.log(suspicion_matrix.describe())
                 susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
@@ -353,8 +357,9 @@ class TestCase(ProposalTest):
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
 
         regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
-        ppp_filename = self.logger.output_path / "patients_per_provider"
-        self.graphs.create_boxplot_group(self.providers_per_patient, regions.rsplit(','), "Providers per patient per region", ppp_filename)
+        self.graphs.create_boxplot_group(self.providers_per_patient, regions.rsplit(','), "Providers per patient per region", "patients_per_provider")
+        non_nation_regions = "ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
+        self.graphs.create_boxplot_group(all_suspicion_scores, non_nation_regions.rsplit(','), f"Provider suspicion scores per region for item {rp.code_of_interest}", "sus_boxes")
 
         for state, data in self.test_data:
             self.log(f"Getting suspicious provider neighbours for {self.code_converter.convert_state_num(state)}")
@@ -377,6 +382,7 @@ class TestCase(ProposalTest):
             for name, group in patients:
                 community = set(str(x) for x in group['SPR'].unique())
                 communities.append(community)
+                
 
             # idx = list(range(len(communities)))
             # df = pd.DataFrame(0, columns=idx, index=idx, dtype=float)
