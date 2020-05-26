@@ -30,7 +30,7 @@ class TestCase(ProposalTest):
         self.provider_stats = []
         self.patient_stats = []
         self.provider_episode_stats = []
-        self.providers_per_patient = []
+        self.patients_per_surgical_provider = []
         super().__init__(logger, params, year)
 
     def check_claim_validity(self, indexed_data):
@@ -158,16 +158,16 @@ class TestCase(ProposalTest):
                 top_codes = top_selection.index.tolist()
                 self.code_converter.write_mbs_codes_to_csv(top_codes, top_file, [top_code_counts], ["No of occurrences"])
 
-        providers_per_patient = []
+        patients_per_surgical_provider = []
         providers_of_interest = data.loc[data["ITEM"] == self.required_params.code_of_interest, "SPR"].unique().tolist()
         provider_claims = data[data["SPR"].isin(providers_of_interest)].groupby("SPR")
         for _, claims in provider_claims:
             patients = claims["PIN"].unique()
-            providers_per_patient.append(len(patients))
+            patients_per_surgical_provider.append(len(patients))
 
-        self.providers_per_patient.append(providers_per_patient)
-        df = pd.DataFrame(providers_per_patient)
-        self.log(f"Providers per patient in {region}")
+        self.patients_per_surgical_provider.append(patients_per_surgical_provider)
+        df = pd.DataFrame(patients_per_surgical_provider)
+        self.log(f"Episodes per surgical provider in {region}")
         self.log(df.describe())
 
     def write_model_to_file(self, d, filename):
@@ -399,7 +399,7 @@ class TestCase(ProposalTest):
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
 
         regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
-        self.graphs.create_boxplot_group(self.providers_per_patient, regions.rsplit(','), "Providers per patient per region", "patients_per_provider")
+        self.graphs.create_boxplot_group(self.patients_per_surgical_provider, regions.rsplit(','), "Episodes per surgical provider per region", "patients_per_provider")
         non_nation_regions = "ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
         self.graphs.create_boxplot_group(all_suspicion_scores, non_nation_regions.rsplit(','), f"Provider suspicion scores per region for item {rp.code_of_interest}", "sus_boxes")
 
