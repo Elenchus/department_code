@@ -17,7 +17,7 @@ class TestCase(ProposalTest):
         ignore_providers_with_less_than_x_patients:int = 4
         human_readable_suspicious_items:bool = False
         graph_style:str = 'fdp'
-        code_of_interest:int = 49318
+        code_of_interest:int = 49115
         
     FINAL_COLS = ["PIN", "ITEM", "PINSTATE", "SPR", "SPR_RSP", "DOS"]
     INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
@@ -57,9 +57,11 @@ class TestCase(ProposalTest):
                     elif date_total < 0:
                         raise ValueError(f"Patient {patient_id} has unusual claim reversals")
                     else:
-                        mdvs = date_claims["MDV_NUMSERV"].tolist()
-                        ex = []
-                        continue # need to come back to this to complete, but will work for now because number of claims per day is unimportant
+                        # need to come back to this to complete, but will work for now because number of claims per day is unimportant
+                        mdvs = date_claims.loc[date_claims["MDV_NUMSERV"] == -1, "index"].tolist()
+                        items_to_remove.extend(mdvs)
+                        # mdvs = date_claims["MDV_NUMSERV"].tolist()
+                        # ex = []
                         # for i in range(len(mdvs) -1):                    
                         #     if mdvs[i + 1] == -1:
                         #         if mdvs[i] == -1:
@@ -77,7 +79,7 @@ class TestCase(ProposalTest):
         patient_data = data[data["PIN"].isin(patients_of_interest)]
         patient_data.reset_index(inplace=True)
         patient_data = self.check_claim_validity(patient_data)
-        assert all(patient_data["MDV_NUMSERV"].tolist())
+        assert all(x==1 for x in patient_data["MDV_NUMSERV"].tolist())
 
         patient_data["PIN"] = patient_data["PIN"].astype(str)
         groups = patient_data.groupby("PIN")

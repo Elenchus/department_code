@@ -6,10 +6,10 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        anaesthetic_code:int = 21402
-        surgery_code_start:int = 49500
-        surgery_code_end:int = 49700
-        surgery_description:str = "knee"
+        anaesthetic_code:int = 21638
+        surgery_code_start:int = 48900 
+        surgery_code_end:int = 49000
+        surgery_description:str = "elbow"
         alternate_code_check_start:int = None
         alternate_code_check_end:int = None
 
@@ -40,7 +40,12 @@ class TestCase(ProposalTest):
 
         patient_groups = patient_claims.groupby("PIN")
         all_patient_surgery_dicts = []
-        patient_surgery_claims = data.loc[(data["ITEM"] >= rp.surgery_code_start) & (data["ITEM"] < rp.surgery_code_end), "ITEM"].value_counts()
+        if rp.surgery_code_start is None:
+            patient_surgery_claims = data["ITEM"].value_counts()
+            raise ValueError("This won't work")
+        else:
+            patient_surgery_claims = data.loc[(data["ITEM"] >= rp.surgery_code_start) & (data["ITEM"] < rp.surgery_code_end), "ITEM"].value_counts()
+
         all_hip_claims = patient_surgery_claims.index
         no_hip_claim_patients = []
         patient_surgery_dict = {}
