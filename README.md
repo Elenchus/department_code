@@ -12,7 +12,7 @@ This code is confirmed to be working in Python 3.6.8.
 
 ## Structure
 ### Overview
-The data analysis framework is split broadly into two sections:
+The data analysis framework is split broadly into two sections:<br/>
 • The 'utilities' folder contains tools used across data analyses, such as logging, graphing, and data extraction functions. It also contains an abstract base class and a template for data analyses<br/>
 • The 'data analysis' folder (and other, removed folders) contain instances of various data analyses which conform to the base class.<br/>
 
