@@ -117,7 +117,7 @@ def start_test(test_details, additional_folder_name_part=None):
         raise KeyError("Test format should be a TestFormat enum")
 
 if __name__ == "__main__":
-    for x in [0.2, 0.4, 0.6, 0.8]:
+    for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
         for item in [48918, 49318, 49518]:
             details = TestDetails(
                 notes="",
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                                 'operator': operator.gt
                                 }
                             },
-                        'min_support': 0.33,
+                        'min_support': x,
                         'code_of_interest': item},
                 # params = None,
                 test_data=mbs,
