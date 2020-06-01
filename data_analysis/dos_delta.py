@@ -1,6 +1,6 @@
 import pandas as pd
 from dataclasses import dataclass
-from phd_utils.base_proposal_test import ProposalTest
+from utilities.base_proposal_test import ProposalTest
 from tqdm import tqdm
 
 class TestCase(ProposalTest):

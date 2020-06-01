@@ -1,6 +1,6 @@
 import pandas as pd
 from dataclasses import dataclass
-from phd_utils.base_proposal_test import ProposalTest
+from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
     @dataclass
@@ -15,15 +15,14 @@ class TestCase(ProposalTest):
 
     def process_dataframe(self, data):
         raise NotImplementedError("Use load data")
-        # super().process_dataframe(data)
-
-        # return data
 
     def get_test_data(self):
         raise NotImplementedError("Use load data")
-        # super().get_test_data()
 
     def load_data(self, data):
+        if data is not None:
+            raise ValueError("No data is expected for this example")
+
         self.test_data = []
 
     def run_test(self):

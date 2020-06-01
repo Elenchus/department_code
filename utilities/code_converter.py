@@ -14,10 +14,10 @@ class CodeConverter:
 
         self.year = year
 
-        mbs_group_filename = 'phd_utils/mbs_groups.pkl'
-        mbs_item_filename = f'phd_utils/MBS_{year}.pkl'
-        rsp_filename = 'phd_utils/SPR_RSP.csv'
-        pbs_item_filename = 'phd_utils/pbs-item-drug-map.csv'
+        mbs_group_filename = 'utilities/mbs_groups.pkl'
+        mbs_item_filename = f'utilities/MBS_{year}.pkl'
+        rsp_filename = 'utilities/SPR_RSP.csv'
+        pbs_item_filename = 'utilities/pbs-item-drug-map.csv'
 
         if not os.path.isfile(rsp_filename):
             raise OSError("Cannot find SPR_RSP.csv - please put it in the file_utils folder")

@@ -1,6 +1,6 @@
 import pandas as pd
 from dataclasses import dataclass
-from phd_utils.base_proposal_test import ProposalTest
+from utilities.base_proposal_test import ProposalTest
 from tqdm import tqdm
 
 class TestCase(ProposalTest):
@@ -63,9 +63,6 @@ class TestCase(ProposalTest):
 
             all_patient_surgery_dicts.append(patient_surgery_dict)
 
-            # hip_dicts = self.hip_dicts
-            # regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
-            # header = f"Item,{regions}\n"
             regions = "Nation"
             header = f"Item,{regions}\n"
             filename = self.logger.output_path / f"{rp.surgery_description}_surgery_item_counts.csv"
@@ -86,7 +83,7 @@ class TestCase(ProposalTest):
                     line = f"{line}\n"
                     f.write(line)
 
-            # get alternate surgery items per patient in the data
+            # get alternate surgery items per patient in the data. Intended for finding incorrect surgery/anaesthesia combinations
             if rp.alternate_code_check_start is not None:
                 alternate_surgery_claims = 0
                 for name in tqdm(no_hip_claim_patients):

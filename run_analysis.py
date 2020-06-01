@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from functools import partial
 from importlib import import_module
-from phd_utils import file_utils
-from phd_utils.logger import Logger
+from utilities import file_utils
+from utilities.logger import Logger
 
 mbs = file_utils.DataSource.MBS
 pbs = file_utils.DataSource.PBS

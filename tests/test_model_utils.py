@@ -3,11 +3,10 @@ import math
 import unittest
 import numpy as np
 import pandas as pd
-import phd_utils.model_utils as model_utils
-from phd_utils.code_converter import CodeConverter
+import utilities.model_utils as model_utils
+from utilities.code_converter import CodeConverter
 from tests.mock_graph_utils import MockGraphUtils
 from tests.mock_logger import MockLogger
-from tests.mock_w2v import MockW2V
 
 def create_mba_test_data():
     documents = []
@@ -218,26 +217,5 @@ class ModelUtilsTest(unittest.TestCase):
         for v in d.values():
             assert len(v) == 7
 
-    def test_sum_and_average_vecors(self):
-        vocab = {}
-        for n in range(1, 5):
-            vocab[str(n)] = np.array([10**n, 2 * 10**n])
-
-        model = MockW2V(vocab)
-        data = [["A", 1], ["A", 2], ["B", 3], ["B", 4]] # 2d test, should maybe see what happens if I have too many columns
-        groups = itertools.groupby(data, key = lambda x: x[0])
-        (sums, avgs) = self.model.sum_and_average_vectors(model, groups)
-
-        assert len(sums) == 2
-        assert len(avgs) == 2
-        assert sums[0][0] == 110
-        assert sums[0][1] == 220
-        assert sums[1][0] == 11000
-        assert sums[1][1] == 22000
-        assert avgs[0][0] == 110 / 2
-        assert avgs[0][1] == 220 / 2
-        assert avgs[1][0] == 11000 / 2
-        assert avgs[1][1] == 22000 / 2
-        
 if __name__ == "__main__":
     unittest.main()

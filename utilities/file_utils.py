@@ -5,6 +5,7 @@ from enum import Enum, auto
 import pandas as pd
 
 class DataSource(Enum):
+    '''Data source types to distinguish between MBS and PBS data'''
     MBS = "MBS"
     PBS = "PBS"
 

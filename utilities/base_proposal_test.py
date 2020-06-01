@@ -3,9 +3,9 @@ import inspect
 import pandas as pd
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, is_dataclass
-from phd_utils.graph_utils import GraphUtils
-from phd_utils.model_utils import ModelUtils
-from phd_utils.code_converter import CodeConverter
+from utilities.graph_utils import GraphUtils
+from utilities.model_utils import ModelUtils
+from utilities.code_converter import CodeConverter
 
 class RequiredParams:
     def __init__(self, d, rp):

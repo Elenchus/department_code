@@ -1,9 +1,9 @@
 import unittest
-from phd_utils.code_converter import CodeConverter
+from utilities.code_converter import CodeConverter
 
 class TestCodeConverter(unittest.TestCase):
     def setUp(self):
-        self.cdv = CodeConverter()
+        self.cdv = CodeConverter(2019)
 
     def tearDown(self):
         pass

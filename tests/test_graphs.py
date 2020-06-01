@@ -1,5 +1,5 @@
 import unittest
-import phd_utils.graph_utils as graph_utils
+import utilities.graph_utils as graph_utils
 from tests.mock_logger import MockLogger
 
 class ModelUtilsTest(unittest.TestCase):
@@ -64,5 +64,5 @@ class ModelUtilsTest(unittest.TestCase):
             ({1: {}, 2: {}}, 1)
         ]
         for test, val in tests:
-            ged, _, _ = self.graphs.graph_edit_distance(model, test)
+            ged, _, _ = self.graphs.graph_edit_distance(model, test, edge_distance_costs=True)
             assert ged == val

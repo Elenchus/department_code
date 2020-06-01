@@ -1,10 +1,10 @@
 import pandas as pd
 import pickle
-from proposal_1.basic_mba import BasicMba
+from data_analysis.basic_mba import BasicMba
 from dataclasses import dataclass
 from enum import Enum
 from gensim.models import Word2Vec
-from phd_utils.base_proposal_test import ProposalTest
+from utilities.base_proposal_test import ProposalTest
 from tqdm import tqdm
 
 class TestCase(ProposalTest):
@@ -115,22 +115,20 @@ class TestCase(ProposalTest):
     def get_test_data(self):
         super().get_test_data()
         self.test_data = self.processed_data.groupby("PINSTATE")
+        self.models.mba.update_filters(self.required_params.filters)
 
     def load_data(self, data):
         super().load_data()
         self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
-        # data = data[~data['PIN'].isin([8170350857,8244084150,3891897366,1749401692,3549753440,6046213577])]
-        data = data[~data['PIN'].str.contains("8244084150|6046213577|3891897366|358753440")] # this is not generalised...
         self.processed_data = data
-
         self.test_data = data.groupby("PINSTATE")
 
     def get_exploratory_stats(self, data, region):
         self.log(f"Descriptive stats for {region}")
         self.log(f"{len(data)} claims")
         self.log(f"{len(data['ITEM'].unique())} items claimed")
-        self.log(f"{len(data['SPR'].unique())} providers") # should this be the reduced set only? of surgeons
+        self.log(f"{len(data['SPR'].unique())} providers") 
         self.log(f"{len(data['PIN'].unique())} patients")
         no_providers_of_interest = len(data.loc[data["ITEM"] == self.required_params.code_of_interest, "SPR"].unique())
         self.log(f"{no_providers_of_interest} surgical providers for {region}")
@@ -378,8 +376,7 @@ class TestCase(ProposalTest):
         for i in range(len(state_sets)):
             for j in range(len(state_sets)):
                 differences.update(state_sets[i].difference(state_sets[j]))
-        # u = set.difference(*state_sets)
-        # self.log(u)
+
         differences = list(differences)
         states = []
         for item in differences:

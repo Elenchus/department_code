@@ -11,7 +11,7 @@ from mlxtend.preprocessing import TransactionEncoder
 from matplotlib import markers
 from matplotlib import pyplot as plt
 from multiprocessing import Pool
-from phd_utils.mba_utils import MbaUtils
+from utilities.mba_utils import MbaUtils
 from sklearn import cluster, metrics
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
