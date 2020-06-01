@@ -1,7 +1,9 @@
+'''MBA functions'''
 import operator
 from tqdm import tqdm
 
 class BasicMba:
+    '''Class for holding data for MBA processed from MBS/PBS datasets'''
     def __init__(self, code_converter, test_data, model, graphs, basket_header, group_header, sub_group_header=None):
         self.code_converter = code_converter
         self.model = model
@@ -19,6 +21,7 @@ class BasicMba:
         self.create_groups()
 
     def convert_graph_and_attrs(self, d):
+        '''convert code information to human-readable within a graph'''
         attrs = None
         legend = None
         if self.basket_header == 'SPR_RSP':
@@ -37,6 +40,7 @@ class BasicMba:
         return converted_d, attrs, legend
 
     def create_documents(self, data):
+        '''Create MBA documents from data'''
         self.log("Creating documents")
         documents = []
 
@@ -51,17 +55,22 @@ class BasicMba:
         return documents
 
     def create_model(self, items, documents, min_support):
+        '''Create an MBA model'''
         d = self.model.mba.pairwise_market_basket(items,
-                                                documents,
-                                                min_support=min_support,
-                                                max_p_value=1)
+                                                  documents,
+                                                  min_support=min_support,
+                                                  max_p_value=1)
 
         return d
 
     def create_graph(self, d, name, title, attrs=None, graph_style='fdp'):
+        '''Create a visual graph from a graph dictionary'''
         filename = self.logger.output_path / f"{name}.png"
         filters = self.model.mba.filters
-        if filters['conviction']['value'] == 0 and filters['confidence']['value'] == 0 and (filters['certainty_factor']['value'] == 0 and filters['certainty_factor']['operator'] == operator.ge):
+        if filters['conviction']['value'] == 0 \
+           and filters['confidence']['value'] == 0 \
+           and (filters['certainty_factor']['value'] == 0 \
+           and filters['certainty_factor']['operator'] == operator.ge):
             directed = False
         else:
             directed = True
@@ -70,6 +79,7 @@ class BasicMba:
         self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs, graph_style=graph_style)
 
     def create_groups(self):
+        '''Create groups and subgroups from data'''
         self.group_data = self.test_data.groupby(self.group_header)
         if self.sub_group_header is not None:
             subgroup_data = []
@@ -83,6 +93,7 @@ class BasicMba:
             self.subgroup_data = None
 
     def get_suspicious_ged(self, model, data, min_support, attrs=None):
+        '''Find suspicious graph variants from data'''
         def reset():
             c = ""
             u = set()
@@ -115,9 +126,13 @@ class BasicMba:
 
         return suspicious_transactions, all_graphs, edit_graphs, edit_attrs
 
-    def get_suspicious_transaction_score(self, d, data, scoring_method='max', attrs=None, min_support = 0.005):
+    def get_suspicious_transaction_score(self, d, data, scoring_method='max', attrs=None, min_support=0.005):
+        '''Create and score models from data'''
         if scoring_method == 'ged':
-            suspicious_transactions, all_graphs, edit_graphs, edit_attrs = self.get_suspicious_ged(d, data, min_support, attrs)
+            suspicious_transactions, all_graphs, edit_graphs, edit_attrs = self.get_suspicious_ged(d,
+                                                                                                   data,
+                                                                                                   min_support,
+                                                                                                   attrs)
 
             return suspicious_transactions, all_graphs, edit_graphs, edit_attrs
 
@@ -155,6 +170,7 @@ class BasicMba:
         return suspicious_transactions
 
     def identify_closest_component(self, components, d):
+        '''Identify component a model is closest to'''
         test_items = self.graphs.flatten_graph_dict(d)
         component_score = []
         for component in components:
@@ -168,6 +184,7 @@ class BasicMba:
         return component_score.index(max_score)
 
     def log_exception_rules(self, model, threshold, ignore_list, documents):
+        '''Write exception rules to log file'''
         self.log("Getting exception rules")
         for antecedent in list(model.keys()):
             if antecedent in ignore_list:
@@ -178,12 +195,13 @@ class BasicMba:
                     continue
 
                 rules = self.model.mba.exception_rules(antecedent, consequent, threshold, documents)
-                if len(rules) > 0:
+                if rules:
                     for e in rules:
                         self.log(f"{antecedent} -> {consequent} -| {e}")
 
     def update_properties(self, basket_header, group_header, sub_group_header):
-        self.basket_header=basket_header
-        self.group_header=group_header
-        self.sub_group_header=sub_group_header
+        '''Change class properties'''
+        self.basket_header = basket_header
+        self.group_header = group_header
+        self.sub_group_header = sub_group_header
         self.create_groups()

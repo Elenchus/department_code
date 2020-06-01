@@ -27,7 +27,7 @@ class CodeConverter:
 
         with open(mbs_item_filename, 'rb') as f:
             self.mbs_item_dict = pickle.load(f)
-        
+
         with open(mbs_group_filename, 'rb') as f:
             self.mbs_groups_dict = pickle.load(f)
 
@@ -48,12 +48,12 @@ class CodeConverter:
             '7': 'CLEFT LIP AND CLEFT PALATE SERVICES',
             '8': 'MISCELLANEOUS SERVICES'
         }
-        
+
         try:
             x = d[cat_num]
         except KeyError:
             x = 'Item not in dictionary'
-        
+
         return x
 
     def convert_mbs_code_to_description(self, code):
@@ -74,7 +74,7 @@ class CodeConverter:
         sub = item['SubGroup']
 
         cat_desc = self.mbs_groups_dict[cat]["Label"]
-        group_desc = self.mbs_groups_dict[cat]["Groups"][group]["Label"] 
+        group_desc = self.mbs_groups_dict[cat]["Groups"][group]["Label"]
         if sub is None:
             return [cat_desc, group_desc]
 
@@ -157,6 +157,7 @@ class CodeConverter:
         return fee, fee_type
 
     def get_mbs_code_as_line(self, code):
+        '''Get MBS item code information as a string formatted for printing'''
         groups = self.convert_mbs_code_to_group_labels(code)
         desc = self.convert_mbs_code_to_description(code)
         mod_line = [f'"{x}"' for x in groups]
@@ -165,10 +166,11 @@ class CodeConverter:
 
         mod_line.append(str(code))
         mod_line.append(f'"{desc}"')
-        
+
         return mod_line
 
     def write_mbs_codes_to_csv(self, codes, filename, additional_cols=None, additional_headers=[]):
+        '''Get MBS item code information and write to a file'''
         with open(filename, 'w+') as f:
             line = "Group,Category,Sub-Category,Item,Description,Cost,FeeType"
             if additional_cols is not None:
@@ -188,6 +190,6 @@ class CodeConverter:
                 if additional_cols is not None:
                     for col in additional_cols:
                         line += f",{col[idx]}"
-                        
+
                 line += '\r\n'
                 f.write(line)

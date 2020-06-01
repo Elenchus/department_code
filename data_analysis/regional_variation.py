@@ -1,11 +1,11 @@
-import pandas as pd
+'''Main analysis file'''
 import pickle
-from data_analysis.basic_mba import BasicMba
 from dataclasses import dataclass
-from enum import Enum
-from gensim.models import Word2Vec
-from utilities.base_proposal_test import ProposalTest
+import pandas as pd
+from overrides import overrides
 from tqdm import tqdm
+from data_analysis.basic_mba import BasicMba
+from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
     @dataclass
@@ -34,6 +34,7 @@ class TestCase(ProposalTest):
         super().__init__(logger, params, year)
 
     def check_claim_validity(self, indexed_data):
+        '''confirm claims have not been reversed'''
         self.log("Checking patient claim validity")
         patients_to_check = indexed_data.loc[indexed_data["MDV_NUMSERV"] != 1, "PIN"].unique().tolist()
         patient_groups = indexed_data.groupby("PIN")
@@ -42,7 +43,7 @@ class TestCase(ProposalTest):
             patient = patient_groups.get_group(patient_id)
             items_to_check = patient.loc[indexed_data["MDV_NUMSERV"] != 1, "ITEM"].unique().tolist()
             item_groups = patient[patient["ITEM"].isin(items_to_check)].groupby("ITEM")
-            for item, item_group in item_groups:
+            for _, item_group in item_groups:
                 dos_groups = item_group.groupby("DOS")
                 zero_date_indices = item_group.loc[item_group["MDV_NUMSERV"] == 0, "index"].unique().tolist()
                 items_to_remove.extend(zero_date_indices)
@@ -57,7 +58,7 @@ class TestCase(ProposalTest):
                     elif date_total < 0:
                         raise ValueError(f"Patient {patient_id} has unusual claim reversals")
                     else:
-                        # need to come back to this to complete, but will work for now because number of claims per day is unimportant
+                        # need to come back and fix this, but is ok because number of claims per day is unimportant
                         mdvs = date_claims.loc[date_claims["MDV_NUMSERV"] == -1, "index"].tolist()
                         items_to_remove.extend(mdvs)
                         # mdvs = date_claims["MDV_NUMSERV"].tolist()
@@ -72,6 +73,7 @@ class TestCase(ProposalTest):
 
         return indexed_data[~indexed_data["index"].isin(items_to_remove)]
 
+    @overrides
     def process_dataframe(self, data):
         super().process_dataframe(data)
         rp = self.required_params
@@ -112,13 +114,15 @@ class TestCase(ProposalTest):
 
         return final_data.drop(["index", "MDV_NUMSERV"], axis=1)
 
+    @overrides
     def get_test_data(self):
         super().get_test_data()
         self.test_data = self.processed_data.groupby("PINSTATE")
         self.models.mba.update_filters(self.required_params.filters)
 
+    @overrides
     def load_data(self, data):
-        super().load_data()
+        super().load_data(data)
         self.models.mba.update_filters(self.required_params.filters)
         data = pd.read_csv(data)
         self.processed_data = data
@@ -168,7 +172,8 @@ class TestCase(ProposalTest):
         self.log(f"Episodes per surgical provider in {region}")
         self.log(df.describe())
 
-    def write_model_to_file(self, d, filename):
+    @staticmethod
+    def write_model_to_file(d, filename):
         header = "Item is claimed for at least 1/3 of unliateral hip replacements in the state within 2 weeks before or after the anaesthesia date of service,If the item is claimed for a patient these items were also likely to be claimed for that patient\n"
         with open(filename, 'w+') as f:
             f.write(header)
@@ -177,14 +182,15 @@ class TestCase(ProposalTest):
                 line = f"{node}," + '; '.join(nodes) + '\n'
                 f.write(line)
 
-    def write_suspicions_to_file(self, d, attrs, filename):
+    @staticmethod
+    def write_suspicions_to_file(d, attrs, filename):
         too_much = []
         too_little = []
         ok = []
         for node in attrs:
             try:
                 shape = attrs[node]['shape']
-            except:
+            except KeyError:
                 shape = 'ok'
 
             if shape == 'database':
@@ -207,6 +213,7 @@ class TestCase(ProposalTest):
                 for node in section:
                     f.write(f"{node}\n")
 
+    @overrides
     def run_test(self):
         super().run_test()
         all_suspicion_scores = []

@@ -1,10 +1,13 @@
-import pandas as pd
+# pylint: disable=W0107 ## flags class pass as not required
+'''abstract class for data analysis'''
 from abc import ABC, abstractmethod
+import pandas as pd
 from utilities.graph_utils import GraphUtils
 from utilities.model_utils import ModelUtils
 from utilities.code_converter import CodeConverter
 
 class RequiredParams:
+    '''Combines parameters from run_analysis and the defaults in the test case'''
     def __init__(self, d, rp):
         for k, v in d.items():
             if k not in rp:
@@ -27,30 +30,35 @@ class ProposalTest(ABC):
     @classmethod
     # @abstractmethod
     class RequiredParams:
+        '''Parameters required for the analysis'''
         pass
 
     @property
     @classmethod
     @abstractmethod
-    def INITIAL_COLS(self):
+    def INITIAL_COLS(cls):
+        '''Columns to load from parquet files'''
         raise NotImplementedError
 
     @property
     @classmethod
     @abstractmethod
-    def FINAL_COLS(self):
+    def FINAL_COLS(cls):
+        '''Columns to keep once initial processing is done'''
         raise NotImplementedError
 
     @property
     @classmethod
     @abstractmethod
-    def required_params(self):
+    def required_params(cls):
+        '''Stores required parameters'''
         raise NotImplementedError
 
     @property
     @classmethod
     @abstractmethod
-    def test_data(self):
+    def test_data(cls):
+        '''Stores test data'''
         raise NotImplementedError
 
     def __init__(self, logger, params, year):
@@ -79,6 +87,7 @@ class ProposalTest(ABC):
             raise AttributeError(f"params must be of type None or dict, not {type(params)}")
 
     def log(self, text):
+        '''Wrapper for quick logging and printing'''
         if self.logger is None:
             print(text)
         else:
