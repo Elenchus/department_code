@@ -1,4 +1,3 @@
-# unicode
 # Graphical Association Analysis for Describing Variation in Surgical Providers
 Code to extract MBS claims, create association rules, and rank providers by variation from commonly used claims within various procedures
 
