@@ -33,6 +33,7 @@ def create_mba_test_data():
     return documents
 
 class ModelUtilsTest(unittest.TestCase):
+    '''Test cases for ModelUtils'''
     def setUp(self):
         self.model = model_utils.ModelUtils(MockLogger(), MockGraphUtils(), CodeConverter(2014))
 
@@ -91,7 +92,7 @@ class ModelUtilsTest(unittest.TestCase):
                 b = cat[j]
                 if a == b:
                     continue
-                
+
                 supp = min(a,b) / max(cat)
                 supp_x = a / max(cat)
                 supp_y = b / max(cat)
@@ -117,7 +118,7 @@ class ModelUtilsTest(unittest.TestCase):
         d = test_function(documents, min_support=0.01, min_confidence=0.9, min_lift=0)
         assert d['0']['1'] == {'color': '#0200fd'}
         assert d['0']['2'] == {'color': '#0200fd'}
-        assert len(d['0']) == 2 
+        assert len(d['0']) == 2
 
         # test min_lift
         d = test_function(documents, min_support=0.01, min_confidence= 0, min_lift=1.1)
@@ -155,7 +156,7 @@ class ModelUtilsTest(unittest.TestCase):
         d = test_function(names, documents, min_support=0.01)
         assert '1' in d['0'] # {'color': '#0200fd'}
         assert '2' in d['0'] # {'color': '#0200fd'}
-        assert len(d['0']) == 2 
+        assert len(d['0']) == 2
 
         # test min_lift
         filters = {
@@ -193,7 +194,7 @@ class ModelUtilsTest(unittest.TestCase):
                 b = cat[j]
                 if a == b:
                     continue
-                
+
                 supp = min(a,b) / max(cat)
                 supp_x = a / max(cat)
                 supp_y = b / max(cat)

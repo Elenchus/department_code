@@ -2,7 +2,8 @@ import unittest
 import utilities.graph_utils as graph_utils
 from tests.mock_logger import MockLogger
 
-class ModelUtilsTest(unittest.TestCase):
+class GraphUtilsTest(unittest.TestCase):
+    '''Test cases for GraphUtils'''
     def setUp(self):
         self.graphs = graph_utils.GraphUtils(MockLogger())
 
@@ -10,6 +11,7 @@ class ModelUtilsTest(unittest.TestCase):
         pass
 
     def test_graph_conversion(self):
+        '''Confirm graph and adjacency matrices are correctly converted'''
         model = {
             1: {2: {}},
             3: {4: {}},
@@ -31,6 +33,7 @@ class ModelUtilsTest(unittest.TestCase):
                 assert graph[ante][con] is None
 
     def test_component_id(self):
+        '''Confirm separate components are correctly found'''
         model = {
             1: {2: {}},
             3: {4: {}},
@@ -45,6 +48,7 @@ class ModelUtilsTest(unittest.TestCase):
         assert len(components[0]) != len(components[1])
 
     def test_graph_edit_distance(self):
+        '''Confirm graph edit distance scoring is correct'''
         model = {
             1: {2: {}},
             3: {4: {}},
