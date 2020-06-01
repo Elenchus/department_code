@@ -406,10 +406,7 @@ class GraphUtils():
 
                 edit_history[key][k] = {'color': '#F0E442'}
 
-        while True:
-            if nodes_to_add:
-                break
-
+        while nodes_to_add:
             ignore_list = []
             node = nodes_to_add.pop()
             if node in attrs:

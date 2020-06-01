@@ -10,15 +10,15 @@ from tqdm import tqdm
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
-        colour_only:bool = True
-        min_support:float = 0.33
-        provider_min_support_count:float = 3
-        filters:dict = None
-        ignore_providers_with_less_than_x_patients:int = 4
-        human_readable_suspicious_items:bool = False
-        graph_style:str = 'fdp'
-        code_of_interest:int = 49115
-        
+        colour_only: bool = True
+        min_support: float = 0.33
+        provider_min_support_count: float = 3
+        filters: dict = None
+        ignore_providers_with_less_than_x_patients: int = 4
+        human_readable_suspicious_items: bool = False
+        graph_style: str = 'fdp'
+        code_of_interest: int = 49115
+
     FINAL_COLS = ["PIN", "ITEM", "PINSTATE", "SPR", "SPR_RSP", "DOS"]
     INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
     required_params: RequiredParams = None
@@ -62,7 +62,7 @@ class TestCase(ProposalTest):
                         items_to_remove.extend(mdvs)
                         # mdvs = date_claims["MDV_NUMSERV"].tolist()
                         # ex = []
-                        # for i in range(len(mdvs) -1):                    
+                        # for i in range(len(mdvs) -1):
                         #     if mdvs[i + 1] == -1:
                         #         if mdvs[i] == -1:
                         #             raise ValueError("Unexpected MDV_NUMSERV behaviour")
@@ -128,7 +128,7 @@ class TestCase(ProposalTest):
         self.log(f"Descriptive stats for {region}")
         self.log(f"{len(data)} claims")
         self.log(f"{len(data['ITEM'].unique())} items claimed")
-        self.log(f"{len(data['SPR'].unique())} providers") 
+        self.log(f"{len(data['SPR'].unique())} providers")
         self.log(f"{len(data['PIN'].unique())} patients")
         no_providers_of_interest = len(data.loc[data["ITEM"] == self.required_params.code_of_interest, "SPR"].unique())
         self.log(f"{no_providers_of_interest} surgical providers for {region}")
@@ -137,7 +137,7 @@ class TestCase(ProposalTest):
         for _, g in data.groupby("SPR"):
             episodes = len(g["PIN"].unique())
             provider_episodes.append(episodes)
-        
+
         data["provider_episodes"] = pd.DataFrame(provider_episodes)
         for (description, header, filename, collection) in [
             ("Claims per item", "ITEM", "item", self.item_stats),
@@ -186,7 +186,7 @@ class TestCase(ProposalTest):
                 shape = attrs[node]['shape']
             except:
                 shape = 'ok'
-            
+
             if shape == 'database':
                 too_much.append(node)
             elif shape == 'box':
@@ -216,7 +216,7 @@ class TestCase(ProposalTest):
         suspicious_transaction_list = []
 
         self.get_exploratory_stats(self.processed_data, "nation")
-        
+
         for state, data in self.test_data:
             state_order.append(state)
             rp = self.required_params
@@ -251,11 +251,11 @@ class TestCase(ProposalTest):
             else:
                 formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
 
-            model_name = self.logger.output_path / f"model_state_{state}.pkl" 
+            model_name = self.logger.output_path / f"model_state_{state}.pkl"
             with open(model_name, "wb") as f:
                 pickle.dump(formatted_d, f)
-            
-            attrs_name = self.logger.output_path / f"attrs_state_{state}.pkl" 
+
+            attrs_name = self.logger.output_path / f"attrs_state_{state}.pkl"
             with open(attrs_name, "wb") as f:
                 pickle.dump(attrs, f)
 
@@ -268,7 +268,7 @@ class TestCase(ProposalTest):
             # not_chord = self.graphs.create_hv_graph(source, target)
             # self.graphs.save_hv_fig(not_chord, "hv_test")
             # circo_filename = self.logger.output_path / f"{state}_circos"
-            # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename) 
+            # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename)
             self.graphs.create_visnetwork(formatted_d, name, title, attrs)
             # self.graphs.create_rchord(formatted_d,name,title)
 
@@ -277,13 +277,13 @@ class TestCase(ProposalTest):
             fee_record = {x: {} for x in all_unique_items}
             for node in fee_record:
                 fee_record[node]['weight'] =  self.code_converter.get_mbs_item_fee(node)[0]
-                    
+
             all_graphs = {}
             suspicious_transactions = {}
             suspicion_scores = []
             edit_graphs = {}
             edit_attrs = {}
-            providers = data.loc[data["ITEM"] == rp.code_of_interest, "SPR"].unique().tolist() 
+            providers = data.loc[data["ITEM"] == rp.code_of_interest, "SPR"].unique().tolist()
             for provider in tqdm(providers):
                 provider_docs = []
                 patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
@@ -410,7 +410,7 @@ class TestCase(ProposalTest):
                 neighbour_providers = data.loc[data['PIN'].isin(claims), 'SPR'].unique().tolist()
                 neighbour_providers.remove(provider)
                 for neighbour in neighbour_providers:
-                    neighbour_score = state_providers.get(neighbour, "- unscored") 
+                    neighbour_score = state_providers.get(neighbour, "- unscored")
                     if isinstance(neighbour_score, float):
                         neighbour_score = f'{neighbour_score:.2f}'
                         self.log(f"Neighbour {neighbour} has score {neighbour_score}")
@@ -421,7 +421,7 @@ class TestCase(ProposalTest):
             for name, group in patients:
                 community = set(str(x) for x in group['SPR'].unique())
                 communities.append(community)
-                
+
 
             # idx = list(range(len(communities)))
             # df = pd.DataFrame(0, columns=idx, index=idx, dtype=float)
@@ -465,7 +465,7 @@ class TestCase(ProposalTest):
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
 
-            
+
             # for k, v in provider_graph.items():
             #     provider_graph[k] = {item: None for item in v}
 

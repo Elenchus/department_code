@@ -93,7 +93,7 @@ class ProposalTest(ABC):
     def get_test_data(self):
         '''Modify the processed data before the test'''
         self.log("Getting test data")
-        if not self.processed_data.columns:
+        if not self.processed_data.columns.tolist():
             raise KeyError("No data specified")
 
     @abstractmethod

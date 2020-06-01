@@ -27,16 +27,16 @@ class TestDetails():
     '''Holds details for the analysis to be run'''
     notes: str
     params: dict
-    proposal: int
     test_data: object
     test_file_name: str
     test_format: TestFormat
+    test_location: str
     years: list
 
 def run_combined_test(test_name, test_details):
     '''Run an analysis on data from combined years'''
     with Logger(test_name, '/mnt/c/data') as logger:
-        test_file = import_module(f"proposal_{test_details.proposal}.{test_details.test_file_name}")
+        test_file = import_module(f"{test_details.test_location}.{test_details.test_file_name}")
         test_case_class = getattr(test_file, "TestCase")
         test_case = test_case_class(logger, test_details.params, test_details.years[-1])
         test_details.params = test_case.required_params
@@ -61,7 +61,7 @@ def run_combined_test(test_name, test_details):
 def run_iterative_test(test_name, test_details):
     '''Run an iterative analysis'''
     with Logger(test_name, '/mnt/c/data') as logger:
-        test_file = __import__(f"proposal_{test_details.proposal}.{test_details.test_file_name}",
+        test_file = __import__(f"{test_details.test_location}.{test_details.test_file_name}",
                                fromlist=['TestCase'])
         test_case = test_file.TestCase(logger, test_details.params, test_details.years[-1])
         test_details.params = test_case.required_params
@@ -91,9 +91,9 @@ def set_test_name(test_details, additional_folder_name_part):
 
 
     if additional_folder_name_part is None:
-        test_name = f'proposal_{test_details.proposal}_{test_details.test_file_name}_{data_source}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}'
+        test_name = f'{test_details.test_location}_{test_details.test_file_name}_{data_source}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}'
     else:
-        test_name = f'proposal_{test_details.proposal}_{test_details.test_file_name}_{data_source}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}_{additional_folder_name_part}'
+        test_name = f'{test_details.test_location}_{test_details.test_file_name}_{data_source}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}_{additional_folder_name_part}'
 
     return test_name
 
@@ -110,29 +110,32 @@ def start_test(test_details, additional_folder_name_part=None):
         for year in years:
             test_details.years = [year]
             run_combined_test(test_name, test_details)
+
     elif test_format == TestFormat.IterateYearsWithinTest:
         run_iterative_test(test_name, test_details)
     else:
         raise KeyError("Test format should be a TestFormat enum")
 
 if __name__ == "__main__":
-    # for x in [0.2, 0.4, 0.6, 0.8]:
-    details = TestDetails(
-        notes="",
-        params={
-                'filters': {
-                    'conviction': {
-                        'value': 1.1,
-                        'operator': operator.ge
-                        }
-                    },
-                'min_support': 0.33},
-        # params = None,
-        proposal=1,
-        test_data=mbs,
-        test_file_name=f'regional_variation',
-        test_format=TestFormat.CombineYears,
-        years=[str(x) for x in [2010, 2011, 2012, 2013, 2014]]
-    )
+    for x in [0.2, 0.4, 0.6, 0.8]:
+        for item in [48918, 49318, 49518]:
+            details = TestDetails(
+                notes="",
+                params={
+                        'filters': {
+                            'conviction': {
+                                'value': 1,
+                                'operator': operator.gt
+                                }
+                            },
+                        'min_support': 0.33,
+                        'code_of_interest': item},
+                # params = None,
+                test_data=mbs,
+                test_file_name=f'regional_variation',
+                test_format=TestFormat.CombineYears,
+                test_location="data_analysis",
+                years=[str(x) for x in [2010, 2011, 2012, 2013, 2014]]
+            )
 
-    start_test(details)
+            start_test(details)
