@@ -1,4 +1,3 @@
-# pylint: disable=C0103,R0904,R0912,R0913,R0914
 '''functions for quick graphing'''
 from copy import deepcopy
 from datetime import datetime

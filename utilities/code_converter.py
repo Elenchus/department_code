@@ -37,6 +37,7 @@ class CodeConverter:
         self.valid_rsp_str_values = self.rsp_table['Label'].unique()
 
     def convert_mbs_category_number_to_label(self, cat_num):
+        '''Returns a category label'''
         cat_num = str(cat_num)
         d = {
             '1': 'PROFESSIONAL ATTENDANCES',
@@ -57,6 +58,7 @@ class CodeConverter:
         return x
 
     def convert_mbs_code_to_description(self, code):
+        '''Returns the description of an MBS item'''
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
             return f"Item code not in {self.year} dictionary"
@@ -64,6 +66,7 @@ class CodeConverter:
         return f"{item['Description']}"
 
     def convert_mbs_code_to_group_labels(self, code):
+        '''Returns the group description of an MBS item'''
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
             return f"Item code not in {self.year} dictionary"
@@ -116,6 +119,7 @@ class CodeConverter:
         return self.rsp_table.loc[self.rsp_table['Label'] == str(rsp)]['SPR_RSP'].values.tolist()[0]
 
     def convert_state_num(self, state):
+        '''Convert a state number to human readable'''
         state_id = str(state)
         state_names = {
             '1': 'ACT + NSW',
@@ -128,6 +132,7 @@ class CodeConverter:
         return state_names.get(state_id, "Not a valid state")
 
     def get_mbs_item_fee(self, code):
+        '''Return the fee amount and type for an MBS item'''
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
             return 500, "Not in dictionary"
@@ -169,7 +174,7 @@ class CodeConverter:
 
         return mod_line
 
-    def write_mbs_codes_to_csv(self, codes, filename, additional_cols=None, additional_headers=[]):
+    def write_mbs_codes_to_csv(self, codes, filename, additional_cols=None, additional_headers=None):
         '''Get MBS item code information and write to a file'''
         with open(filename, 'w+') as f:
             line = "Group,Category,Sub-Category,Item,Description,Cost,FeeType"
@@ -177,8 +182,9 @@ class CodeConverter:
                 for col in additional_cols:
                     assert len(col) == len(codes)
 
-                for header in additional_headers:
-                    line += f",{header}"
+                if additional_headers:
+                    for header in additional_headers:
+                        line += f",{header}"
 
             line += "\r\n"
             f.write(line)

@@ -1,3 +1,4 @@
+# pylint: disable=C0330 ## Formatting of nested dictionaries
 '''Run tests from proposals'''
 import operator
 from dataclasses import dataclass
@@ -89,11 +90,11 @@ def set_test_name(test_details, additional_folder_name_part):
     else:
         data_source = test_details.test_data
 
-
-    if additional_folder_name_part is None:
-        test_name = f'{test_details.test_location}_{test_details.test_file_name}_{data_source}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}'
-    else:
-        test_name = f'{test_details.test_location}_{test_details.test_file_name}_{data_source}_{test_details.years[0] if len(test_details.years) == 1 else f"{test_details.years[0]}-{test_details.years[-1]}"}_{additional_folder_name_part}'
+    test_years = f"{test_details.years[0]}" if len(test_details.years) == 1 \
+        else f"{test_details.years[0]}-{test_details.years[-1]}"
+    test_name = f'{test_details.test_location}_{test_details.test_file_name}_{data_source}_{test_years}'
+    if additional_folder_name_part is not None:
+        test_name = f'{test_name}_{additional_folder_name_part}'
 
     return test_name
 

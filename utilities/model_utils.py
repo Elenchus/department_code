@@ -14,9 +14,12 @@ class ModelUtils():
         self.graph_utils = graph_utils
         self.mba = MbaUtils(code_converter, graph_utils)
 
-    def apriori_analysis(self, documents, output_file=None, item_list=None, min_support=0.01, min_confidence=0.8, min_lift = 1.1, directed=True):
-        max_length=2
-        rules = apyori(documents, min_support = min_support, min_confidence = min_confidence, min_lift = min_lift, max_length = max_length)
+    def apriori_analysis(self, documents, output_file=None, item_list=None,
+                         min_support=0.01, min_confidence=0.8, min_lift=1.1, directed=True):
+        '''Find association rules with apriori analysis'''
+        max_length = 2
+        rules = apyori(documents, min_support=min_support, min_confidence=min_confidence,
+                       min_lift=min_lift, max_length=max_length)
         d = {}
         if item_list is not None:
             for item in item_list:
@@ -34,7 +37,7 @@ class ModelUtils():
 
                 item_0 = next(iter(stat[0]))
                 item_1 = next(iter(stat[1]))
-                lift=stat[3]
+                lift = stat[3]
                 if item_list is None and item_0 not in d:
                     d[item_0] = {}
 
@@ -52,6 +55,7 @@ class ModelUtils():
         return d
 
     def fp_growth_analysis(self, documents, output_file=None, min_support=0.01, min_conviction=1.1, directed=True):
+        '''Find association rules with FP growth'''
         te = TransactionEncoder()
         te_ary = te.fit(documents).transform(documents)
         df = pd.DataFrame(te_ary, columns=te.columns_)
@@ -60,19 +64,20 @@ class ModelUtils():
         rules = association_rules(freq_items, metric='conviction', min_threshold=min_conviction)
         rules['ante_len'] = rules['antecedents'].apply(len)
         rules['con_len'] = rules['consequents'].apply(len)
-        rules= rules[(rules['ante_len'] == 1) & (rules['con_len'] == 1)]
+        rules = rules[(rules['ante_len'] == 1) & (rules['con_len'] == 1)]
 
         antecedents = [x for x, *_ in rules['antecedents'].values.tolist()]
         consequents = [x for x, *_ in rules['consequents'].values.tolist()]
 
         max_conviction = rules.loc[rules['conviction'] != np.inf, 'conviction'].max()
-        conviction = rules['conviction'].replace(np.inf, (max_conviction if max_conviction > 1 else 9999)).values.tolist()
+        conviction = rules['conviction'].replace(np.inf,
+                                                 (max_conviction if max_conviction > 1 else 9999)).values.tolist()
         min_conviction = rules['conviction'].min()
 
-        d={}
+        d = {}
         for i, a in enumerate(antecedents):
             if a not in d:
-                d[a]={}
+                d[a] = {}
 
             b = consequents[i]
             if a == b:
@@ -93,6 +98,7 @@ class ModelUtils():
         return d
 
     def generate_sentences_from_group(self, data, column, convert_to_string=True):
+        '''From pandas groupby column, generate sentences for MBA'''
         documents = []
         for _, group in data:
             items = group[column].values.tolist()
@@ -103,17 +109,8 @@ class ModelUtils():
 
         return documents
 
-    def get_outlier_indices(self, data):
-        q75, q25 = np.percentile(data, [75 ,25])
-        iqr = q75 - q25
-        list_of_outlier_indices = []
-        for i in range(len(data)):
-            if data[i] > q75 + 1.5 * iqr or data[i] < q25 - 1.5 * iqr:
-                list_of_outlier_indices.append(i)
-
-        return list_of_outlier_indices
-
     def pairwise_neg_cor_low_sup(self, items, documents, max_support=0.01, hc=0.8):
+        '''Get cross support rules'''
         group_count = len(documents)
         max_occurrences = max_support * group_count
         counts = pd.DataFrame(0, index=items, columns=items)
@@ -138,7 +135,7 @@ class ModelUtils():
                 s_1 = count_1 / group_count
                 s_2 = count_2 / group_count
                 s = count / group_count
-                cross_support=min(s_1, s_2) / max(s_1, s_2)
+                cross_support = min(s_1, s_2) / max(s_1, s_2)
                 if cross_support < hc:
                     continue
 

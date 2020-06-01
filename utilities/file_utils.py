@@ -1,7 +1,7 @@
 '''File and logging classes and functions'''
 import os
 import sys
-from enum import Enum, auto
+from enum import Enum
 import pandas as pd
 
 class DataSource(Enum):
@@ -44,7 +44,7 @@ def combine_10p_data(logger, data_type, initial_cols, final_cols, years, callbac
             processed_data = callback(all_data)
 
         assert len(final_cols) == len(processed_data.columns)
-        for i in range(len(final_cols)):
+        for i, _ in enumerate(final_cols):
             assert final_cols[i] == processed_data.columns[i]
 
         data = data.append(processed_data)

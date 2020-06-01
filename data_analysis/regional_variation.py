@@ -8,8 +8,10 @@ from data_analysis.basic_mba import BasicMba
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
+    '''Regional MBA'''
     @dataclass
     class RequiredParams:
+        '''test parameters'''
         colour_only: bool = True
         min_support: float = 0.33
         provider_min_support_count: float = 3
@@ -36,19 +38,24 @@ class TestCase(ProposalTest):
     def check_claim_validity(self, indexed_data):
         '''confirm claims have not been reversed'''
         self.log("Checking patient claim validity")
-        patients_to_check = indexed_data.loc[indexed_data["MDV_NUMSERV"] != 1, "PIN"].unique().tolist()
+        patients_to_check = indexed_data.loc[indexed_data["MDV_NUMSERV"] != 1, "PIN"].unique(
+        ).tolist()
         patient_groups = indexed_data.groupby("PIN")
         items_to_remove = []
         for patient_id in tqdm(patients_to_check):
             patient = patient_groups.get_group(patient_id)
-            items_to_check = patient.loc[indexed_data["MDV_NUMSERV"] != 1, "ITEM"].unique().tolist()
-            item_groups = patient[patient["ITEM"].isin(items_to_check)].groupby("ITEM")
+            items_to_check = patient.loc[indexed_data["MDV_NUMSERV"] != 1, "ITEM"].unique(
+            ).tolist()
+            item_groups = patient[patient["ITEM"].isin(
+                items_to_check)].groupby("ITEM")
             for _, item_group in item_groups:
                 dos_groups = item_group.groupby("DOS")
-                zero_date_indices = item_group.loc[item_group["MDV_NUMSERV"] == 0, "index"].unique().tolist()
+                zero_date_indices = item_group.loc[item_group["MDV_NUMSERV"] == 0, "index"].unique(
+                ).tolist()
                 items_to_remove.extend(zero_date_indices)
 
-                neg_date = item_group.loc[item_group["MDV_NUMSERV"] == -1, "DOS"].unique().tolist()
+                neg_date = item_group.loc[item_group["MDV_NUMSERV"]
+                                          == -1, "DOS"].unique().tolist()
                 for date in neg_date:
                     date_claims = dos_groups.get_group(date)
                     date_total = date_claims["MDV_NUMSERV"].sum()
@@ -56,10 +63,12 @@ class TestCase(ProposalTest):
                     if date_total == 0:
                         items_to_remove.extend(indices)
                     elif date_total < 0:
-                        raise ValueError(f"Patient {patient_id} has unusual claim reversals")
+                        raise ValueError(
+                            f"Patient {patient_id} has unusual claim reversals")
                     else:
                         # need to come back and fix this, but is ok because number of claims per day is unimportant
-                        mdvs = date_claims.loc[date_claims["MDV_NUMSERV"] == -1, "index"].tolist()
+                        mdvs = date_claims.loc[date_claims["MDV_NUMSERV"]
+                                               == -1, "index"].tolist()
                         items_to_remove.extend(mdvs)
                         # mdvs = date_claims["MDV_NUMSERV"].tolist()
                         # ex = []
@@ -77,11 +86,12 @@ class TestCase(ProposalTest):
     def process_dataframe(self, data):
         super().process_dataframe(data)
         rp = self.required_params
-        patients_of_interest = data.loc[data["ITEM"] == rp.code_of_interest, "PIN"].unique().tolist()
+        patients_of_interest = data.loc[data["ITEM"] ==
+                                        rp.code_of_interest, "PIN"].unique().tolist()
         patient_data = data[data["PIN"].isin(patients_of_interest)]
         patient_data.reset_index(inplace=True)
         patient_data = self.check_claim_validity(patient_data)
-        assert all(x==1 for x in patient_data["MDV_NUMSERV"].tolist())
+        assert all(x == 1 for x in patient_data["MDV_NUMSERV"].tolist())
 
         patient_data["PIN"] = patient_data["PIN"].astype(str)
         groups = patient_data.groupby("PIN")
@@ -89,22 +99,27 @@ class TestCase(ProposalTest):
         exclusions = 0
         splits = 0
         for patient, group in tqdm(groups):
-            dos = group.loc[group["ITEM"] == rp.code_of_interest, "DOS"].unique().tolist()
+            dos = group.loc[group["ITEM"] ==
+                            rp.code_of_interest, "DOS"].unique().tolist()
             number_of_surgeries = len(dos)
             if number_of_surgeries == 1:
                 indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
-                final_data = final_data.append(patient_data[patient_data["index"].isin(indices)], ignore_index=True)
+                final_data = final_data.append(
+                    patient_data[patient_data["index"].isin(indices)], ignore_index=True)
             elif number_of_surgeries == 0:
-                self.log(f"Patient {patient} has {len(dos)} claims for {rp.code_of_interest} and was excluded")
+                self.log(
+                    f"Patient {patient} has {len(dos)} claims for {rp.code_of_interest} and was excluded")
                 exclusions += 1
                 continue
             else:
                 if number_of_surgeries > 2:
-                    self.log(f"Patient {patient} had {number_of_surgeries} surgeries")
+                    self.log(
+                        f"Patient {patient} had {number_of_surgeries} surgeries")
 
                 splits += 1
-                for i in range(len(dos)):
-                    indices = group.loc[group["DOS"] == dos[i], "index"].tolist()
+                for i, _ in enumerate(dos):
+                    indices = group.loc[group["DOS"]
+                                        == dos[i], "index"].tolist()
                     temp_df = patient_data[patient_data["index"].isin(indices)]
                     temp_df["PIN"] = temp_df["PIN"] + f"{i}"
                     final_data = final_data.append(temp_df, ignore_index=True)
@@ -129,12 +144,14 @@ class TestCase(ProposalTest):
         self.test_data = data.groupby("PINSTATE")
 
     def get_exploratory_stats(self, data, region):
+        '''EDA'''
         self.log(f"Descriptive stats for {region}")
         self.log(f"{len(data)} claims")
         self.log(f"{len(data['ITEM'].unique())} items claimed")
         self.log(f"{len(data['SPR'].unique())} providers")
         self.log(f"{len(data['PIN'].unique())} patients")
-        no_providers_of_interest = len(data.loc[data["ITEM"] == self.required_params.code_of_interest, "SPR"].unique())
+        no_providers_of_interest = len(
+            data.loc[data["ITEM"] == self.required_params.code_of_interest, "SPR"].unique())
         self.log(f"{no_providers_of_interest} surgical providers for {region}")
 
         provider_episodes = []
@@ -144,10 +161,11 @@ class TestCase(ProposalTest):
 
         data["provider_episodes"] = pd.DataFrame(provider_episodes)
         for (description, header, filename, collection) in [
-            ("Claims per item", "ITEM", "item", self.item_stats),
-            ("Claims per provider", "SPR", "provider", self.provider_stats),
-            ("Claims per episode", "PIN", "episode", self.patient_stats),
-            ("Surgical episodes per provider", "provider_episodes", "provider_episodes", self.provider_episode_stats)
+                ("Claims per item", "ITEM", "item", self.item_stats),
+                ("Claims per provider", "SPR", "provider", self.provider_stats),
+                ("Claims per episode", "PIN", "episode", self.patient_stats),
+                ("Surgical episodes per provider", "provider_episodes",
+                 "provider_episodes", self.provider_episode_stats)
         ]:
             top_file = self.logger.output_path / f'top_{filename}_{region}.csv'
             top_selection = data[header].value_counts()
@@ -158,23 +176,30 @@ class TestCase(ProposalTest):
 
             if description == "Item":
                 top_codes = top_selection.index.tolist()
-                self.code_converter.write_mbs_codes_to_csv(top_codes, top_file, [top_code_counts], ["No of occurrences"])
+                self.code_converter.write_mbs_codes_to_csv(
+                    top_codes, top_file, [top_code_counts], ["No of occurrences"])
 
         patients_per_surgical_provider = []
-        providers_of_interest = data.loc[data["ITEM"] == self.required_params.code_of_interest, "SPR"].unique().tolist()
-        provider_claims = data[data["SPR"].isin(providers_of_interest)].groupby("SPR")
+        providers_of_interest = data.loc[data["ITEM"] ==
+                                         self.required_params.code_of_interest, "SPR"].unique().tolist()
+        provider_claims = data[data["SPR"].isin(
+            providers_of_interest)].groupby("SPR")
         for _, claims in provider_claims:
             patients = claims["PIN"].unique()
             patients_per_surgical_provider.append(len(patients))
 
-        self.patients_per_surgical_provider.append(patients_per_surgical_provider)
+        self.patients_per_surgical_provider.append(
+            patients_per_surgical_provider)
         df = pd.DataFrame(patients_per_surgical_provider)
         self.log(f"Episodes per surgical provider in {region}")
         self.log(df.describe())
 
     @staticmethod
     def write_model_to_file(d, filename):
-        header = "Item is claimed for at least 1/3 of unliateral hip replacements in the state within 2 weeks before or after the anaesthesia date of service,If the item is claimed for a patient these items were also likely to be claimed for that patient\n"
+        '''Save a graph model'''
+        header = "Item is claimed for at least 1/3 of unliateral hip replacements in the state \
+                  within 2 weeks before or after the anaesthesia date of service,If the item is \
+                  claimed for a patient these items were also likely to be claimed for that patient\n"
         with open(filename, 'w+') as f:
             f.write(header)
             for node in d:
@@ -184,6 +209,7 @@ class TestCase(ProposalTest):
 
     @staticmethod
     def write_suspicions_to_file(d, attrs, filename):
+        '''Save a suspicious model'''
         too_much = []
         too_little = []
         ok = []
@@ -201,14 +227,18 @@ class TestCase(ProposalTest):
                 ok.append(node)
 
         with open(filename, 'w+') as f:
-            header = 'Appears in at least 1/3 of patients for this provider but not at least 1/3 of patients in the state,If item is claimed the patients for that provider probably also had these items claimed\n'
+            header = 'Appears in at least 1/3 of patients for this provider but not at least 1/3 of patients in the \
+                      state,If item is claimed the patients for that provider probably also had these items claimed\n'
             f.write(header)
             for node in too_much:
                 nodes = list(d[node].keys())
                 line = f"{node}," + '; '.join(nodes) + '\n'
                 f.write(line)
 
-            for (section, header) in [(too_little, "Expected items in the model which do not commonly appear in the providers claims,\n"),(ok, "Items expected in the model which the provider does claim,\n")]:
+            for (section, header) in [(too_little,
+                                       "Expected items in the model which do not commonly appear \
+                                           in the providers claims,\n"),
+                                      (ok, "Items expected in the model which the provider does claim,\n")]:
                 f.write(f'\n{header}')
                 for node in section:
                     f.write(f"{node}\n")
@@ -229,15 +259,20 @@ class TestCase(ProposalTest):
             rp = self.required_params
 
             all_unique_items = [str(x) for x in data["ITEM"].unique().tolist()]
-            self.get_exploratory_stats(data, self.code_converter.convert_state_num(state))
-            mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN")
+            self.get_exploratory_stats(
+                data, self.code_converter.convert_state_num(state))
+            mba_funcs = BasicMba(self.code_converter, data,
+                                 self.models, self.graphs, "ITEM", "PIN")
             documents = mba_funcs.create_documents(mba_funcs.group_data)
 
-            self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
+            self.log(
+                f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
 
             self.log("Creating model")
-            d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
-            model_dict_csv = self.logger.output_path / f"state_{state}_model.csv"
+            d = mba_funcs.create_model(
+                all_unique_items, documents, rp.min_support)
+            model_dict_csv = self.logger.output_path / \
+                f"state_{state}_model.csv"
             self.write_model_to_file(d, model_dict_csv)
             # remove no other item:
             if "No other items" in d:
@@ -251,7 +286,8 @@ class TestCase(ProposalTest):
                 d[k].pop("No other items", None)
 
             name = f"PIN_ITEM_state_{state}_graph"
-            title = f'Connections between ITEM when grouped by PIN and in state {self.code_converter.convert_state_num(state)}'
+            state_name = self.code_converter.convert_state_num(state)
+            title = f'Connections between ITEM when grouped by PIN and in state {state_name}'
 
             if rp.colour_only and "ITEM" == "ITEM":
                 formatted_d, attrs, legend = self.models.mba.colour_mbs_codes(d)
@@ -283,17 +319,20 @@ class TestCase(ProposalTest):
             fee_record = None
             fee_record = {x: {} for x in all_unique_items}
             for node in fee_record:
-                fee_record[node]['weight'] =  self.code_converter.get_mbs_item_fee(node)[0]
+                fee_record[node]['weight'] = self.code_converter.get_mbs_item_fee(node)[
+                    0]
 
             all_graphs = {}
             suspicious_transactions = {}
             suspicion_scores = []
             edit_graphs = {}
             edit_attrs = {}
-            providers = data.loc[data["ITEM"] == rp.code_of_interest, "SPR"].unique().tolist()
+            providers = data.loc[data["ITEM"] ==
+                                 rp.code_of_interest, "SPR"].unique().tolist()
             for provider in tqdm(providers):
                 provider_docs = []
-                patients = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
+                patients = data.loc[data['SPR'] ==
+                                    provider, 'PIN'].unique().tolist()
                 if len(patients) < rp.ignore_providers_with_less_than_x_patients:
                     continue
                 patient_data = data.loc[data['PIN'].isin(patients)]
@@ -304,8 +343,10 @@ class TestCase(ProposalTest):
                     doc = patient_data_group['ITEM'].unique().tolist()
                     provider_docs.append(doc)
 
-                provider_model = self.models.mba.pairwise_market_basket(provider_items, provider_docs, min_support=rp.provider_min_support_count)
-                ged, edit_d, edit_attr = self.graphs.graph_edit_distance(d, provider_model, fee_record)
+                provider_model = self.models.mba.pairwise_market_basket(
+                    provider_items, provider_docs, min_support=rp.provider_min_support_count)
+                ged, edit_d, edit_attr = self.graphs.graph_edit_distance(
+                    d, provider_model, fee_record)
                 suspicious_transactions[provider] = ged
                 suspicion_scores.append(ged)
                 edit_attrs[provider] = edit_attr
@@ -314,7 +355,8 @@ class TestCase(ProposalTest):
 
             suspicious_transaction_list.append(suspicious_transactions)
             all_suspicion_scores.append(suspicion_scores)
-            suspicion_matrix = pd.DataFrame.from_dict(suspicious_transactions, orient='index', columns=['count'])
+            suspicion_matrix = pd.DataFrame.from_dict(
+                suspicious_transactions, orient='index', columns=['count'])
             self.log(suspicion_matrix.describe())
             susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
             state_suspicious_providers = []
@@ -327,17 +369,22 @@ class TestCase(ProposalTest):
 
                 group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket ITEM for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                 group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
-                group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
-                # mba_funcs.create_graph(group_graph, group_graph_name, group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
-                self.graphs.create_visnetwork(group_graph,group_graph_name,group_graph_title,attrs=group_attrs)
+                group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(
+                    all_graphs[s])
+                # mba_funcs.create_graph(group_graph, group_graph_name,
+                #                        group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
+                self.graphs.create_visnetwork(
+                    group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
                 edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket ITEM for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
                 edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
                 if rp.human_readable_suspicious_items:
-                    converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(edit_graphs[s])
+                    converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(
+                        edit_graphs[s])
                 else:
                     converted_edit_graph = edit_graphs[s]
-                    _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(converted_edit_graph)
+                    _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(
+                        converted_edit_graph)
 
                 for key in new_edit_attrs:
                     code = key.split('\n')[-1]
@@ -346,18 +393,27 @@ class TestCase(ProposalTest):
                             if 'shape' in edit_attrs[s][code]:
                                 new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
-                # mba_funcs.create_graph(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
-                self.graphs.create_visnetwork(converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
-                suspicious_filename = self.logger.output_path / f"suspicious_provider_{idx}_in_state_{state}.csv"
-                self.write_suspicions_to_file(converted_edit_graph, new_edit_attrs, suspicious_filename)
+                # mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
+                #                        edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
+                self.graphs.create_visnetwork(
+                    converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
+                suspicious_filename = self.logger.output_path / \
+                    f"suspicious_provider_{idx}_in_state_{state}.csv"
+                self.write_suspicions_to_file(
+                    converted_edit_graph, new_edit_attrs, suspicious_filename)
 
             suspicious_provider_list.append(state_suspicious_providers)
 
-        labels = ["Nation"] + [self.code_converter.convert_state_num(x) for x in range(1,6)]
-        self.graphs.create_boxplot_group(self.item_stats, labels, "Claims per item", "claims_items")
-        self.graphs.create_boxplot_group(self.provider_stats, labels, "Claims per provider", "claims_providers")
-        self.graphs.create_boxplot_group(self.patient_stats, labels, "Claims per episode", "claims_episodes")
-        self.graphs.create_boxplot_group(self.provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
+        labels = ["Nation"] + \
+            [self.code_converter.convert_state_num(x) for x in range(1, 6)]
+        self.graphs.create_boxplot_group(
+            self.item_stats, labels, "Claims per item", "claims_items")
+        self.graphs.create_boxplot_group(
+            self.provider_stats, labels, "Claims per provider", "claims_providers")
+        self.graphs.create_boxplot_group(
+            self.patient_stats, labels, "Claims per episode", "claims_episodes")
+        self.graphs.create_boxplot_group(
+            self.provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
 
         state_sets = []
         for i, state in enumerate(state_records):
@@ -367,22 +423,26 @@ class TestCase(ProposalTest):
             name = f"costs_for_state_{self.code_converter.convert_state_num(state_order[i])}.csv"
             filename = self.logger.output_path / name
             with open(filename, 'w+') as f:
-                f.write("Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
+                f.write(
+                    "Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
                 for item in s:
                     code = item.split('\n')[-1]
-                    line = ','.join(self.code_converter.get_mbs_code_as_line(code))
-                    item_cost, fee_type = self.code_converter.get_mbs_item_fee(code)
+                    line = ','.join(
+                        self.code_converter.get_mbs_code_as_line(code))
+                    item_cost, fee_type = self.code_converter.get_mbs_item_fee(
+                        code)
                     total_cost += item_cost
                     item_cost = "${:.2f.format(item_cost)}"
                     f.write(f"{line},{item_cost},{fee_type}\r\n")
 
                 total_cost = "${:.2f.format(total_cost)}"
-                self.log(f"Cost for {self.code_converter.convert_state_num(state_order[i])}: {total_cost}")
+                self.log(
+                    f"Cost for {self.code_converter.convert_state_num(state_order[i])}: {total_cost}")
 
         differences = set()
-        for i in range(len(state_sets)):
-            for j in range(len(state_sets)):
-                differences.update(state_sets[i].difference(state_sets[j]))
+        for i in state_sets:
+            for j in state_sets:
+                differences.update(i.difference(j))
 
         differences = list(differences)
         states = []
@@ -392,62 +452,53 @@ class TestCase(ProposalTest):
                 if item in state:
                     item_states.append(i)
 
-            item_states = '; '.join([self.code_converter.convert_state_num(x+1) for x in item_states])
+            item_states = '; '.join(
+                [self.code_converter.convert_state_num(x+1) for x in item_states])
             states.append(item_states)
 
         diff_file = self.logger.output_path / 'diff_file.csv'
-        self.code_converter.write_mbs_codes_to_csv(differences, diff_file, additional_headers=['States'], additional_cols=[states])
+        self.code_converter.write_mbs_codes_to_csv(
+            differences, diff_file, additional_headers=['States'], additional_cols=[states])
 
         sames = set.intersection(*state_sets)
         same_file = self.logger.output_path / 'same_file.csv'
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
 
         regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
-        self.graphs.create_boxplot_group(self.patients_per_surgical_provider, regions.rsplit(','), "Episodes per surgical provider per region", "patients_per_provider")
+        self.graphs.create_boxplot_group(self.patients_per_surgical_provider, regions.rsplit(
+            ','), "Episodes per surgical provider per region", "patients_per_provider")
         non_nation_regions = "ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
-        self.graphs.create_boxplot_group(all_suspicion_scores, non_nation_regions.rsplit(','), f"Provider suspicion scores per region for item {rp.code_of_interest}", "sus_boxes")
+        self.graphs.create_boxplot_group(all_suspicion_scores, non_nation_regions.rsplit(
+            ','), f"Provider suspicion scores per region for item {rp.code_of_interest}", "sus_boxes")
 
         for state, data in self.test_data:
-            self.log(f"Getting suspicious provider neighbours for {self.code_converter.convert_state_num(state)}")
+            self.log(
+                f"Getting suspicious provider neighbours for {self.code_converter.convert_state_num(state)}")
             idx = state_order.index(state)
             state_providers = suspicious_transaction_list[idx]
             for provider in suspicious_provider_list[idx]:
-                self.log(f"Suspicious provider {provider} has score {state_providers[provider]:.2f}")
-                claims = data.loc[data['SPR'] == provider, 'PIN'].unique().tolist()
-                neighbour_providers = data.loc[data['PIN'].isin(claims), 'SPR'].unique().tolist()
+                self.log(
+                    f"Suspicious provider {provider} has score {state_providers[provider]:.2f}")
+                claims = data.loc[data['SPR'] ==
+                                  provider, 'PIN'].unique().tolist()
+                neighbour_providers = data.loc[data['PIN'].isin(
+                    claims), 'SPR'].unique().tolist()
                 neighbour_providers.remove(provider)
                 for neighbour in neighbour_providers:
-                    neighbour_score = state_providers.get(neighbour, "- unscored")
+                    neighbour_score = state_providers.get(
+                        neighbour, "- unscored")
                     if isinstance(neighbour_score, float):
                         neighbour_score = f'{neighbour_score:.2f}'
-                        self.log(f"Neighbour {neighbour} has score {neighbour_score}")
+                        self.log(
+                            f"Neighbour {neighbour} has score {neighbour_score}")
 
-            self.log(f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
+            self.log(
+                f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
             patients = data.groupby('PIN')
             communities = []
             for name, group in patients:
                 community = set(str(x) for x in group['SPR'].unique())
                 communities.append(community)
-
-
-            # idx = list(range(len(communities)))
-            # df = pd.DataFrame(0, columns=idx, index=idx, dtype=float)
-            # for i, a in enumerate(communities):
-            #     for j, b in enumerate(communities):
-            #         if i == j:
-            #             continue
-
-            #         length = len(a.union(b))
-            #         similar = len(a.intersection(b))
-            #         ratio = similar / length
-            #         df.at[i,j] = ratio
-
-            # x = df.to_numpy().sum()
-            # self.log(f"Community similarity measure in {self.code_converter.convert_state_num(state)}: {x/2} / {(len(idx)**2) / 2)
-
-            # patient_model = Word2Vec(communities)
-            # pca = self.models.pca_2d(patient_model[patient_model.wv.vocab])
-            # self.models.k_means_cluster(pca, 10, 'Patient clusters', f"k_means_state_{state)
 
             provider_graph = {}
             for community in communities:
@@ -464,14 +515,15 @@ class TestCase(ProposalTest):
             for x in enumerate(sorted(provider_graph.items(), key=lambda x: len(x[1]), reverse=True)):
                 i, (provider, connections) = x
                 connections = len(connections)
-                if i >=10:
+                if i >= 10:
                     break
 
-                self.log(f"Provider {provider} has {connections} connections and has the following RSPs")
-                rsps = data.loc[data['SPR'] == int(provider), 'SPR_RSP'].unique().tolist()
+                self.log(
+                    f"Provider {provider} has {connections} connections and has the following RSPs")
+                rsps = data.loc[data['SPR'] == int(
+                    provider), 'SPR_RSP'].unique().tolist()
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
-
 
             # for k, v in provider_graph.items():
             #     provider_graph[k] = {item: None for item in v}
@@ -479,4 +531,7 @@ class TestCase(ProposalTest):
             # converted_graph = self.graphs.contract_largest_maximum_cliques(provider_graph)
             # self.log("Graphing")
             # filename = self.logger.output_path / f"provider_communities_state_{state}.png"
-            # self.graphs.visual_graph(converted_graph, filename, f"Provider communities in {self.code_converter.convert_state_num(state), directed=False)
+            # self.graphs.visual_graph(converted_graph,
+            #                          filename,
+            #                          f"Provider communities in {self.code_converter.convert_state_num(state),
+            #                          directed=False)
