@@ -21,7 +21,7 @@ These sections are linked together by run_analysis.py, which loads the data anal
 ### Usage
 • Data location should be specified in utilities/file_utils.py<br/>
 • Test parameters, including the data analysis file, should be specified in run_analysis.py<br/>
-• The test can then be run with pyton run_analysis.py<br/>
+• The test can then be run with python run_analysis.py<br/>
 
 ## Tests
 Unit tests have been run within VSCode using the unittest framework.
