@@ -1,11 +1,15 @@
-import pandas as pd
+'''Get the difference in dates of service between two item codes'''
 from dataclasses import dataclass
-from utilities.base_proposal_test import ProposalTest
+import pandas as pd
+from overrides import overrides
 from tqdm import tqdm
+from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
+    '''Data analysis case'''
     @dataclass
     class RequiredParams:
+        '''Parameters required for the analysis'''
         anaesthesia_code:int = 21214
         surgery_code:int = 49318
 
@@ -15,15 +19,18 @@ class TestCase(ProposalTest):
     processed_data: pd.DataFrame = None
     test_data = None
 
+    @overrides
     def process_dataframe(self, data):
         super().process_dataframe(data)
 
         return data
 
+    @overrides
     def get_test_data(self):
         super().get_test_data()
         self.test_data = self.processed_data
 
+    @overrides
     def run_test(self):
         super().run_test()
         rp = self.required_params
@@ -52,7 +59,5 @@ class TestCase(ProposalTest):
 
         self.log(f"{incomplete_matches} incomplete matches")
         filename = self.logger.output_path / "difference_plot"
-        self.graphs.create_boxplot(timedelta, f"Difference between DOS for {rp.anaesthesia_code} and {rp.surgery_code}", filename)
-            
-
-            
+        self.graphs.create_boxplot(timedelta,
+                                   f"Difference between DOS for {rp.anaesthesia_code} and {rp.surgery_code}", filename)

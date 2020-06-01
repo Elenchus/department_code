@@ -39,7 +39,7 @@ class TestCase(ProposalTest):
         example_output = self.logger.output_path / "example"
         self.graphs.create_visnetwork(model, model_output, "Example regional model", m_attrs)
         self.graphs.create_visnetwork(example, example_output, "Example provider from region", e_attrs)
-        ged, edit_d, edit_attr = self.graphs.graph_edit_distance(model, example)
+        _, edit_d, edit_attr = self.graphs.graph_edit_distance(model, example)
         for k in edit_attr:
             if edit_attr[k]['shape'] == 'database':
                 edit_attr[k]['color'] = '#D55E00'

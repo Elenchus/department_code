@@ -1,8 +1,5 @@
-import functools
-import inspect
 import pandas as pd
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, is_dataclass
 from utilities.graph_utils import GraphUtils
 from utilities.model_utils import ModelUtils
 from utilities.code_converter import CodeConverter
@@ -25,6 +22,7 @@ class RequiredParams:
         return f"RequiredParams({str(self.__dict__)})"
 
 class ProposalTest(ABC):
+    '''Run an analysis through the framework'''
     @property
     @classmethod
     # @abstractmethod
@@ -54,7 +52,7 @@ class ProposalTest(ABC):
     @abstractmethod
     def test_data(self):
         raise NotImplementedError
-    
+
     def __init__(self, logger, params, year):
         self.logger = logger
         self.code_converter = CodeConverter(year)
@@ -88,22 +86,27 @@ class ProposalTest(ABC):
 
     @abstractmethod
     def process_dataframe(self, data):
+        '''Get required data from the source'''
         self.log("Processing dataframe")
 
     @abstractmethod
     def get_test_data(self):
+        '''Modify the processed data before the test'''
         self.log("Getting test data")
-        if len(self.processed_data.columns) == 0:
+        if not self.processed_data.columns:
             raise KeyError("No data specified")
 
     @abstractmethod
     def run_test(self):
+        '''Run the analysis'''
         self.log("Running test")
         if self.test_data is None:
             raise KeyError("No test data specified")
 
-    def load_data(self):
+    def load_data(self, data):
+        '''Load data from a file instead of processing and modifying from source'''
         self.log("Loading data")
 
     def finalise_test(self):
-        raise NotImplementedError
+        '''To be used when completing an iterative test case'''
+        self.log("Finalising all iterations")

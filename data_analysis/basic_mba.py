@@ -1,5 +1,4 @@
 import operator
-import pandas as pd
 from tqdm import tqdm
 
 class BasicMba:
@@ -41,7 +40,7 @@ class BasicMba:
         self.log("Creating documents")
         documents = []
 
-        for _, group in tqdm(data): 
+        for _, group in tqdm(data):
             items = group[self.basket_header].unique().tolist()
             items = [str(item) for item in items]
             if len(items) == 1:
@@ -113,8 +112,8 @@ class BasicMba:
 
             documents.append(group[self.basket_header].unique().tolist())
             unique_items.update(group[self.basket_header])
-        
-        return suspicious_transactions, all_graphs, edit_graphs, edit_attrs 
+
+        return suspicious_transactions, all_graphs, edit_graphs, edit_attrs
 
     def get_suspicious_transaction_score(self, d, data, scoring_method='max', attrs=None, min_support = 0.005):
         if scoring_method == 'ged':
@@ -167,7 +166,7 @@ class BasicMba:
             return len(components)
 
         return component_score.index(max_score)
-        
+
     def log_exception_rules(self, model, threshold, ignore_list, documents):
         self.log("Getting exception rules")
         for antecedent in list(model.keys()):

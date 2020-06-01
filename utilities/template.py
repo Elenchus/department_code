@@ -1,10 +1,12 @@
-import pandas as pd
 from dataclasses import dataclass
+import pandas as pd
+from overrides import overrides
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
+        '''Parameters required for the analysis'''
         pass
 
     FINAL_COLS = []
@@ -13,13 +15,15 @@ class TestCase(ProposalTest):
     processed_data: pd.DataFrame = None
     test_data = None
 
+    @overrides
     def process_dataframe(self, data):
         super().process_dataframe(data)
 
         return data
-
+    @overrides
     def get_test_data(self):
         super().get_test_data()
 
+    @overrides
     def run_test(self):
         super().run_test()
