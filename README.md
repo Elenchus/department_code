@@ -3,8 +3,8 @@ Code to extract MBS claims, create association rules, and rank providers by vari
 
 This repository contains an extract of a larger data analysis framework. The extract contains the code used in the paper submitted by the same name, available as a preprint at _____.
 
-## Python compatibility
-This code is confirmed to be working in Python 3.6.8.
+## Software version compatibility
+This code was run in Python 3.6.8 in Ubuntu 18.04.2 LTS. Some graphs were made in R 3.4.4 using rpy2. Python package versions are documented in requirements.txt
 
 ## Structure
 ### Overview
@@ -20,7 +20,7 @@ These sections are linked together by run_analysis.py, which loads the data anal
 • The test can then be run with python run_analysis.py<br/>
 
 ### Data extraction summary
-The base analysis class expects a general test order of: extract and process the data from the source, which is separated by years; manipulate the data in some way to make it more suitable for the test; run the analysis. Loading previously extracted and processed data from a file is also allowed for.
+The base analysis class typically expects a general test order of: extract, combine, and process the data from the source, which is separated by years; process the data in some way to make it more suitable for the test; run the analysis. Loading previously extracted and processed data from a file is a possible alternative, which bypasses the extraction and processing steps.
 
 Because the data source is separated by years, three ways of working with the data are implemented in run_analysis.py - combining the years together, iterating over the years outside the analysis, or iterating over the years within the analysis. Only the combined years are used in this repository.
 
