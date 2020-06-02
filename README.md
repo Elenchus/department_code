@@ -48,7 +48,7 @@ Please contact me with any questions
 [![alt text][1.1]][1]
 [![alt text][2.1]][2]
 
-[1.1]: https://blog-assets.hootsuite.com/wp-content/uploads/2018/09/In-2C-54px-R.png =18x12
+[1.1]: (https://blog-assets.hootsuite.com/wp-content/uploads/2018/09/In-2C-54px-R.png =18x12)
 [1]: https://au.linkedin.com/in/james-kemp-11874a93
-[2.1]: https://www.researchgate.net/apple-touch-icon-180x180.png =15x15
+[2.1]: (https://www.researchgate.net/apple-touch-icon-180x180.png =15x15)
 [2]: https://www.researchgate.net/profile/James_Kemp6
