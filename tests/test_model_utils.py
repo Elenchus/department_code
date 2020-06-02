@@ -40,39 +40,6 @@ class ModelUtilsTest(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_cartesian_polar(self):
-        data = [[1, 1], [-1, 1], [-1, -1], [1, -1]]
-        polar = self.model.cartesian_to_polar(data)
-        for result in polar:
-            assert result[0] == math.sqrt(2)
-
-        assert polar[0][1] == 45
-        assert polar[1][1] == 135
-        assert polar[2][1] == 225
-        assert polar[3][1] == 315
-
-    def test_get_best_cluster_size(self):
-        arr = None
-        no_clusters = 6
-        for n in range(no_clusters):
-            part_arr = (n * 2) + np.random.rand(10, 2)
-            if arr is None:
-                arr = part_arr
-            else:
-                arr = np.concatenate((arr, part_arr))
-
-        (k, max_n) = self.model.get_best_cluster_size(arr, [2, 4, 6, 8])
-
-        assert k == 6
-        assert max_n > 0 and max_n <= 100
-
-    def test_get_outlier_indices(self):
-        data = [50] * 50 + [40] * 25 + [60] * 25 + [9] + [91]
-        x = self.model.get_outlier_indices(data)
-        assert len(x) == 2
-        assert 101 in x
-        assert 100 in x
-
     def test_fpgrowth(self):
         test_function = self.model.fp_growth_analysis
         documents = create_mba_test_data()

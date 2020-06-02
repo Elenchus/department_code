@@ -231,7 +231,7 @@ class TestCase(ProposalTest):
                       state,If item is claimed the patients for that provider probably also had these items claimed\n'
             f.write(header)
             for node in too_much:
-                nodes = list(d[node].keys())
+                nodes = list(d.get(node, {}).keys())
                 line = f"{node}," + '; '.join(nodes) + '\n'
                 f.write(line)
 

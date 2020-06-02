@@ -464,7 +464,7 @@ class GraphUtils():
         current = datetime.now().strftime("%Y%m%dT%H%M%S")
         output_path = self.logger.get_file_path(f"{filename}_{current}")
         pickle_path = self.logger.get_file_path(f"{output_path}.pickle")
-        with open(pickle_path, 'w+') as f:
+        with open(pickle_path, 'wb') as f:
             pickle.dump(fig, f)
 
         if bbox_extra_artists is None:
