@@ -1,6 +1,7 @@
+'''Test cases for GraphUtils'''
 import unittest
 import utilities.graph_utils as graph_utils
-from tests.mock_logger import MockLogger
+from mock_logger import MockLogger
 
 class GraphUtilsTest(unittest.TestCase):
     '''Test cases for GraphUtils'''
@@ -28,7 +29,7 @@ class GraphUtilsTest(unittest.TestCase):
 
         graph = self.graphs.convert_adjacency_matrix_to_graph(am)
         assert len(model.keys()) == len(graph.keys())
-        for ante in model.keys():
+        for ante in model:
             for con in model[ante].keys():
                 assert graph[ante][con] is None
 

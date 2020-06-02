@@ -1,14 +1,12 @@
-import itertools
-import math
+'''Unit tests for ModelUtils'''
 import unittest
-import numpy as np
-import pandas as pd
-import utilities.model_utils as model_utils
-from utilities.code_converter import CodeConverter
 from tests.mock_graph_utils import MockGraphUtils
 from tests.mock_logger import MockLogger
+import utilities.model_utils as model_utils
+from utilities.code_converter import CodeConverter
 
 def create_mba_test_data():
+    '''create test data'''
     documents = []
     for i in range(1000):
         doc = []
@@ -41,6 +39,7 @@ class ModelUtilsTest(unittest.TestCase):
         pass
 
     def test_fpgrowth(self):
+        '''confirm fpgrowth implementation correctly finds association rules'''
         test_function = self.model.fp_growth_analysis
         documents = create_mba_test_data()
 
@@ -52,15 +51,13 @@ class ModelUtilsTest(unittest.TestCase):
 
         # test min conviction
         d = test_function(documents, min_support=0.01, min_conviction=1.1)
-        cat = [1000,999,900,899,700,10,9,1]
-        for i in range(len(cat)):
-            for j in range(len(cat)):
-                a = cat[i]
-                b = cat[j]
+        cat = [1000, 999, 900, 899, 700, 10, 9, 1]
+        for i, a in enumerate(cat):
+            for j, b in enumerate(cat):
                 if a == b:
                     continue
 
-                supp = min(a,b) / max(cat)
+                supp = min(a, b) / max(cat)
                 supp_x = a / max(cat)
                 supp_y = b / max(cat)
                 conf = supp / supp_x
@@ -73,10 +70,11 @@ class ModelUtilsTest(unittest.TestCase):
                         assert str(j) in d[str(i)]
 
     def test_apriori(self):
+        '''confirm apriori implementation correctly finds association rules'''
         test_function = self.model.apriori_analysis
         documents = create_mba_test_data()
         # test min_support
-        d = test_function(documents, min_support=0.01, min_confidence= 0, min_lift=0)
+        d = test_function(documents, min_support=0.01, min_confidence=0, min_lift=0)
         assert len(d) == 6
         for i in d:
             assert len(d[i]) == 5
@@ -88,17 +86,15 @@ class ModelUtilsTest(unittest.TestCase):
         assert len(d['0']) == 2
 
         # test min_lift
-        d = test_function(documents, min_support=0.01, min_confidence= 0, min_lift=1.1)
-        cat = [1000,999,900,899,700,10,9,1]
+        d = test_function(documents, min_support=0.01, min_confidence=0, min_lift=1.1)
+        cat = [1000, 999, 900, 899, 700, 10, 9, 1]
 
-        for i in range(len(cat)):
-            for j in range(len(cat)):
-                a = cat[i]
-                b = cat[j]
+        for i, a in enumerate(cat):
+            for j, b in enumerate(cat):
                 if a == b:
                     continue
-                lift = (min(a,b)/max(cat))/((a/max(cat))*(b/max(cat)))
-                supp = min(a,b) / max(cat)
+                lift = (min(a, b)/max(cat))/((a/max(cat))*(b/max(cat)))
+                supp = min(a, b) / max(cat)
                 if supp >= 0.01:
                     if lift < 1.1:
                         if str(a) in d:
@@ -107,9 +103,10 @@ class ModelUtilsTest(unittest.TestCase):
                         assert str(j) in d[str(i)]
 
     def test_pairwise_market_basket(self):
+        '''confirm pairwise implementation correctly finds association rules'''
         test_function = self.model.mba.pairwise_market_basket
         documents = create_mba_test_data()
-        cat = [1000,999,900,899,700,10,9,1]
+        cat = [1000, 999, 900, 899, 700, 10, 9, 1]
         names = [str(x) for x in range(8)]
         # test min_support
         d = test_function(names, documents, min_support=0.01)
@@ -133,14 +130,12 @@ class ModelUtilsTest(unittest.TestCase):
         self.model.mba.update_filters(filters)
         d = test_function(names, documents, min_support=0.01)
 
-        for i in range(len(cat)):
-            for j in range(len(cat)):
-                a = cat[i]
-                b = cat[j]
+        for i, a in enumerate(cat):
+            for j, b in enumerate(cat):
                 if a == b:
                     continue
-                lift = (min(a,b)/max(cat))/((a/max(cat))*(b/max(cat)))
-                supp = min(a,b) / max(cat)
+                lift = (min(a, b)/max(cat))/((a/max(cat))*(b/max(cat)))
+                supp = min(a, b) / max(cat)
                 if supp >= 0.01:
                     if lift < 1.1:
                         if str(a) in d:
@@ -155,14 +150,12 @@ class ModelUtilsTest(unittest.TestCase):
         }
         self.model.mba.update_filters(filters)
         d = test_function(names, documents, min_support=0.01)
-        for i in range(len(cat)):
-            for j in range(len(cat)):
-                a = cat[i]
-                b = cat[j]
+        for i, a in enumerate(cat):
+            for j, b in enumerate(cat):
                 if a == b:
                     continue
 
-                supp = min(a,b) / max(cat)
+                supp = min(a, b) / max(cat)
                 supp_x = a / max(cat)
                 supp_y = b / max(cat)
                 conf = supp / supp_x

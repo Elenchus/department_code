@@ -1,7 +1,10 @@
+# pylint: disable=C0330,C0301 ## bad indentations and ong lines
+'''tests for MBS/PBS code converter'''
 import unittest
 from utilities.code_converter import CodeConverter
 
 class TestCodeConverter(unittest.TestCase):
+    '''test case class'''
     def setUp(self):
         self.cdv = CodeConverter(2019)
 
@@ -9,6 +12,7 @@ class TestCodeConverter(unittest.TestCase):
         pass
 
     def test_convert_mbs_code(self):
+        '''check MBS items are converted to plain language'''
         for (func, test, expected_result) in [
                                         (self.cdv.convert_mbs_code_to_group_numbers, 113, ['1', 'A3', None]),
                                         (self.cdv.convert_mbs_code_to_group_numbers, "32046", ['3', 'T8', '2']),
@@ -20,12 +24,13 @@ class TestCodeConverter(unittest.TestCase):
             actual_result = func(test)
             if isinstance(expected_result, list):
                 assert len(expected_result) == len(actual_result)
-                for i in range(len(expected_result)):
+                for i, _ in enumerate(expected_result):
                     assert expected_result[i] == actual_result[i]
             else:
                 assert expected_result == actual_result
 
     def test_convert_pbs_code(self):
+        '''check PBS items are converted to plain language'''
         row = self.cdv.convert_pbs_code("00043G")
         assert len(row) == 4
         assert row[0] == "00043G"
@@ -34,12 +39,14 @@ class TestCodeConverter(unittest.TestCase):
         assert row[3] == "Z"
 
     def test_convert_rsp_num(self):
+        '''check SPR_RSP codes are converted correctly'''
         expected = {0: "Not Defined", 4: "Cardiology", 160: "Interns", 416: "College Trainee - Palliative Medicine"}
         for key, val in expected.items():
             result = self.cdv.convert_rsp_num(key)
             assert result == val
 
     def test_convert_rsp_str(self):
+        '''check SPR_RSP descriptions are converted correctly'''
         expected = {0: "Not Defined", 4: "Cardiology", 160: "Interns", 416: "College Trainee - Palliative Medicine"}
         for key, val in expected.items():
             result = self.cdv.convert_rsp_str(val)
