@@ -167,7 +167,7 @@ class TestCase(ProposalTest):
                 ("Surgical episodes per provider", "provider_episodes",
                  "provider_episodes", self.provider_episode_stats)
         ]:
-            top_file = self.logger.output_path / f'top_{filename}_{region}.csv'
+            top_file = self.logger.get_file_path(f'top_{filename}_{region}.csv')
             top_selection = data[header].value_counts()
             top_code_counts = top_selection.values.tolist()
             collection.append(top_code_counts)
@@ -271,8 +271,7 @@ class TestCase(ProposalTest):
             self.log("Creating model")
             d = mba_funcs.create_model(
                 all_unique_items, documents, rp.min_support)
-            model_dict_csv = self.logger.output_path / \
-                f"state_{state}_model.csv"
+            model_dict_csv = self.logger.get_file_path(f"state_{state}_model.csv")
             self.write_model_to_file(d, model_dict_csv)
             # remove no other item:
             if "No other items" in d:
@@ -294,15 +293,15 @@ class TestCase(ProposalTest):
             else:
                 formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
 
-            model_name = self.logger.output_path / f"model_state_{state}.pkl"
+            model_name = self.logger.get_file_path(f"model_state_{state}.pkl")
             with open(model_name, "wb") as f:
                 pickle.dump(formatted_d, f)
 
-            attrs_name = self.logger.output_path / f"attrs_state_{state}.pkl"
+            attrs_name = self.logger.output_path.get_file_path(f"attrs_state_{state}.pkl")
             with open(attrs_name, "wb") as f:
                 pickle.dump(attrs, f)
 
-            legend_file = self.logger.output_path / f"Legend_{state}.png"
+            legend_file = self.logger.get_file_path(f"Legend_{state}.png")
             self.graphs.graph_legend(legend, legend_file, "Legend")
 
             state_records.append(d)
@@ -397,8 +396,7 @@ class TestCase(ProposalTest):
                 #                        edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
                 self.graphs.create_visnetwork(
                     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
-                suspicious_filename = self.logger.output_path / \
-                    f"suspicious_provider_{idx}_in_state_{state}.csv"
+                suspicious_filename = self.logger.get_file_path(f"suspicious_provider_{idx}_in_state_{state}.csv")
                 self.write_suspicions_to_file(
                     converted_edit_graph, new_edit_attrs, suspicious_filename)
 
@@ -421,7 +419,7 @@ class TestCase(ProposalTest):
             state_sets.append(s)
             total_cost = 0
             name = f"costs_for_state_{self.code_converter.convert_state_num(state_order[i])}.csv"
-            filename = self.logger.output_path / name
+            filename = self.logger.get_file_path(name)
             with open(filename, 'w+') as f:
                 f.write(
                     "Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
@@ -456,12 +454,12 @@ class TestCase(ProposalTest):
                 [self.code_converter.convert_state_num(x+1) for x in item_states])
             states.append(item_states)
 
-        diff_file = self.logger.output_path / 'diff_file.csv'
+        diff_file = self.logger.get_file_path('diff_file.csv')
         self.code_converter.write_mbs_codes_to_csv(
             differences, diff_file, additional_headers=['States'], additional_cols=[states])
 
         sames = set.intersection(*state_sets)
-        same_file = self.logger.output_path / 'same_file.csv'
+        same_file = self.logger.get_file_path('same_file.csv')
         self.code_converter.write_mbs_codes_to_csv(sames, same_file)
 
         regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"

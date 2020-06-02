@@ -1,4 +1,5 @@
 '''functions for quick graphing'''
+import pickle
 from copy import deepcopy
 from datetime import datetime
 import holoviews as hv
@@ -461,9 +462,10 @@ class GraphUtils():
     def save_plt_fig(self, fig, filename, bbox_extra_artists=None):
         '''Save a plot figure to file with timestamp'''
         current = datetime.now().strftime("%Y%m%dT%H%M%S")
-        output_path = f"{filename}_{current}"
-        if self.logger is not None:
-            output_path = self.logger.output_path / output_path
+        output_path = self.logger.get_file_path(f"{filename}_{current}")
+        pickle_path = self.logger.get_file_path(f"{output_path}.pickle")
+        with open(pickle_path, 'w+') as f:
+            pickle.dump(fig, f)
 
         if bbox_extra_artists is None:
             fig.savefig(output_path)

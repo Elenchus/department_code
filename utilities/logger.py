@@ -72,6 +72,13 @@ class Logger:
 
                 return output_folder
 
+            def get_file_path(self, filename):
+                '''combines a filename with the logger output path'''
+                if self.output_path is None:
+                    return filename
+
+                return self.output_path / filename
+
             def handle_exception(self, exc_type, exc_value, exc_traceback, from_exit=False):
                 '''log exceptions to file'''
                 if issubclass(exc_type, KeyboardInterrupt):
