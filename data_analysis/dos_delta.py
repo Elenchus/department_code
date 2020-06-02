@@ -6,12 +6,24 @@ from tqdm import tqdm
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
+                    # new_row = {"Antecedent": a,
+                    #            "Consequent": b,
+                    #            "Count": count,
+                    #            "Support": support,
+                    #            "Confidence": confidence,
+                    #            "Conviction": conviction,
+                    #            "Lift": lift,
+                    #            "Odds ratio": odds_ratio}
+                    # row_list.append(new_row)
+
+        # output = pd.DataFrame(row_list)
+
     '''Data analysis case'''
     @dataclass
     class RequiredParams:
         '''Parameters required for the analysis'''
-        anaesthesia_code:int = 21214
-        surgery_code:int = 49318
+        anaesthesia_code: int = 21214
+        surgery_code: int = 49318
 
     FINAL_COLS = ["ITEM", "PIN", "DOS"]
     INITIAL_COLS = FINAL_COLS

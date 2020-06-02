@@ -1,11 +1,12 @@
+'''Association analysis functions'''
 import operator
 import pandas as pd
-from enum import auto, Enum
 from numpy import nan
 from scipy.stats import fisher_exact
 
 class MbaUtils:
-    filters:dict = {
+    '''Class for association analysis'''
+    filters: dict = {
         'confidence': {
             'operator': operator.ge,
             'value': 0
@@ -29,10 +30,11 @@ class MbaUtils:
     }
 
     def __init__(self, code_converter, graphs):
-        self.code_converter=code_converter
+        self.code_converter = code_converter
         self.graphs = graphs
 
     def update_filters(self, filters):
+        '''Updates thresholds for interest measures'''
         for k, v in filters.items():
             if k not in self.filters:
                 raise KeyError(f"Invalid filter {k}")
@@ -42,6 +44,7 @@ class MbaUtils:
                 self.filters[k][key] = val
 
     def compare_transaction_to_model(self, items, model):
+        '''compare the items in a single transaction to a graph dictionary model'''
         _items = {}
         for i in items:
             if i not in _items:
@@ -60,6 +63,7 @@ class MbaUtils:
         return _items, diamonds
 
     def find_repeated_abnormal_nodes(self, non_unique_basket, model, threshold=10):
+        '''find nodes that occur repeatedly in the basket, but not in the model'''
         improper, _ = self.check_basket_for_presences(non_unique_basket, model)
         basket = list(set(non_unique_basket))
         diamonds = []
@@ -70,6 +74,7 @@ class MbaUtils:
         return diamonds
 
     def get_nodes_from_digraph(self, d):
+        '''return set of nodes in a graph dictionary''' # this might be a repeat of GraphUtils.flatten_graph_dict
         a = set()
         for x in d.keys():
             a.add(x)
@@ -79,6 +84,7 @@ class MbaUtils:
         return a
 
     def check_basket_for_absences(self, basket, model):
+        '''find nodes in the model missing in the basket'''
         tally = 0
         for item in model.keys():
             if item in basket:
@@ -88,6 +94,7 @@ class MbaUtils:
         return tally
 
     def check_basket_for_presences(self, basket, model, threshold=0):
+        '''find nodes in the basket missing in the model'''
         # two problems - unique item differences, and repeated item differences
         tally = {i: 0 for i in set(basket)}
         nodes = self.get_nodes_from_digraph(model)
@@ -104,8 +111,9 @@ class MbaUtils:
             x[k] = abs(v)
 
         return improper, proper
-            
+
     def color_providers(self, d, data, colour_keys=True, colour_vals=True):
+        '''colour nodes based on MBS SPR_RSP'''
         def get_provider_val(spr):
             spr = int(spr)
             rows = data[data['SPR'] == spr]
@@ -139,7 +147,7 @@ class MbaUtils:
         for i, col in enumerate(used_colors):
             color = int(i * 255 / len(used_colors))
             anti_col = 255 - color
-            g = int(min(color, anti_col)/2)
+            # g = int(min(color, anti_col)/2)
             c = '{:02x}'.format(color)
             a = '{:02x}'.format(anti_col)
 
@@ -151,12 +159,10 @@ class MbaUtils:
 
         return colors, colour_table
 
-    def compare_items_to_model(self, items, model):
-        pass
-
     def colour_mbs_codes(self, d):
+        '''colour nodes based on MBS item groups'''
         get_color = {
-            'I': 'red', # for item not in dictionary. Colours mostly from https://serialmentor.com/dataviz/color-pitfalls.html
+            'I': 'red', # item not in dictionary. Colours: https://serialmentor.com/dataviz/color-pitfalls.html
             '1': '#E69F00',
             '2': '#56B4E9',
             '3': '#009E73',
@@ -164,7 +170,7 @@ class MbaUtils:
             '5': '#0072B2',
             '6': '#D55E00',
             '7': '#CC79A7',
-            '8': '#ffd912' 
+            '8': '#ffd912'
         }
 
         all_items = self.graphs.flatten_graph_dict(d)
@@ -184,11 +190,14 @@ class MbaUtils:
         for color in color_map:
             color_name = get_color[color]
             color_label = self.code_converter.convert_mbs_category_number_to_label(color)
-            legend[color_name] = {'color': color_name, 'label': color_label.replace(' ','\n'), 'labeljust': ';', 'rank': 'max'}
+            legend[color_name] = {'color': color_name,
+                                  'label': color_label.replace(' ', '\n'),
+                                  'labeljust': ';', 'rank': 'max'}
 
         return (d, attrs, legend)
 
     def convert_mbs_codes(self, d):
+        '''change node text from MBS item codes to human readable descriptions'''
         get_color = {
             'I': 'red', # for item not in dictionary
             '1': '#E69F00',
@@ -198,7 +207,7 @@ class MbaUtils:
             '5': '#0072B2',
             '6': '#D55E00',
             '7': '#CC79A7',
-            '8': '#ffd912' 
+            '8': '#ffd912'
         }
 
         lookup = {}
@@ -249,11 +258,15 @@ class MbaUtils:
         for color in color_map:
             color_name = get_color[color]
             color_label = self.code_converter.convert_mbs_category_number_to_label(color)
-            legend[color_name] = {'color': color_name, 'label': color_label.replace(' ','\n'), 'labeljust': ';', 'rank': 'max'}
+            legend[color_name] = {'color': color_name,
+                                  'label': color_label.replace(' ', '\n'),
+                                  'labeljust': ';',
+                                  'rank': 'max'}
 
         return (new_data, colors, legend)
 
     def convert_rsp_keys(self, d):
+        '''convert node text from SPR_RSP numbers to human readable text'''
         lookup = {}
         for k in d.keys():
             if k == "No other items":
@@ -277,6 +290,7 @@ class MbaUtils:
         return new_data
 
     def exception_rules(self, antecedent, consequent, threshold, documents):
+        '''Find exception rules for an item pair'''
         X_subset = []
         item_subset = {}
         exclusions = []
@@ -299,7 +313,7 @@ class MbaUtils:
 
             support_XY = support_XY / len(X_subset)
             confidence = support_XY / support_X
-            num = (1 - support_Y) 
+            num = (1 - support_Y)
             den = (1 - confidence)
             conviction = num / den if den != 0 else 2 * threshold
             if conviction < threshold:
@@ -308,10 +322,11 @@ class MbaUtils:
         return exclusions
 
     def pairwise_market_basket(self,
-                                items,
-                                documents,
-                                min_support = 0.1,
-                                max_p_value=1):
+                               items,
+                               documents,
+                               min_support=0.1,
+                               max_p_value=1):
+        '''find association rules between item pairs'''
         group_len = len(documents)
         if min_support < 1:
             min_occurrence = min_support * group_len
@@ -350,7 +365,7 @@ class MbaUtils:
                 if a == b:
                     continue
 
-                count = counts.at[a, b] 
+                count = counts.at[a, b]
                 if  count >= min_occurrence:
                     f11 = count
                     f10 = reduced_items[a] - f11
@@ -362,7 +377,7 @@ class MbaUtils:
 
                     if p_value > max_p_value:
                         continue
-                    
+
                     support = count / group_len
                     support_a = reduced_items[a] / group_len
                     support_b = reduced_items[b] / group_len
@@ -401,10 +416,5 @@ class MbaUtils:
                             d[a] = {}
 
                         d[a][b] = {"weight": confidence}
-
-                    # new_row = {"Antecedent": a, "Consequent": b, "Count": count, "Support": support, "Confidence": confidence, "Conviction": conviction, "Lift": lift, "Odds ratio": odds_ratio}
-                    # row_list.append(new_row)
-
-        # output = pd.DataFrame(row_list)
 
         return d

@@ -1,3 +1,4 @@
+# pylint: disable=W0201 ## flags self.logger assigned outside init
 '''Logging functions for MBS and PBS tests'''
 # import atexit
 import logging
@@ -18,6 +19,7 @@ class Logger:
 
     def __enter__(self):
         class LoggingStructure:
+            '''Create the logging structure on enter'''
             def __init__(self, test_name, copy_path=None):
                 self.copy_path = copy_path
                 self.test_name = test_name

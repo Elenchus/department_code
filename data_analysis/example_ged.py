@@ -1,10 +1,14 @@
-import pandas as pd
+# pylint: disable=W0107 ## flags class pass as not required
+'''Create an example of the graph edit distance between two graph dictionaries'''
 from dataclasses import dataclass
+import pandas as pd
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
+    '''Analysis class'''
     @dataclass
     class RequiredParams:
+        '''no required parameters'''
         pass
 
     FINAL_COLS = []
