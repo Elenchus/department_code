@@ -297,7 +297,7 @@ class TestCase(ProposalTest):
             with open(model_name, "wb") as f:
                 pickle.dump(formatted_d, f)
 
-            attrs_name = self.logger.output_path.get_file_path(f"attrs_state_{state}.pkl")
+            attrs_name = self.logger.get_file_path(f"attrs_state_{state}.pkl")
             with open(attrs_name, "wb") as f:
                 pickle.dump(attrs, f)
 
