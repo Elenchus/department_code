@@ -251,6 +251,7 @@ class TestCase(ProposalTest):
         state_order = []
         suspicious_provider_list = []
         suspicious_transaction_list = []
+        sus_items = {}
 
         self.get_exploratory_stats(self.processed_data, "nation")
 
@@ -344,6 +345,11 @@ class TestCase(ProposalTest):
 
                 provider_model = self.models.mba.pairwise_market_basket(
                     provider_items, provider_docs, min_support=rp.provider_min_support_count)
+                all_provider_items = self.graphs.flatten_graph_dict(provider_model)
+                for prov_item in all_provider_items:
+                    sus_item_count = sus_items.get(prov_item, 0) + 1
+                    sus_items[prov_item] = sus_item_count
+
                 ged, edit_d, edit_attr = self.graphs.graph_edit_distance(
                     d, provider_model, fee_record)
                 suspicious_transactions[provider] = ged
@@ -401,6 +407,9 @@ class TestCase(ProposalTest):
                     converted_edit_graph, new_edit_attrs, suspicious_filename)
 
             suspicious_provider_list.append(state_suspicious_providers)
+            sus_item_keys = list(sus_items.keys())
+            sus_item_vals = [sus_items[x] for x in sus_item_keys]
+            self.code_converter.write_mbs_codes_to_csv(sus_item_keys, f'sus_items_{state}', [sus_item_vals], ['Count'])
 
         labels = ["Nation"] + \
             [self.code_converter.convert_state_num(x) for x in range(1, 6)]
