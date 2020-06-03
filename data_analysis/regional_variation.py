@@ -430,12 +430,12 @@ class TestCase(ProposalTest):
                     item_cost, fee_type = self.code_converter.get_mbs_item_fee(
                         code)
                     total_cost += item_cost
-                    item_cost = "${:.2f.format(item_cost)}"
+                    item_cost = "${:.2f}".format(item_cost)
                     f.write(f"{line},{item_cost},{fee_type}\r\n")
 
-                total_cost = "${:.2f.format(total_cost)}"
+                total_cost_str = "${:.2f}".format(total_cost)
                 self.log(
-                    f"Cost for {self.code_converter.convert_state_num(state_order[i])}: {total_cost}")
+                    f"Cost for {self.code_converter.convert_state_num(state_order[i])}: {total_cost_str}")
 
         differences = set()
         for i in state_sets:
