@@ -372,7 +372,9 @@ class TestCase(ProposalTest):
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
 
-                group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: normal basket ITEM for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
+                group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
+                                    + f'normal basket ITEM for patients treated by SPR {s} with score ' \
+                                    + f'{suspicious_transactions[s]:.2f}'
                 group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
                 group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(
                     all_graphs[s])
@@ -381,7 +383,9 @@ class TestCase(ProposalTest):
                 self.graphs.create_visnetwork(
                     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
-                edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: edit history of basket ITEM for patients treated by SPR {s} with score {suspicious_transactions[s]:.2f}'
+                edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
+                                   + f'edit history of basket ITEM for patients treated by SPR {s} with score ' \
+                                   + f'{suspicious_transactions[s]:.2f}'
                 edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
                 if rp.human_readable_suspicious_items:
                     converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(
@@ -407,12 +411,6 @@ class TestCase(ProposalTest):
                     converted_edit_graph, new_edit_attrs, suspicious_filename)
 
             suspicious_provider_list.append(state_suspicious_providers)
-            sus_item_keys = list(sus_items.keys())
-            sus_item_vals = [sus_items[x] for x in sus_item_keys]
-            self.code_converter.write_mbs_codes_to_csv(sus_item_keys,
-                                                       self.logger.get_file_path(f'sus_items_{state}'),
-                                                       [sus_item_vals],
-                                                       ['Count'])
 
         labels = ["Nation"] + \
             [self.code_converter.convert_state_num(x) for x in range(1, 6)]
@@ -425,6 +423,12 @@ class TestCase(ProposalTest):
         self.graphs.create_boxplot_group(
             self.provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
 
+        sus_item_keys = list(sus_items.keys())
+        sus_item_vals = [sus_items[x] for x in sus_item_keys]
+        self.code_converter.write_mbs_codes_to_csv(sus_item_keys,
+                                                   self.logger.get_file_path(f'sus_items.csv'),
+                                                   [sus_item_vals],
+                                                   ['Count'])
         state_sets = []
         for i, state in enumerate(state_records):
             s = self.graphs.flatten_graph_dict(state)
