@@ -409,7 +409,10 @@ class TestCase(ProposalTest):
             suspicious_provider_list.append(state_suspicious_providers)
             sus_item_keys = list(sus_items.keys())
             sus_item_vals = [sus_items[x] for x in sus_item_keys]
-            self.code_converter.write_mbs_codes_to_csv(sus_item_keys, f'sus_items_{state}', [sus_item_vals], ['Count'])
+            self.code_converter.write_mbs_codes_to_csv(sus_item_keys,
+                                                       self.logger.get_file_path(f'sus_items_{state}'),
+                                                       [sus_item_vals],
+                                                       ['Count'])
 
         labels = ["Nation"] + \
             [self.code_converter.convert_state_num(x) for x in range(1, 6)]
