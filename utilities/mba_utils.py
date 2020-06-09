@@ -325,13 +325,17 @@ class MbaUtils:
                                items,
                                documents,
                                min_support=0.1,
-                               max_p_value=1):
+                               max_p_value=1,
+                               absolute_min_support_count=0):
         '''find association rules between item pairs'''
         group_len = len(documents)
         if min_support < 1:
             min_occurrence = min_support * group_len
         else:
             min_occurrence = min_support
+
+        if min_occurrence < absolute_min_support_count:
+            min_occurrence = absolute_min_support_count
 
         reduced_items = {"No other items": 0}
         for item in items:

@@ -14,7 +14,8 @@ class TestCase(ProposalTest):
         '''test parameters'''
         colour_only: bool = True
         min_support: float = 0.33
-        provider_min_support_count: float = 3
+        provider_min_support_count: int = 3
+        provider_min_support: float = 0.33
         filters: dict = None
         ignore_providers_with_less_than_x_patients: int = 4
         human_readable_suspicious_items: bool = False
@@ -344,7 +345,8 @@ class TestCase(ProposalTest):
                     provider_docs.append(doc)
 
                 provider_model = self.models.mba.pairwise_market_basket(
-                    provider_items, provider_docs, min_support=rp.provider_min_support_count)
+                    provider_items, provider_docs, min_support=rp.provider_min_support_,
+                    absolute_min_support_count=rp.provider_min_support_count)
                 all_provider_items = self.graphs.flatten_graph_dict(provider_model)
                 for prov_item in all_provider_items:
                     sus_item_count = sus_items.get(prov_item, 0) + 1
