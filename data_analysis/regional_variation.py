@@ -157,6 +157,10 @@ class TestCase(ProposalTest):
         self.graphs.create_boxplot_group(
             self.provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
 
+        regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
+        self.graphs.create_boxplot_group(self.patients_per_surgical_provider, regions.rsplit(
+            ','), "Episodes per surgical provider per region", "patients_per_provider")
+
     def create_state_model(self, state, mba_funcs, all_unique_items):
         '''Commands related to creation, graphing and saving of the state models'''
         rp = self.required_params
@@ -207,6 +211,14 @@ class TestCase(ProposalTest):
         # self.graphs.create_rchord(formatted_d,name,title)
 
         return d
+
+    def export_suspicious_claims(self, spr, state, rank):
+        '''export patient data for validation'''
+        data = self.processed_data
+        patient_ids = data.loc[data["SPR"] == spr, "PIN"].unique().tolist()
+        patient_claims = data[data["PIN"].isin(patient_ids)]
+        path = self.logger.get_file_path(f"suspicious_claims_rank_{rank}_state_{state}.csv")
+        patient_claims.to_csv(path)
 
     def get_exploratory_stats(self, data, region):
         '''EDA'''
@@ -425,6 +437,7 @@ class TestCase(ProposalTest):
             susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
             state_suspicious_providers = []
             for idx, s in enumerate(susp):
+                self.export_suspicious_claims(s, state, idx)
                 state_suspicious_providers.append(s)
                 self.log(f"Rank {idx} provider {s} has the following RSPs")
                 rsps = data.loc[data['SPR'] == s, 'SPR_RSP'].unique().tolist()
@@ -435,8 +448,7 @@ class TestCase(ProposalTest):
                                     + f'normal basket ITEM for patients treated by SPR {s} with score ' \
                                     + f'{suspicious_transactions[s]:.2f}'
                 group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
-                group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(
-                    all_graphs[s])
+                group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
                 # mba_funcs.create_graph(group_graph, group_graph_name,
                 #                        group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
                 self.graphs.create_visnetwork(
@@ -480,9 +492,6 @@ class TestCase(ProposalTest):
 
         self.get_similar_differences(state_records, state_order)
 
-        regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
-        self.graphs.create_boxplot_group(self.patients_per_surgical_provider, regions.rsplit(
-            ','), "Episodes per surgical provider per region", "patients_per_provider")
         non_nation_regions = "ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
         self.graphs.create_boxplot_group(all_suspicion_scores, non_nation_regions.rsplit(
             ','), f"Provider suspicion scores per region for item {rp.code_of_interest}", "sus_boxes")
