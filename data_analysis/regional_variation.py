@@ -209,6 +209,57 @@ class TestCase(ProposalTest):
         self.log(f"Episodes per surgical provider in {region}")
         self.log(df.describe())
 
+    def get_similar_differences(self, state_records, state_order):
+        '''gets similar and varying items between states'''
+        state_sets = []
+        for i, state in enumerate(state_records):
+            s = self.graphs.flatten_graph_dict(state)
+            state_sets.append(s)
+            total_cost = 0
+            name = f"costs_for_state_{self.code_converter.convert_state_num(state_order[i])}.csv"
+            filename = self.logger.get_file_path(name)
+            with open(filename, 'w+') as f:
+                f.write(
+                    "Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
+                for item in s:
+                    code = item.split('\n')[-1]
+                    line = ','.join(
+                        self.code_converter.get_mbs_code_as_line(code))
+                    item_cost, fee_type = self.code_converter.get_mbs_item_fee(
+                        code)
+                    total_cost += item_cost
+                    item_cost = "${:.2f}".format(item_cost)
+                    f.write(f"{line},{item_cost},{fee_type}\r\n")
+
+                total_cost_str = "${:.2f}".format(total_cost)
+                self.log(
+                    f"Cost for {self.code_converter.convert_state_num(state_order[i])}: {total_cost_str}")
+
+        differences = set()
+        for i in state_sets:
+            for j in state_sets:
+                differences.update(i.difference(j))
+
+        differences = list(differences)
+        states = []
+        for item in differences:
+            item_states = []
+            for i, state in enumerate(state_sets):
+                if item in state:
+                    item_states.append(i)
+
+            item_states = '; '.join(
+                [self.code_converter.convert_state_num(x+1) for x in item_states])
+            states.append(item_states)
+
+        diff_file = self.logger.get_file_path('diff_file.csv')
+        self.code_converter.write_mbs_codes_to_csv(
+            differences, diff_file, additional_headers=['States'], additional_cols=[states])
+
+        sames = set.intersection(*state_sets)
+        same_file = self.logger.get_file_path('same_file.csv')
+        self.code_converter.write_mbs_codes_to_csv(sames, same_file)
+
     def write_model_to_file(self, d, filename):
         '''Save a graph model'''
         header = "Item is claimed for at least 1/3 of unliateral joint replacements in the state \
@@ -219,7 +270,7 @@ class TestCase(ProposalTest):
                 line = self.code_converter.get_mbs_code_as_line(node)
                 f.write(f"{line}\n")
 
-    def write_suspicions_to_file(self, d, attrs, filename):
+    def write_suspicions_to_file(self, attrs, filename):
         '''Save a suspicious model'''
         too_much = []
         too_little = []
@@ -321,8 +372,7 @@ class TestCase(ProposalTest):
             fee_record = None
             fee_record = {x: {} for x in all_unique_items}
             for node in fee_record:
-                fee_record[node]['weight'] = self.code_converter.get_mbs_item_fee(node)[
-                    0]
+                fee_record[node]['weight'] = self.code_converter.get_mbs_item_fee(node)[0]
 
             all_graphs = {}
             suspicious_transactions = {}
@@ -410,8 +460,7 @@ class TestCase(ProposalTest):
                 self.graphs.create_visnetwork(
                     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
                 suspicious_filename = self.logger.get_file_path(f"suspicious_provider_{idx}_in_state_{state}.csv")
-                self.write_suspicions_to_file(
-                    converted_edit_graph, new_edit_attrs, suspicious_filename)
+                self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
 
             suspicious_provider_list.append(state_suspicious_providers)
 
@@ -422,54 +471,8 @@ class TestCase(ProposalTest):
                                                    self.logger.get_file_path(f'sus_items.csv'),
                                                    [sus_item_vals],
                                                    ['Count'])
-        state_sets = []
-        for i, state in enumerate(state_records):
-            s = self.graphs.flatten_graph_dict(state)
-            state_sets.append(s)
-            total_cost = 0
-            name = f"costs_for_state_{self.code_converter.convert_state_num(state_order[i])}.csv"
-            filename = self.logger.get_file_path(name)
-            with open(filename, 'w+') as f:
-                f.write(
-                    "Group,Category,Sub-Category,Item,Description,Cost,FeeType\r\n")
-                for item in s:
-                    code = item.split('\n')[-1]
-                    line = ','.join(
-                        self.code_converter.get_mbs_code_as_line(code))
-                    item_cost, fee_type = self.code_converter.get_mbs_item_fee(
-                        code)
-                    total_cost += item_cost
-                    item_cost = "${:.2f}".format(item_cost)
-                    f.write(f"{line},{item_cost},{fee_type}\r\n")
 
-                total_cost_str = "${:.2f}".format(total_cost)
-                self.log(
-                    f"Cost for {self.code_converter.convert_state_num(state_order[i])}: {total_cost_str}")
-
-        differences = set()
-        for i in state_sets:
-            for j in state_sets:
-                differences.update(i.difference(j))
-
-        differences = list(differences)
-        states = []
-        for item in differences:
-            item_states = []
-            for i, state in enumerate(state_sets):
-                if item in state:
-                    item_states.append(i)
-
-            item_states = '; '.join(
-                [self.code_converter.convert_state_num(x+1) for x in item_states])
-            states.append(item_states)
-
-        diff_file = self.logger.get_file_path('diff_file.csv')
-        self.code_converter.write_mbs_codes_to_csv(
-            differences, diff_file, additional_headers=['States'], additional_cols=[states])
-
-        sames = set.intersection(*state_sets)
-        same_file = self.logger.get_file_path('same_file.csv')
-        self.code_converter.write_mbs_codes_to_csv(sames, same_file)
+        self.get_similar_differences(state_records, state_order)
 
         regions = "Nation,ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
         self.graphs.create_boxplot_group(self.patients_per_surgical_provider, regions.rsplit(
@@ -531,14 +534,3 @@ class TestCase(ProposalTest):
                     provider), 'SPR_RSP'].unique().tolist()
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
-
-            # for k, v in provider_graph.items():
-            #     provider_graph[k] = {item: None for item in v}
-
-            # converted_graph = self.graphs.contract_largest_maximum_cliques(provider_graph)
-            # self.log("Graphing")
-            # filename = self.logger.output_path / f"provider_communities_state_{state}.png"
-            # self.graphs.visual_graph(converted_graph,
-            #                          filename,
-            #                          f"Provider communities in {self.code_converter.convert_state_num(state),
-            #                          directed=False)
