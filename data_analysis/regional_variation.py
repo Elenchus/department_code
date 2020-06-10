@@ -17,7 +17,7 @@ class TestCase(ProposalTest):
         provider_min_support_count: int = 3
         provider_min_support: float = 0.33
         filters: dict = None
-        ignore_providers_with_less_than_x_patients: int = 4
+        ignore_providers_with_less_than_x_patients: int = 3
         human_readable_suspicious_items: bool = False
         graph_style: str = 'fdp'
         code_of_interest: int = 49115
@@ -144,6 +144,20 @@ class TestCase(ProposalTest):
         self.processed_data = data
         self.test_data = data.groupby("PINSTATE")
 
+    def create_eda_boxplots(self):
+        '''make boxplots from the gathered data for all states'''
+        labels = ["Nation"] + \
+            [self.code_converter.convert_state_num(x) for x in range(1, 6)]
+        self.graphs.create_boxplot_group(
+            self.item_stats, labels, "Claims per item", "claims_items")
+        self.graphs.create_boxplot_group(
+            self.provider_stats, labels, "Claims per provider", "claims_providers")
+        self.graphs.create_boxplot_group(
+            self.patient_stats, labels, "Claims per episode", "claims_episodes")
+        self.graphs.create_boxplot_group(
+            self.provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
+
+
     def get_exploratory_stats(self, data, region):
         '''EDA'''
         self.log(f"Descriptive stats for {region}")
@@ -195,21 +209,17 @@ class TestCase(ProposalTest):
         self.log(f"Episodes per surgical provider in {region}")
         self.log(df.describe())
 
-    @staticmethod
-    def write_model_to_file(d, filename):
+    def write_model_to_file(self, d, filename):
         '''Save a graph model'''
-        header = "Item is claimed for at least 1/3 of unliateral hip replacements in the state \
-                  within 2 weeks before or after the anaesthesia date of service,If the item is \
-                  claimed for a patient these items were also likely to be claimed for that patient\n"
+        header = "Item is claimed for at least 1/3 of unliateral joint replacements in the state \
+                  on the surgery date of service\n"
         with open(filename, 'w+') as f:
             f.write(header)
             for node in d:
-                nodes = list(d[node].keys())
-                line = f"{node}," + '; '.join(nodes) + '\n'
-                f.write(line)
+                line = self.code_converter.get_mbs_code_as_line(node)
+                f.write(f"{line}\n")
 
-    @staticmethod
-    def write_suspicions_to_file(d, attrs, filename):
+    def write_suspicions_to_file(self, d, attrs, filename):
         '''Save a suspicious model'''
         too_much = []
         too_little = []
@@ -228,21 +238,17 @@ class TestCase(ProposalTest):
                 ok.append(node)
 
         with open(filename, 'w+') as f:
-            header = 'Appears in at least 1/3 of patients for this provider but not at least 1/3 of patients in the \
-                      state,If item is claimed the patients for that provider probably also had these items claimed\n'
-            f.write(header)
-            for node in too_much:
-                nodes = list(d.get(node, {}).keys())
-                line = f"{node}," + '; '.join(nodes) + '\n'
-                f.write(line)
-
-            for (section, header) in [(too_little,
-                                       "Expected items in the model which do not commonly appear \
-                                           in the providers claims,\n"),
+            for (section, header) in [(too_much,
+                                       'Appears in at least 1/3 of patients for this provider but \
+                                           not at least 1/3 of patients in the state\n'),
+                                      (too_little,
+                                       "Expected items in the model which do not commonly appear in \
+                                           the providers claims,\n"),
                                       (ok, "Items expected in the model which the provider does claim,\n")]:
                 f.write(f'\n{header}')
                 for node in section:
-                    f.write(f"{node}\n")
+                    line = self.code_converter.get_mbs_code_as_line(node)
+                    f.write(f"{line}\n")
 
     @overrides
     def run_test(self):
@@ -261,18 +267,13 @@ class TestCase(ProposalTest):
             rp = self.required_params
 
             all_unique_items = [str(x) for x in data["ITEM"].unique().tolist()]
-            self.get_exploratory_stats(
-                data, self.code_converter.convert_state_num(state))
-            mba_funcs = BasicMba(self.code_converter, data,
-                                 self.models, self.graphs, "ITEM", "PIN")
+            self.get_exploratory_stats(data, self.code_converter.convert_state_num(state))
+            mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN")
             documents = mba_funcs.create_documents(mba_funcs.group_data)
-
-            self.log(
-                f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
+            self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
 
             self.log("Creating model")
-            d = mba_funcs.create_model(
-                all_unique_items, documents, rp.min_support)
+            d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
             model_dict_csv = self.logger.get_file_path(f"state_{state}_model.csv")
             self.write_model_to_file(d, model_dict_csv)
             # remove no other item:
@@ -345,7 +346,7 @@ class TestCase(ProposalTest):
                     provider_docs.append(doc)
 
                 provider_model = self.models.mba.pairwise_market_basket(
-                    provider_items, provider_docs, min_support=rp.provider_min_support_,
+                    provider_items, provider_docs, min_support=rp.provider_min_support,
                     absolute_min_support_count=rp.provider_min_support_count)
                 all_provider_items = self.graphs.flatten_graph_dict(provider_model)
                 for prov_item in all_provider_items:
@@ -414,17 +415,7 @@ class TestCase(ProposalTest):
 
             suspicious_provider_list.append(state_suspicious_providers)
 
-        labels = ["Nation"] + \
-            [self.code_converter.convert_state_num(x) for x in range(1, 6)]
-        self.graphs.create_boxplot_group(
-            self.item_stats, labels, "Claims per item", "claims_items")
-        self.graphs.create_boxplot_group(
-            self.provider_stats, labels, "Claims per provider", "claims_providers")
-        self.graphs.create_boxplot_group(
-            self.patient_stats, labels, "Claims per episode", "claims_episodes")
-        self.graphs.create_boxplot_group(
-            self.provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
-
+        self.create_eda_boxplots()
         sus_item_keys = list(sus_items.keys())
         sus_item_vals = [sus_items[x] for x in sus_item_keys]
         self.code_converter.write_mbs_codes_to_csv(sus_item_keys,
