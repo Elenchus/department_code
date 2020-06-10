@@ -157,6 +157,56 @@ class TestCase(ProposalTest):
         self.graphs.create_boxplot_group(
             self.provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
 
+    def create_state_model(self, state, mba_funcs, all_unique_items):
+        '''Commands related to creation, graphing and saving of the state models'''
+        rp = self.required_params
+        documents = mba_funcs.create_documents(mba_funcs.group_data)
+        self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
+        self.log("Creating model")
+        d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
+        model_dict_csv = self.logger.get_file_path(f"state_{state}_model.csv")
+        self.write_model_to_file(d, model_dict_csv)
+        # remove no other item:
+        if "No other items" in d:
+            for k in d["No other items"]:
+                if k not in d:
+                    d[k] = {}
+
+            d.pop("No other items")
+
+        for k in d.keys():
+            d[k].pop("No other items", None)
+
+        name = f"PIN_ITEM_state_{state}_graph"
+        state_name = self.code_converter.convert_state_num(state)
+        title = f'Connections between ITEM when grouped by PIN and in state {state_name}'
+
+        if rp.colour_only:
+            formatted_d, attrs, legend = self.models.mba.colour_mbs_codes(d)
+        else:
+            formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
+
+        model_name = self.logger.get_file_path(f"model_state_{state}.pkl")
+        with open(model_name, "wb") as f:
+            pickle.dump(formatted_d, f)
+
+        attrs_name = self.logger.get_file_path(f"attrs_state_{state}.pkl")
+        with open(attrs_name, "wb") as f:
+            pickle.dump(attrs, f)
+
+        legend_file = self.logger.get_file_path(f"Legend_{state}.png")
+        self.graphs.graph_legend(legend, legend_file, "Legend")
+
+        # mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
+        # source, target = self.graphs.convert_pgv_to_hv(formatted_d)
+        # not_chord = self.graphs.create_hv_graph(source, target)
+        # self.graphs.save_hv_fig(not_chord, "hv_test")
+        # circo_filename = self.logger.output_path / f"{state}_circos"
+        # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename)
+        self.graphs.create_visnetwork(formatted_d, name, title, attrs)
+        # self.graphs.create_rchord(formatted_d,name,title)
+
+        return d
 
     def get_exploratory_stats(self, data, region):
         '''EDA'''
@@ -320,53 +370,8 @@ class TestCase(ProposalTest):
             all_unique_items = [str(x) for x in data["ITEM"].unique().tolist()]
             self.get_exploratory_stats(data, self.code_converter.convert_state_num(state))
             mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN")
-            documents = mba_funcs.create_documents(mba_funcs.group_data)
-            self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
-
-            self.log("Creating model")
-            d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
-            model_dict_csv = self.logger.get_file_path(f"state_{state}_model.csv")
-            self.write_model_to_file(d, model_dict_csv)
-            # remove no other item:
-            if "No other items" in d:
-                for k in d["No other items"]:
-                    if k not in d:
-                        d[k] = {}
-
-                d.pop("No other items")
-
-            for k in d.keys():
-                d[k].pop("No other items", None)
-
-            name = f"PIN_ITEM_state_{state}_graph"
-            state_name = self.code_converter.convert_state_num(state)
-            title = f'Connections between ITEM when grouped by PIN and in state {state_name}'
-
-            if rp.colour_only and "ITEM" == "ITEM":
-                formatted_d, attrs, legend = self.models.mba.colour_mbs_codes(d)
-            else:
-                formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
-
-            model_name = self.logger.get_file_path(f"model_state_{state}.pkl")
-            with open(model_name, "wb") as f:
-                pickle.dump(formatted_d, f)
-
-            attrs_name = self.logger.get_file_path(f"attrs_state_{state}.pkl")
-            with open(attrs_name, "wb") as f:
-                pickle.dump(attrs, f)
-
-            legend_file = self.logger.get_file_path(f"Legend_{state}.png")
-            self.graphs.graph_legend(legend, legend_file, "Legend")
-
+            d = self.create_state_model(state, mba_funcs, all_unique_items)
             state_records.append(d)
-            # mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
-            # source, target = self.graphs.convert_pgv_to_hv(formatted_d)
-            # not_chord = self.graphs.create_hv_graph(source, target)
-            # self.graphs.save_hv_fig(not_chord, "hv_test")
-            # circo_filename = self.logger.output_path / f"{state}_circos"
-            # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename)
-            self.graphs.create_visnetwork(formatted_d, name, title, attrs)
-            # self.graphs.create_rchord(formatted_d,name,title)
 
             self.log("Finding suspicious providers")
             fee_record = None
@@ -387,6 +392,7 @@ class TestCase(ProposalTest):
                                     provider, 'PIN'].unique().tolist()
                 if len(patients) < rp.ignore_providers_with_less_than_x_patients:
                     continue
+
                 patient_data = data.loc[data['PIN'].isin(patients)]
 
                 patient_data_groups = patient_data.groupby('PIN')
@@ -480,57 +486,3 @@ class TestCase(ProposalTest):
         non_nation_regions = "ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
         self.graphs.create_boxplot_group(all_suspicion_scores, non_nation_regions.rsplit(
             ','), f"Provider suspicion scores per region for item {rp.code_of_interest}", "sus_boxes")
-
-        for state, data in self.test_data:
-            self.log(
-                f"Getting suspicious provider neighbours for {self.code_converter.convert_state_num(state)}")
-            idx = state_order.index(state)
-            state_providers = suspicious_transaction_list[idx]
-            for provider in suspicious_provider_list[idx]:
-                self.log(
-                    f"Suspicious provider {provider} has score {state_providers[provider]:.2f}")
-                claims = data.loc[data['SPR'] ==
-                                  provider, 'PIN'].unique().tolist()
-                neighbour_providers = data.loc[data['PIN'].isin(
-                    claims), 'SPR'].unique().tolist()
-                neighbour_providers.remove(provider)
-                for neighbour in neighbour_providers:
-                    neighbour_score = state_providers.get(
-                        neighbour, "- unscored")
-                    if isinstance(neighbour_score, float):
-                        neighbour_score = f'{neighbour_score:.2f}'
-                        self.log(
-                            f"Neighbour {neighbour} has score {neighbour_score}")
-
-            self.log(
-                f"Getting provider communities for {self.code_converter.convert_state_num(state)}")
-            patients = data.groupby('PIN')
-            communities = []
-            for name, group in patients:
-                community = set(str(x) for x in group['SPR'].unique())
-                communities.append(community)
-
-            provider_graph = {}
-            for community in communities:
-                for provider_a in community:
-                    if provider_a not in provider_graph:
-                        provider_graph[provider_a] = set()
-
-                    for provider_b in community:
-                        if provider_a == provider_b:
-                            continue
-
-                        provider_graph[provider_a].add(provider_b)
-
-            for x in enumerate(sorted(provider_graph.items(), key=lambda x: len(x[1]), reverse=True)):
-                i, (provider, connections) = x
-                connections = len(connections)
-                if i >= 10:
-                    break
-
-                self.log(
-                    f"Provider {provider} has {connections} connections and has the following RSPs")
-                rsps = data.loc[data['SPR'] == int(
-                    provider), 'SPR_RSP'].unique().tolist()
-                for rsp in rsps:
-                    self.log(self.code_converter.convert_rsp_num(rsp))
