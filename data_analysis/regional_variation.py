@@ -236,7 +236,6 @@ class TestCase(ProposalTest):
             episodes = len(g["PIN"].unique())
             provider_episodes.append(episodes)
 
-        data["provider_episodes"] = pd.DataFrame(provider_episodes)
         for (description, header, filename, collection) in [
                 ("Claims per item", "ITEM", "item", self.item_stats),
                 ("Claims per provider", "SPR", "provider", self.provider_stats),
