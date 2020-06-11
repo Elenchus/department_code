@@ -145,9 +145,7 @@ class TestCase(ProposalTest):
                 splits += 1
                 additional_patients += len(dos) - 1
                 for i, day in enumerate(dos):
-                    rows = data.loc[(data["PIN"] == patient) & (data["DOS"] == day)]
-                    data["PIN"] = rows["PIN"] + f"_{i}"
-                    assert len(data[data["PIN"] == 0]) == 0
+                    data.loc[(data["PIN"] == patient) & (data["DOS"] == day), "PIN"] = f"{patient}_{i}"
 
         total_patients = len(data["PIN"].unique())
         assert total_patients == original_no + additional_patients
