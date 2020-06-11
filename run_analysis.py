@@ -141,19 +141,21 @@ if __name__ == "__main__":
 
     #         start_test(details)
 
+    export_years = [str(x) for x in [2010, 2011, 2012, 2013, 2014]]
     for filename, code_of_interest in [('shoulder', 48918), ('hip', 49318), ('knee', 49518)]:
         details = TestDetails(
             notes="",
             params={
                     'providers_to_load': f"{filename}_providers.pickle",
-                    'code_of_interest': code_of_interest
+                    'code_of_interest': code_of_interest,
+                    'years': export_years
                     },
             # params = None,
             test_data=mbs,
             test_file_name=f'export_claims',
             test_format=TestFormat.CombineYears,
             test_location="data_analysis",
-            years=[str(x) for x in [2010, 2011, 2012, 2013, 2014]]
+            years=export_years
         )
 
         start_test(details)

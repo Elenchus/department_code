@@ -372,12 +372,11 @@ class TestCase(ProposalTest):
 
         with open(filename, 'w+') as f:
             for (section, header) in [(too_much,
-                                       'Appears in at least 1/3 of patients for this provider but \
-                                           not at least 1/3 of patients in the state\n'),
+                                       'Items in the provider model but not in the state model\n'),
                                       (too_little,
-                                       "Expected items in the model which do not commonly appear in \
-                                           the providers claims,\n"),
-                                      (ok, "Items expected in the model which the provider does claim,\n")]:
+                                       "Expected items in the model which do not commonly \
+                                           appear in the provider model\n"),
+                                      (ok, "Items expected in the model which are in the provider model\n")]:
                 f.write(f'\n{header}')
                 for node in section:
                     line = self.code_converter.get_mbs_code_as_line(node)

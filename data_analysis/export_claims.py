@@ -1,4 +1,4 @@
-# pylint: disable=W0107 ## flags class pass as not required
+# pylint: disable=W0107, E1101 ## flags class pass as not required, DatetimeIndex as no year member
 '''Template for data analyses'''
 from dataclasses import dataclass, field
 import pickle
@@ -17,8 +17,8 @@ class TestCase(ProposalTest):
         years: list = field(default_factory=lambda: [2013, 2014])
         providers_to_load: str = None
 
-    FINAL_COLS = ['PIN', 'DOS', 'SPR', 'ITEM']
-    INITIAL_COLS = FINAL_COLS
+    FINAL_COLS = ["patient_interest_indices", "PIN", "DOS"]
+    INITIAL_COLS = ['PIN', 'DOS', 'SPR', 'ITEM']
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
     test_data = None
@@ -34,7 +34,6 @@ class TestCase(ProposalTest):
     def process_dataframe(self, data):
         super().process_dataframe(data)
         rp = self.required_params
-        self.log("got data")
         patients_of_interest = data.loc[(data["SPR"].isin(self.all_providers)) &
                                         (data["ITEM"] == rp.code_of_interest), "PIN"].unique().tolist()
         patient_data = data[data["PIN"].isin(patients_of_interest)]
@@ -44,9 +43,11 @@ class TestCase(ProposalTest):
             patient_data = patient_data.drop(patient_data[(patient_data["PIN"] == patient) &
                                                           (~patient_data["DOS"].isin(dos))].index)
 
-        indices = pd.DataFrame(patient_data.index.tolist(), columns=["patient_interest_indices"])
-        indices["PIN"] = patient_data["PIN"]
+        indices = pd.DataFrame(patient_data.index.tolist(),
+                               columns=["patient_interest_indices"], index=patient_data.index)
+        indices["PIN"] = patient_data["PIN"].values.tolist()
         indices["DOS"] = pd.DatetimeIndex(patient_data["DOS"]).year
+
 
         return indices
 
@@ -55,21 +56,25 @@ class TestCase(ProposalTest):
         super().get_test_data()
         rp = self.required_params
         indices = self.processed_data
-        data = pd.DataFrame(index=indices.values.tolist())
+        data = pd.DataFrame(columns=MBS_HEADER)
         for year in list(rp.years):
-            year_indices = indices.loc[indices["DOS"] == year, "patient_interest_indices"].values.tolist()
+            year_indices = indices.loc[indices["DOS"] == int(year), "patient_interest_indices"].values.tolist()
+            assert year_indices
+            par_data = pd.DataFrame(columns=MBS_HEADER, index=year_indices)
             for col in MBS_HEADER:
-                col_idx = data.get_loc(col)
-                par_data = combine_10p_data(self.logger, DataSource.MBS, col, col, year, None)
-                data[col] = par_data.iloc[year_indices, col_idx]
+                par_col = combine_10p_data(self.logger, DataSource.MBS, [col], [col], [str(year)], None)
+                col_idx = par_col.columns.get_loc(col)
+                par_data[col] = par_col.iloc[year_indices, col_idx]
+
+            data = data.append(par_data)
 
         original_patient_order = self.processed_data["PIN"].values.tolist()
-        current_patient_order = data["PIN"]
+        current_patient_order = data["PIN"].values.tolist()
         assert len(original_patient_order) == len(current_patient_order)
         for i, val in enumerate(original_patient_order):
             assert val == current_patient_order[i]
 
-        self.test_data = self.processed_data
+        self.test_data = data
 
     @overrides
     def run_test(self):
@@ -77,9 +82,9 @@ class TestCase(ProposalTest):
         data = self.test_data
         data = data.assign(patient_id=data['PIN'].astype('category').cat.codes)
         data = data.assign(provider_id=data['SPR'].astype('category').cat.codes)
-        for i, state in enumerate(self.state_order):
+        for state in self.state_order:
             providers = self.providers_per_state[i]
-            for provider in tqdm(providers):
+            for i, provider in enumerate(providers):
                 patients = data.loc[data["SPR"] == provider, "PIN"].unique().tolist()
                 provider_claims = data[data["PIN"].isin(patients)]
                 provider_claims.to_csv(self.logger.get_file_path(f"rank_{i}_state_{state}.csv"))
