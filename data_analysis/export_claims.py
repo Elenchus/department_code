@@ -81,12 +81,12 @@ class TestCase(ProposalTest):
         data = self.test_data
         data = data.assign(patient_id=data['PIN'].astype('category').cat.codes)
         data = data.assign(provider_id=data['SPR'].astype('category').cat.codes)
-        for state in self.state_order:
+        for i, state in self.state_order:
             providers = self.providers_per_state[i]
-            for i, provider in enumerate(providers):
+            for j, provider in enumerate(providers):
                 patients = data.loc[data["SPR"] == provider, "PIN"].unique().tolist()
                 provider_claims = data[data["PIN"].isin(patients)]
-                provider_claims.to_csv(self.logger.get_file_path(f"rank_{i}_state_{state}.csv"))
+                provider_claims.to_csv(self.logger.get_file_path(f"rank_{j}_state_{state}.csv"))
 
         key = data.loc[:, ["PIN", "patient_id", "SPR", "provider_id"]]
         key_path = self.logger.get_file_path("key.csv")
