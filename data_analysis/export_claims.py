@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 import pickle
 import pandas as pd
 from overrides import overrides
-from tqdm import tqdm
 from utilities.base_proposal_test import ProposalTest
 from utilities.file_utils import combine_10p_data, MBS_HEADER, DataSource
 
@@ -87,7 +86,7 @@ class TestCase(ProposalTest):
             for i, provider in enumerate(providers):
                 patients = data.loc[data["SPR"] == provider, "PIN"].unique().tolist()
                 provider_claims = data[data["PIN"].isin(patients)]
-                provider_claims.to_csv(self.logger.get_file_path(f"rank_{i - 2}_state_{state}.csv"))
+                provider_claims.to_csv(self.logger.get_file_path(f"rank_{i}_state_{state}.csv"))
 
         key = data.loc[:, ["PIN", "patient_id", "SPR", "provider_id"]]
         key_path = self.logger.get_file_path("key.csv")
