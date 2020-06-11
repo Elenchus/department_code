@@ -14,7 +14,6 @@ class TestCase(ProposalTest):
         '''Parameters required for the analysis'''
         code_of_interest: int = 48918
         providers_to_load: str = None
-        providers: list = None
 
     FINAL_COLS = MBS_HEADER
     INITIAL_COLS = FINAL_COLS
@@ -22,17 +21,19 @@ class TestCase(ProposalTest):
     processed_data: pd.DataFrame = None
     test_data = None
 
+    def __init__(self, d, rp):
+        super().__init__(self, d, rp)
+        with open(rp.providers_to_load, 'rb') as f:
+            (self.state_order, self.providers_per_state) = list(pickle.load(f))
+
+        self.all_providers = [x for x in y for y in self.providers_per_state]
+
     @overrides
     def process_dataframe(self, data):
         super().process_dataframe(data)
         rp = self.required_params
-        assert rp.providers_to_load ^ rp.providers
-        if rp.providers_to_load:
-            with open(rp.providers_to_load, 'rb') as f:
-                rp.providers = list(pickle.load(f))
-
-        patients_of_interest = data.loc[data["SPR"].isin(rp.providers) &
-                                        data["ITEM"] == rp.code_of_interest, "PIN"].unique().tolist()
+        patients_of_interest = data.loc[(data["SPR"].isin(self.all_providers)) &
+                                        (data["ITEM"] == rp.code_of_interest), "PIN"].unique().tolist()
         patient_data = data[data["PIN"].isin(patients_of_interest)]
         for patient in patients_of_interest:
             dos = patient_data.loc[patient_data["ITEM"] ==
@@ -54,5 +55,12 @@ class TestCase(ProposalTest):
         key_path = self.logger.get_file_path("key.csv")
         key.to_csv(key_path)
         data.drop(columns=["PIN", "SPR"], inplace=True)
-        path = self.logger.get_file_path("claims.csv")
+        path = self.logger.get_file_path("all_claims.csv")
         data.to_csv(path)
+        for i, state in enumerate(self.state_order):
+            providers = self.providers_per_state[i]
+            for provider in providers:
+                patients = data.loc[data["SPR"] == provider, "PIN"].unique().tolist()
+                provider_claims = data[data["PIN"].isin(patients)]
+                provider_claims.to_csv(self.logger.get_file_path(f"rank_{i}_state_{state}.csv"))
+

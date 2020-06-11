@@ -136,15 +136,21 @@ class TestCase(ProposalTest):
         # check if patients have multiple surgeries over multiple years
         data = self.processed_data
         patients = data["PIN"].unique().tolist()
+        original_no = len(patients)
         splits = 0
+        additional_patients = 0
         for patient in patients:
-            dos = data.loc[data["PIN"] == patient, "DOS"].unique()
+            dos = data.loc[data["PIN"] == patient, "DOS"].unique().tolist()
             if len(dos) > 1:
                 splits += 1
-                for i, _ in enumerate(dos):
-                    rows = data.loc[data["PIN"] == patient & data["DOS"] == dos]
-                    rows["PIN"] = rows["PIN"] + f"_{i}"
+                additional_patients += len(dos) - 1
+                for i, day in enumerate(dos):
+                    rows = data.loc[(data["PIN"] == patient) & (data["DOS"] == day)]
+                    data["PIN"] = rows["PIN"] + f"_{i}"
+                    assert len(data[data["PIN"] == 0]) == 0
 
+        total_patients = len(data["PIN"].unique())
+        assert total_patients == original_no + additional_patients
         self.log(f"{splits} patients split")
         self.test_data = data.groupby("PINSTATE")
         self.models.mba.update_filters(self.required_params.filters)
@@ -257,7 +263,11 @@ class TestCase(ProposalTest):
                  "provider_episodes", self.provider_episode_stats)
         ]:
             top_file = self.logger.get_file_path(f'top_{filename}_{region}.csv')
-            top_selection = data[header].value_counts()
+            if header == "provider_episodes":
+                top_selection = pd.Series(provider_episodes).value_counts()
+            else:
+                top_selection = data[header].value_counts()
+
             top_code_counts = top_selection.values.tolist()
             collection.append(top_code_counts)
             self.log(f"{description} in {region}")
@@ -508,4 +518,5 @@ class TestCase(ProposalTest):
         self.graphs.create_boxplot_group(all_suspicion_scores, non_nation_regions.rsplit(
             ','), f"Provider suspicion scores per region for item {rp.code_of_interest}", "sus_boxes")
         with open(self.logger.get_file_path("suspicious_providers.pickle"), 'wb') as f:
-            pickle.dump(suspicious_provider_list, f)
+            out = (state_order, suspicious_provider_list)
+            pickle.dump(out, f)
