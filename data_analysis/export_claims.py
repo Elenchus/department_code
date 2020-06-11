@@ -81,7 +81,7 @@ class TestCase(ProposalTest):
         data = self.test_data
         data = data.assign(patient_id=data['PIN'].astype('category').cat.codes)
         data = data.assign(provider_id=data['SPR'].astype('category').cat.codes)
-        for i, state in self.state_order:
+        for i, state in enumerate(self.state_order):
             providers = self.providers_per_state[i]
             for j, provider in enumerate(providers):
                 patients = data.loc[data["SPR"] == provider, "PIN"].unique().tolist()
