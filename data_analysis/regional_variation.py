@@ -133,7 +133,20 @@ class TestCase(ProposalTest):
     @overrides
     def get_test_data(self):
         super().get_test_data()
-        self.test_data = self.processed_data.groupby("PINSTATE")
+        # check if patients have multiple surgeries over multiple years
+        data = self.processed_data
+        patients = data["PIN"].unique().tolist()
+        splits = 0
+        for patient in patients:
+            dos = data.loc[data["PIN"] == patient, "DOS"].unique()
+            if len(dos) > 1:
+                splits += 1
+                for i, _ in enumerate(dos):
+                    rows = data.loc[data["PIN"] == patient & data["DOS"] == dos]
+                    rows["PIN"] = rows["PIN"] + f"_{i}"
+
+        self.log(f"{splits} patients split")
+        self.test_data = data.groupby("PINSTATE")
         self.models.mba.update_filters(self.required_params.filters)
 
     @overrides
