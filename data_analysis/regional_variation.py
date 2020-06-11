@@ -507,3 +507,5 @@ class TestCase(ProposalTest):
         non_nation_regions = "ACT+NSW,VIC+TAS,NT+SA,QLD,WA"
         self.graphs.create_boxplot_group(all_suspicion_scores, non_nation_regions.rsplit(
             ','), f"Provider suspicion scores per region for item {rp.code_of_interest}", "sus_boxes")
+        with open(self.logger.get_file_path("suspicious_providers.pickle"), 'wb') as f:
+            pickle.dump(suspicious_provider_list, f)

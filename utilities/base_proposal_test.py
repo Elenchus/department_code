@@ -1,4 +1,4 @@
-# pylint: disable=W0107 ## flags class pass as not required
+# pylint: disable=W0107, W0613 ## flags class pass and load_data data as not required
 '''abstract class for data analysis'''
 from abc import ABC, abstractmethod
 import pandas as pd
