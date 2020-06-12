@@ -344,7 +344,7 @@ class TestCase(ProposalTest):
 
     def write_model_to_file(self, d, filename):
         '''Save a graph model'''
-        header = "Item is claimed for at least 1/3 of unliateral joint replacements in the state \
+        header = "Item is commonly claimed during unliateral joint replacements in the state \
                   on the surgery date of service\n"
         with open(filename, 'w+') as f:
             f.write(header)
@@ -379,7 +379,8 @@ class TestCase(ProposalTest):
                                       (ok, "Items expected in the model which are in the provider model\n")]:
                 f.write(f'\n{header}')
                 for node in section:
-                    line = self.code_converter.get_mbs_code_as_line(node)
+                    line_list = self.code_converter.get_mbs_code_as_line(node)
+                    line = ','.join(line_list)
                     f.write(f"{line}\n")
 
     @overrides

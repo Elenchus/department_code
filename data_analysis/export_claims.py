@@ -80,7 +80,9 @@ class TestCase(ProposalTest):
         super().run_test()
         data = self.test_data
         data = data.assign(patient_id=data['PIN'].astype('category').cat.codes)
-        data = data.assign(provider_id=data['SPR'].astype('category').cat.codes)
+        _, cats = pd.factorize(data.loc[:, ["SPR", "RPR"]].values.ravel())
+        r = data.loc[:, ["SPR", "RPR"]].apply(lambda x: pd.Categorical(x, cats).codes).add_suffix('_ID')
+        data = pd.concat([data, r], 1)
         for i, state in enumerate(self.state_order):
             providers = self.providers_per_state[i]
             for j, provider in enumerate(providers):
@@ -88,9 +90,9 @@ class TestCase(ProposalTest):
                 provider_claims = data[data["PIN"].isin(patients)]
                 provider_claims.to_csv(self.logger.get_file_path(f"rank_{j}_state_{state}.csv"))
 
-        key = data.loc[:, ["PIN", "patient_id", "SPR", "provider_id"]]
+        key = data.loc[:, ["PIN", "patient_id", "SPR", "SPR_ID", "RPR", "RPR_ID"]]
         key_path = self.logger.get_file_path("key.csv")
         key.to_csv(key_path)
-        data.drop(columns=["PIN", "SPR"], inplace=True)
+        data.drop(columns=["PIN", "SPR", "RPR"], inplace=True)
         path = self.logger.get_file_path("all_claims.csv")
         data.to_csv(path)
