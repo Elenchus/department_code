@@ -98,35 +98,48 @@ class TestCase(ProposalTest):
         groups = patient_data.groupby("PIN")
         final_data = pd.DataFrame(columns=patient_data.columns)
         exclusions = 0
+        split_exclusions = 0
         splits = 0
+        excess_patients = 0
         for patient, group in tqdm(groups):
-            dos = group.loc[group["ITEM"] ==
-                            rp.code_of_interest, "DOS"].unique().tolist()
-            number_of_surgeries = len(dos)
-            if number_of_surgeries == 1:
+            dos = group["DOS"].unique().tolist()
+            number_of_dos = len(dos)
+            if number_of_dos == 1:
                 indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
                 final_data = final_data.append(
                     patient_data[patient_data["index"].isin(indices)], ignore_index=True)
-            elif number_of_surgeries == 0:
+            elif number_of_dos == 0:
                 self.log(
                     f"Patient {patient} has {len(dos)} claims for {rp.code_of_interest} and was excluded")
                 exclusions += 1
                 continue
             else:
-                if number_of_surgeries > 2:
+                if number_of_dos > 2:
                     self.log(
-                        f"Patient {patient} had {number_of_surgeries} surgeries")
+                        f"Patient {patient} had {number_of_dos} surgeries")
+                    excess_patients += number_of_dos - 2
 
                 splits += 1
-                for i, _ in enumerate(dos):
+                for i, check_date in enumerate(dos):
+                    has_surgery = len(group[(group["ITEM"] == rp.code_of_interest) & (group["DOS"] == check_date)]) > 0 #pylint: disable=C1801
+                    if not has_surgery:
+                        split_exclusions += 1
+                        continue
+
                     indices = group.loc[group["DOS"]
                                         == dos[i], "index"].tolist()
                     temp_df = patient_data[patient_data["index"].isin(indices)]
-                    temp_df["PIN"] = temp_df["PIN"] + f"{i}"
+                    temp_df["PIN"] = temp_df["PIN"] + f"_{i}"
                     final_data = final_data.append(temp_df, ignore_index=True)
 
         self.log(f"{exclusions} patients excluded")
         self.log(f"{splits} patients split")
+        self.log(f"{split_exclusions} exclusions after split")
+        assert len(final_data["PIN"].unique()) == len(patients_of_interest) \
+                                                  - exclusions \
+                                                  + splits \
+                                                  + excess_patients \
+                                                  - split_exclusions
 
         return final_data.drop(["index", "MDV_NUMSERV"], axis=1)
 
@@ -145,7 +158,7 @@ class TestCase(ProposalTest):
                 splits += 1
                 additional_patients += len(dos) - 1
                 for i, day in enumerate(dos):
-                    data.loc[(data["PIN"] == patient) & (data["DOS"] == day), "PIN"] = f"{patient}_{i}"
+                    data.loc[(data["PIN"] == patient) & (data["DOS"] == day), "PIN"] = f"{patient}__{i}"
 
         total_patients = len(data["PIN"].unique())
         assert total_patients == original_no + additional_patients
