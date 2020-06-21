@@ -98,37 +98,45 @@ class TestCase(ProposalTest):
         groups = patient_data.groupby("PIN")
         final_data = pd.DataFrame(columns=patient_data.columns)
         exclusions = 0
-        split_exclusions = 0
+        state_exclusions = 0
         splits = 0
         excess_patients = 0
         for patient, group in tqdm(groups):
-            dos = group["DOS"].unique().tolist()
-            number_of_dos = len(dos)
-            if number_of_dos == 1:
+            dos = group.loc[group["ITEM"] == rp.code_of_interest, "DOS"].unique().tolist()
+            number_of_surgeries = len(dos)
+            if number_of_surgeries == 1:
                 indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
+                data_to_append = patient_data[patient_data["index"].isin(indices)]
+                states = data_to_append['PINSTATE'].unique().tolist()
+                if len(states) > 1:
+                    self.log(f"Patient {patient} had multiple states on date {dos[0]} and was excluded")
+                    state_exclusions += 1
+                    continue
+
                 final_data = final_data.append(
-                    patient_data[patient_data["index"].isin(indices)], ignore_index=True)
-            elif number_of_dos == 0:
+                    data_to_append, ignore_index=True)
+            elif number_of_surgeries == 0:
                 self.log(
                     f"Patient {patient} has {len(dos)} claims for {rp.code_of_interest} and was excluded")
                 exclusions += 1
                 continue
             else:
-                if number_of_dos > 2:
+                if number_of_surgeries > 2:
                     self.log(
-                        f"Patient {patient} had {number_of_dos} surgeries")
-                    excess_patients += number_of_dos - 2
+                        f"Patient {patient} had {number_of_surgeries} surgeries")
+                    excess_patients += number_of_surgeries - 2
 
                 splits += 1
                 for i, check_date in enumerate(dos):
-                    has_surgery = len(group[(group["ITEM"] == rp.code_of_interest) & (group["DOS"] == check_date)]) > 0 #pylint: disable=C1801
-                    if not has_surgery:
-                        split_exclusions += 1
+                    indices = group.loc[group["DOS"]
+                                        == check_date, "index"].tolist()
+                    temp_df = patient_data[patient_data["index"].isin(indices)]
+                    states = data_to_append['PINSTATE'].unique().tolist()
+                    if len(states) > 1:
+                        self.log(f"Patient {patient}_{i} had multiple states on date {check_date} and was excluded")
+                        state_exclusions += 1
                         continue
 
-                    indices = group.loc[group["DOS"]
-                                        == dos[i], "index"].tolist()
-                    temp_df = patient_data[patient_data["index"].isin(indices)]
                     temp_df["PIN"] = temp_df["PIN"] + f"_{i}"
                     final_data = final_data.append(temp_df, ignore_index=True)
 
@@ -152,7 +160,7 @@ class TestCase(ProposalTest):
         original_no = len(patients)
         splits = 0
         additional_patients = 0
-        for patient in patients:
+        for patient in tqdm(patients):
             dos = data.loc[data["PIN"] == patient, "DOS"].unique().tolist()
             if len(dos) > 1:
                 splits += 1
