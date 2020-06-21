@@ -40,6 +40,9 @@ Claim counts for all items within a range or associated with another item (nomin
 #### example_ged.py
 Used to create the example figure in the paper
 
+#### export_claims.py
+Used to extract provider claims for validation
+
 ## Tests
 Unit tests have been run within VSCode using the unittest framework.
 

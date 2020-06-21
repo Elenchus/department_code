@@ -1,4 +1,3 @@
-# pylint: disable=W0107, W0613 ## flags class pass and load_data data as not required
 '''abstract class for data analysis'''
 from abc import ABC, abstractmethod
 import pandas as pd
@@ -31,7 +30,7 @@ class ProposalTest(ABC):
     # @abstractmethod
     class RequiredParams:
         '''Parameters required for the analysis'''
-        pass
+        pass # pylint: disable=W0107
 
     @property
     @classmethod
@@ -112,7 +111,7 @@ class ProposalTest(ABC):
         if self.test_data is None:
             raise KeyError("No test data specified")
 
-    def load_data(self, data):
+    def load_data(self, data): # pylint: disable=W0613
         '''Load data from a file instead of processing and modifying from source'''
         self.log("Loading data")
 

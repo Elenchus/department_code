@@ -1,5 +1,4 @@
-# pylint: disable=W0107, E1101 ## flags class pass as not required, DatetimeIndex as no year member
-'''Template for data analyses'''
+'''Extract claims for patients of given providers'''
 from dataclasses import dataclass, field
 import pickle
 import pandas as pd
@@ -45,7 +44,7 @@ class TestCase(ProposalTest):
         indices = pd.DataFrame(patient_data.index.tolist(),
                                columns=["patient_interest_indices"], index=patient_data.index)
         indices["PIN"] = patient_data["PIN"].values.tolist()
-        indices["DOS"] = pd.DatetimeIndex(patient_data["DOS"]).year
+        indices["DOS"] = pd.DatetimeIndex(patient_data["DOS"]).year # pylint: disable=E1101
 
 
         return indices
