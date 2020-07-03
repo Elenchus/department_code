@@ -111,9 +111,9 @@ class ProposalTest(ABC):
         if self.test_data is None:
             raise KeyError("No test data specified")
 
-    def load_data(self, data): # pylint: disable=W0613
+    def load_data(self, data_file):
         '''Load data from a file instead of processing and modifying from source'''
-        self.log("Loading data")
+        self.log(f"Loading data from {data_file}")
 
     def finalise_test(self):
         '''To be used when completing an iterative test case'''
