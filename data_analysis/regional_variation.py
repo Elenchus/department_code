@@ -142,12 +142,12 @@ class TestCase(ProposalTest):
 
         self.log(f"{exclusions} patients excluded")
         self.log(f"{splits} patients split")
-        self.log(f"{split_exclusions} exclusions after split")
+        self.log(f"{state_exclusions} exclusions after split")
         assert len(final_data["PIN"].unique()) == len(patients_of_interest) \
                                                   - exclusions \
                                                   + splits \
                                                   + excess_patients \
-                                                  - split_exclusions
+                                                  - state_exclusions
 
         return final_data.drop(["index", "MDV_NUMSERV"], axis=1)
 

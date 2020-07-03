@@ -2,7 +2,7 @@
 import pickle
 
 filenames = ['hip', 'knee', 'shoulder']
-graph_type = '_claims_per_episode'
+graph_type = '_episodes_per_provider'
 models = []
 maxes = []
 for filename in filenames:

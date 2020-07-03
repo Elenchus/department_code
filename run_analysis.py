@@ -1,6 +1,6 @@
 # pylint: disable=C0330 ## Formatting of nested dictionaries
 '''Run tests from proposals'''
-import operator
+import operator # pylint: disable=W0611
 from dataclasses import dataclass
 from enum import Enum, auto
 from importlib import import_module
@@ -119,45 +119,43 @@ def start_test(test_details, additional_folder_name_part=None):
 
 if __name__ == "__main__":
     # for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
-    for x in [0.8]:
         # for item in [48918, 49318, 49518]:
-        for item in [49518]:
-            details = TestDetails(
-                notes="",
-                params={
-                        'filters': {
-                            'conviction': {
-                                'value': 1,
-                                'operator': operator.gt
-                                }
-                            },
-                        'min_support': x,
-                        'code_of_interest': item},
-                # params = None,
-                test_data=mbs,
-                test_file_name=f'regional_variation',
-                test_format=TestFormat.CombineYears,
-                test_location="data_analysis",
-                years=[str(x) for x in [2010, 2011, 2012, 2013, 2014]]
-            )
+            # details = TestDetails(
+            #     notes="",
+            #     params={
+            #             'filters': {
+            #                 'conviction': {
+            #                     'value': 1,
+            #                     'operator': operator.gt
+            #                     }
+            #                 },
+            #             'min_support': x,
+            #             'code_of_interest': item},
+            #     # params = None,
+            #     test_data=mbs,
+            #     test_file_name=f'regional_variation',
+            #     test_format=TestFormat.CombineYears,
+            #     test_location="data_analysis",
+            #     years=[str(x) for x in [2010, 2011, 2012, 2013, 2014]]
+            # )
 
-            start_test(details)
+            # start_test(details)
 
-    # export_years = [str(x) for x in [2010, 2011, 2012, 2013, 2014]]
-    # for filename, code_of_interest in [('shoulder', 48918), ('hip', 49318), ('knee', 49518)]:
-    #     details = TestDetails(
-    #         notes="",
-    #         params={
-    #                 'providers_to_load': f"{filename}_providers.pickle",
-    #                 'code_of_interest': code_of_interest,
-    #                 'years': export_years
-    #                 },
-    #         # params = None,
-    #         test_data=mbs,
-    #         test_file_name=f'export_claims',
-    #         test_format=TestFormat.CombineYears,
-    #         test_location="data_analysis",
-    #         years=export_years
-    #     )
+    export_years = [str(x) for x in [2010, 2011, 2012, 2013, 2014]]
+    for filename, code_of_interest in [('shoulder', 48918), ('hip', 49318), ('knee', 49518)]:
+        details = TestDetails(
+            notes="",
+            params={
+                    'providers_to_load': f"{filename}_providers.pickle",
+                    'code_of_interest': code_of_interest,
+                    'years': export_years
+                    },
+            # params = None,
+            test_data=mbs,
+            test_file_name=f'export_claims',
+            test_format=TestFormat.CombineYears,
+            test_location="data_analysis",
+            years=export_years
+        )
 
-    #     start_test(details)
+        start_test(details)
