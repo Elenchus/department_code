@@ -1,5 +1,6 @@
 '''Shared functions between the regional variation and provider ranking tests'''
 import pickle
+from datetime import datetime as dt
 import pandas as pd
 from tqdm import tqdm
 
@@ -57,6 +58,57 @@ class TestTools:
                         #         ex.append(indices[i+1])
 
         return indexed_data[~indexed_data["index"].isin(items_to_remove)]
+
+    def create_state_model(self, params, state, mba_funcs, all_unique_items):
+        '''Commands related to creation, graphing and saving of the state models'''
+        rp = params
+        documents = mba_funcs.create_documents(mba_funcs.group_data)
+        self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
+        self.log("Creating model")
+        d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
+        model_dict_csv = self.logger.get_file_path(f"state_{state}_model.csv")
+        self.write_model_to_file(d, model_dict_csv)
+        # remove no other item:
+        if "No other items" in d:
+            for k in d["No other items"]:
+                if k not in d:
+                    d[k] = {}
+
+            d.pop("No other items")
+
+        for k in d.keys():
+            d[k].pop("No other items", None)
+
+        name = f"PIN_ITEM_state_{state}_graph"
+        state_name = self.code_converter.convert_state_num(state)
+        title = f'Connections between ITEM when grouped by PIN and in state {state_name}'
+
+        if rp.colour_only:
+            formatted_d, attrs, legend = self.models.mba.colour_mbs_codes(d)
+        else:
+            formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
+
+        model_name = self.logger.get_file_path(f"model_state_{state}.pkl")
+        with open(model_name, "wb") as f:
+            pickle.dump(formatted_d, f)
+
+        attrs_name = self.logger.get_file_path(f"attrs_state_{state}.pkl")
+        with open(attrs_name, "wb") as f:
+            pickle.dump(attrs, f)
+
+        legend_file = self.logger.get_file_path(f"Legend_{state}.png")
+        self.graphs.graph_legend(legend, legend_file, "Legend")
+
+        # mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
+        # source, target = self.graphs.convert_pgv_to_hv(formatted_d)
+        # not_chord = self.graphs.create_hv_graph(source, target)
+        # self.graphs.save_hv_fig(not_chord, "hv_test")
+        # circo_filename = self.logger.output_path / f"{state}_circos"
+        # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename)
+        self.graphs.create_visnetwork(formatted_d, name, title, attrs)
+        # self.graphs.create_rchord(formatted_d,name,title)
+
+        return d
 
     def write_model_to_file(self, d, filename):
         '''Save a graph model'''
@@ -135,7 +187,7 @@ class TestTools:
 
         return final_data.drop(["index", "MDV_NUMSERV"], axis=1)
 
-    def get_test_data(self, data):
+    def get_test_data(self, data, code):
         '''process complete dataframe for the test'''
         # check if patients have multiple surgeries over multiple years
         patients = data["PIN"].unique().tolist()
@@ -153,7 +205,7 @@ class TestTools:
         total_patients = len(data["PIN"].unique())
         assert total_patients == original_no + additional_patients
         self.log(f"{splits} patients split")
-        data_file = self.logger.get_file_path("test_data.pkl")
+        data_file = self.logger.get_file_path(f"test_data_{code}_{dt.now()}.pkl")
         with open(data_file, 'wb') as f:
             pickle.dump(data, f)
 

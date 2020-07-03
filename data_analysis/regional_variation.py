@@ -1,5 +1,4 @@
 '''Main analysis file'''
-import pickle
 from dataclasses import dataclass
 import pandas as pd
 from overrides import overrides
@@ -18,17 +17,15 @@ class TestCase(ProposalTest):
         graph_style: str = 'fdp'
         code_of_interest: int = 49115
 
-    @dataclass
     class StateInformation:
         '''Exploratory statistics for each state'''
         def __init__(self, state):
             self.state: str = state
-
-        item_stats: list
-        provider_stats: list
-        patient_stats: list
-        provider_episode_stats: list
-        patients_per_surgical_provider: list
+            self.item_stats = []
+            self.provider_stats = []
+            self.patient_stats = []
+            self.provider_episode_stats = []
+            self.patients_per_surgical_provider = []
 
     FINAL_COLS = ["PIN", "ITEM", "PINSTATE", "SPR", "SPR_RSP", "DOS"]
     INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
@@ -50,7 +47,7 @@ class TestCase(ProposalTest):
     @overrides
     def get_test_data(self):
         super().get_test_data()
-        data = self.test_tools.get_test_data(self.processed_data)
+        data = self.test_tools.get_test_data(self.processed_data, self.required_params.code_of_interest)
         self.test_data = data.groupby("PINSTATE")
         self.models.mba.update_filters(self.required_params.filters)
 
@@ -86,56 +83,6 @@ class TestCase(ProposalTest):
                                          "Episodes per surgical provider per region",
                                          "patients_per_provider")
 
-    def create_state_model(self, params, state, mba_funcs, all_unique_items):
-        '''Commands related to creation, graphing and saving of the state models'''
-        rp = params
-        documents = mba_funcs.create_documents(mba_funcs.group_data)
-        self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
-        self.log("Creating model")
-        d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
-        model_dict_csv = self.logger.get_file_path(f"state_{state}_model.csv")
-        self.test_tools.write_model_to_file(d, model_dict_csv)
-        # remove no other item:
-        if "No other items" in d:
-            for k in d["No other items"]:
-                if k not in d:
-                    d[k] = {}
-
-            d.pop("No other items")
-
-        for k in d.keys():
-            d[k].pop("No other items", None)
-
-        name = f"PIN_ITEM_state_{state}_graph"
-        state_name = self.code_converter.convert_state_num(state)
-        title = f'Connections between ITEM when grouped by PIN and in state {state_name}'
-
-        if rp.colour_only:
-            formatted_d, attrs, legend = self.models.mba.colour_mbs_codes(d)
-        else:
-            formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
-
-        model_name = self.logger.get_file_path(f"model_state_{state}.pkl")
-        with open(model_name, "wb") as f:
-            pickle.dump(formatted_d, f)
-
-        attrs_name = self.logger.get_file_path(f"attrs_state_{state}.pkl")
-        with open(attrs_name, "wb") as f:
-            pickle.dump(attrs, f)
-
-        legend_file = self.logger.get_file_path(f"Legend_{state}.png")
-        self.graphs.graph_legend(legend, legend_file, "Legend")
-
-        # mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
-        # source, target = self.graphs.convert_pgv_to_hv(formatted_d)
-        # not_chord = self.graphs.create_hv_graph(source, target)
-        # self.graphs.save_hv_fig(not_chord, "hv_test")
-        # circo_filename = self.logger.output_path / f"{state}_circos"
-        # self.graphs.plot_circos_graph(formatted_d, attrs, circo_filename)
-        self.graphs.create_visnetwork(formatted_d, name, title, attrs)
-        # self.graphs.create_rchord(formatted_d,name,title)
-
-        return d
 
     def get_exploratory_stats(self, params, data, region):
         '''EDA'''
@@ -160,7 +107,7 @@ class TestCase(ProposalTest):
                 ("Claims per provider", "SPR", "provider", state_info.provider_stats),
                 ("Claims per episode", "PIN", "episode", state_info.patient_stats),
                 ("Surgical episodes per provider", "provider_episodes",
-                 "provider_episodes", state_info.patients_per_surgical_provider)
+                 "provider_episodes", state_info.provider_episode_stats)
         ]:
             top_file = self.logger.get_file_path(f'top_{filename}_{region}.csv')
             if header == "provider_episodes":
@@ -169,7 +116,9 @@ class TestCase(ProposalTest):
                 top_selection = data[header].value_counts()
 
             top_code_counts = top_selection.values.tolist()
-            collection.append(top_code_counts)
+            for x in top_code_counts:
+                collection.append(x)
+
             self.log(f"{description} in {region}")
             self.log(f"{top_selection.describe()}")
 
@@ -178,17 +127,15 @@ class TestCase(ProposalTest):
                 self.code_converter.write_mbs_codes_to_csv(
                     top_codes, top_file, [top_code_counts], ["No of occurrences"])
 
-        patients_per_surgical_provider = []
         providers_of_interest = data.loc[data["ITEM"] ==
                                          rp.code_of_interest, "SPR"].unique().tolist()
         provider_claims = data[data["SPR"].isin(
             providers_of_interest)].groupby("SPR")
         for _, claims in provider_claims:
             patients = claims["PIN"].unique()
-            patients_per_surgical_provider.append(len(patients))
+            state_info.patients_per_surgical_provider.append(len(patients))
 
-        state_info.patients_per_surgical_provider.append(patients_per_surgical_provider)
-        df = pd.DataFrame(patients_per_surgical_provider)
+        df = pd.DataFrame(state_info.patients_per_surgical_provider)
         self.log(f"Episodes per surgical provider in {region}")
         self.log(df.describe())
 
@@ -260,7 +207,7 @@ class TestCase(ProposalTest):
             state_information = self.get_exploratory_stats(rp, data, self.code_converter.convert_state_num(state))
             state_statistics.append(state_information)
             mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN")
-            d = self.create_state_model(rp, state, mba_funcs, all_unique_items)
+            d = self.test_tools.create_state_model(rp, state, mba_funcs, all_unique_items)
             state_records.append(d)
 
         self.create_eda_boxplots(state_statistics)

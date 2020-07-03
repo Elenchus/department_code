@@ -43,14 +43,14 @@ class TestCase(ProposalTest):
     @overrides
     def get_test_data(self):
         super().get_test_data()
-        self.test_data = self.test_tools.get_test_data(self.processed_data)
+        self.test_data = self.test_tools.get_test_data(self.processed_data, self.required_params.code_of_interest)
         self.models.mba.update_filters(self.required_params.filters)
 
     @overrides
-    def load_data(self, data):
-        super().load_data(data)
+    def load_data(self, data_file):
+        super().load_data(data_file)
         self.models.mba.update_filters(self.required_params.filters)
-        data = pd.read_csv(data)
+        data = self.test_tools.load_data(data_file)
         self.processed_data = data
         self.test_data = data
 
