@@ -26,7 +26,10 @@ Because the data source is separated by years, three ways of working with the da
 
 ### Analysis descriptions
 #### regional_variation.py
-This is the main analysis. For each geographical region, an association rule-based graph model is created. A model for each surgical provider is also created, and a modified graph edit distance is calculated to rank the providers by how much they vary from the regional model.
+This is one of the two main analyses. For each geographical region, an association rule-based graph model is created, and variations in the regions are compared.
+
+#### provider_ranking.py
+The other main analysis. A model for the nation and for each surgical provider is also created, and a modified graph edit distance is calculated to rank the providers by how much they vary from the national model.
 
 #### basic_mba.py
 Wrappers for association analysis functions, should not be run as an analysis.

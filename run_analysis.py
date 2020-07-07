@@ -118,7 +118,8 @@ def start_test(test_details, additional_folder_name_part=None):
         raise KeyError("Test format should be a TestFormat enum")
 
 if __name__ == "__main__":
-    for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
+    # for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
+    for x in [0.33]:
         for item in [48918, 49318, 49518]:
             details = TestDetails(
                 notes="",
@@ -133,7 +134,7 @@ if __name__ == "__main__":
                         'code_of_interest': item},
                 # params = None,
                 test_data=mbs,
-                test_file_name=f'regional_variation',
+                test_file_name=f'provider_ranking',
                 test_format=TestFormat.CombineYears,
                 test_location="data_analysis",
                 years=[str(x) for x in [2010, 2011, 2012, 2013, 2014]]

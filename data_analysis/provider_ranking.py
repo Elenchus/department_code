@@ -171,10 +171,10 @@ class TestCase(ProposalTest):
                                 + f'{suspicious_transactions[s]:.2f}'
             group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
             group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
-            # mba_funcs.create_graph(group_graph, group_graph_name,
-            #                        group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
-            self.graphs.create_visnetwork(
-                group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
+            mba_funcs.create_graph(group_graph, group_graph_name,
+                                   group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
+            # self.graphs.create_visnetwork(
+            #     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
             edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
                                 + f'edit history of basket ITEM for patients treated by SPR {s} with score ' \
@@ -195,10 +195,10 @@ class TestCase(ProposalTest):
                         if 'shape' in edit_attrs[s][code]:
                             new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
-            # mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
-            #                        edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
-            self.graphs.create_visnetwork(
-                converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
+            mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
+                                   edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
+            # self.graphs.create_visnetwork(
+            #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
             suspicious_filename = self.logger.get_file_path(f"suspicious_provider_{idx}_in_state_{state}.csv")
             self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
 
@@ -212,8 +212,8 @@ class TestCase(ProposalTest):
                                                    ['Count'])
 
         self.graphs.create_boxplot_group(all_suspicion_scores,
-                                         "Nation",
+                                         [rp.code_of_interest],
                                          f"Provider suspicion scores per region for item {rp.code_of_interest}",
                                          "sus_boxes")
-        with open(self.logger.get_file_path("suspicious_providers.pickle"), 'wb') as f:
+        with open(self.logger.get_file_path("suspicious_providers.pkl"), 'wb') as f:
             pickle.dump(suspicious_provider_list, f)
