@@ -59,29 +59,29 @@ class TestCase(ProposalTest):
         self.processed_data = data
         self.test_data = data.groupby("PINSTATE")
 
-    def create_eda_boxplots(self, states):
+    def create_eda_boxplots(self, states, code):
         '''make boxplots from the gathered data for all states'''
         labels = ["Nation"] + \
             [self.code_converter.convert_state_num(x) for x in range(1, 6)]
 
         item_stats = [si.item_stats for si in states]
         provider_stats = [si.provider_stats for si in states]
-        patient_stats = [si.patient_stats for si in states]
+        patient_stats = [states[0].patient_stats]
         provider_episode_stats = [si.provider_episode_stats for si in states]
-        patients_per_surgical_provider = [si.patients_per_surgical_provider for si in states]
+        patients_per_surgical_provider = [states[0].patients_per_surgical_provider]
         self.graphs.create_boxplot_group(
             item_stats, labels, "Claims per item", "claims_items")
         self.graphs.create_boxplot_group(
             provider_stats, labels, "Claims per provider", "claims_providers")
         self.graphs.create_boxplot_group(
-            patient_stats, labels, "Claims per episode", "claims_episodes")
+            patient_stats, [code], "Claims per episode", "claims_episodes", ["Item code", "Quantity"])
         self.graphs.create_boxplot_group(
             provider_episode_stats, labels, "Episodes per provider", "episodes_providers")
-
         self.graphs.create_boxplot_group(patients_per_surgical_provider,
-                                         labels,
-                                         "Episodes per surgical provider per region",
-                                         "patients_per_provider")
+                                         [code],
+                                         "Episodes per surgical provider",
+                                         "patients_per_provider",
+                                         ["Item code", "Quantity"])
 
 
     def get_exploratory_stats(self, params, data, region):
@@ -210,5 +210,5 @@ class TestCase(ProposalTest):
             d = self.test_tools.create_state_model(rp, state, mba_funcs, all_unique_items)
             state_records.append(d)
 
-        self.create_eda_boxplots(state_statistics)
+        self.create_eda_boxplots(state_statistics, rp.code_of_interest)
         self.get_similar_differences(state_records, state_order)

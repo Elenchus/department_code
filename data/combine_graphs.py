@@ -2,11 +2,11 @@
 import pickle
 
 filenames = ['hip', 'knee', 'shoulder']
-graph_type = '_episodes_per_provider'
+graph_type = '_claims_per_episode'
 models = []
 maxes = []
 for filename in filenames:
-    model = pickle.load(open(f'{filename}{graph_type}.pickle', 'rb'))
+    model = pickle.load(open(f'{filename}.pkl', 'rb'))
     _, _, _, y_max = model.gca().axis()
     models.append(model)
     maxes.append(y_max)

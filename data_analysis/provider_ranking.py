@@ -214,6 +214,7 @@ class TestCase(ProposalTest):
         self.graphs.create_boxplot_group(all_suspicion_scores,
                                          [rp.code_of_interest],
                                          f"Provider suspicion scores per region for item {rp.code_of_interest}",
-                                         "sus_boxes")
+                                         "sus_boxes",
+                                         ["Item code", "Score"])
         with open(self.logger.get_file_path("suspicious_providers.pkl"), 'wb') as f:
             pickle.dump(suspicious_provider_list, f)

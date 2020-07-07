@@ -463,7 +463,7 @@ class GraphUtils():
         '''Save a plot figure to file with timestamp'''
         current = datetime.now().strftime("%Y%m%dT%H%M%S")
         output_path = self.logger.get_file_path(f"{filename}_{current}")
-        pickle_path = self.logger.get_file_path(f"{output_path}.pickle")
+        pickle_path = self.logger.get_file_path(f"{output_path}.pkl")
         with open(pickle_path, 'wb') as f:
             pickle.dump(fig, f)
 
