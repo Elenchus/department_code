@@ -1,8 +1,10 @@
 '''Main analysis file'''
 import pickle
 from dataclasses import dataclass
+from statistics import mean
 import pandas as pd
 from overrides import overrides
+from scipy import stats
 from tqdm import tqdm
 from data_analysis.basic_mba import BasicMba
 from data_analysis.test_tools import TestTools
@@ -120,6 +122,7 @@ class TestCase(ProposalTest):
         edit_graphs = {}
         edit_attrs = {}
         providers = data.loc[data["ITEM"] == rp.code_of_interest, "SPR"].unique().tolist()
+        episodes_per_provider = []
         for provider in tqdm(providers):
             provider_docs = []
             patients = data.loc[data['SPR'] ==
@@ -130,6 +133,7 @@ class TestCase(ProposalTest):
             patient_data = data.loc[data['PIN'].isin(patients)]
 
             patient_data_groups = patient_data.groupby('PIN')
+            episodes_per_provider.append(len(patient_data_groups))
             provider_items = patient_data['ITEM'].unique().tolist()
             for _, patient_data_group in patient_data_groups:
                 doc = patient_data_group['ITEM'].unique().tolist()
@@ -218,3 +222,14 @@ class TestCase(ProposalTest):
                                          ["Item code", "Score"])
         with open(self.logger.get_file_path("suspicious_providers.pkl"), 'wb') as f:
             pickle.dump(suspicious_provider_list, f)
+
+        # estimate costs - only written for nation, won't work for loop
+        ssdf = pd.DataFrame(all_suspicion_scores[0], columns=["Score"])
+        top_scores = ssdf[stats.zscore(ssdf["Score"]) > 2]
+        total_top_scores = top_scores["Score"].sum()
+        mean_score = ssdf["Score"].mean()
+        estimated_surgeries = mean(episodes_per_provider) * 10
+        estimated_savings = (total_top_scores - mean_score * len(top_scores)) * estimated_surgeries
+        self.log(f"Identified {len(top_scores)} outliers of {len(providers)}")
+        self.log(f"Estimated {estimated_surgeries} per surgical provider in whole dataset")
+        self.log(f"Estimated savings from reducing outliers to mean: ${estimated_savings}")

@@ -134,7 +134,7 @@ if __name__ == "__main__":
                         'code_of_interest': item},
                 # params = None,
                 test_data=mbs,
-                test_file_name=f'regional_variation',
+                test_file_name=f'provider_ranking',
                 test_format=TestFormat.CombineYears,
                 test_location="data_analysis",
                 years=[str(x) for x in [2010, 2011, 2012, 2013, 2014]]
