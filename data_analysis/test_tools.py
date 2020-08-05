@@ -112,10 +112,12 @@ class TestTools:
 
     def write_model_to_file(self, d, filename):
         '''Save a graph model'''
-        header = "Item is commonly claimed during unliateral joint replacements in the state \
-                  on the surgery date of service\n"
+        header = "Item is commonly claimed during unliateral joint replacements in the state " \
+                  + "on the surgery date of service\n"
+        col_header = ','.join([])
         with open(filename, 'w+') as f:
             f.write(header)
+            f.write(col_header)
             for node in d:
                 line = self.code_converter.get_mbs_code_as_line(node)
                 f.write(f"{line}\n")

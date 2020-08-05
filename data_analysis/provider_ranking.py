@@ -22,6 +22,7 @@ class TestCase(ProposalTest):
         human_readable_suspicious_items: bool = False
         graph_style: str = 'fdp'
         code_of_interest: int = 49115
+        no_to_save: int = 10
 
     FINAL_COLS = ["PIN", "ITEM", "PINSTATE", "SPR", "SPR_RSP", "DOS"]
     INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
@@ -82,11 +83,11 @@ class TestCase(ProposalTest):
 
         with open(filename, 'w+') as f:
             for (section, header) in [(too_much,
-                                       'Items in the provider model but not in the state model\n'),
+                                       'Items in the provider model but not in the reference model\n'),
                                       (too_little,
-                                       "Expected items in the model which do not commonly \
-                                           appear in the provider model\n"),
-                                      (ok, "Items expected in the model which are in the provider model\n")]:
+                                       "Expected items in the model which do not commonly "\
+                                           + "appear in the provider model\n"),
+                                      (ok, "Items expected in the reference model which are in the provider model\n")]:
                 f.write(f'\n{header}')
                 for node in section:
                     line_list = self.code_converter.get_mbs_code_as_line(node)
@@ -156,7 +157,7 @@ class TestCase(ProposalTest):
         suspicion_matrix = pd.DataFrame.from_dict(
             suspicious_transactions, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
-        susp = suspicion_matrix.nlargest(3, 'count').index.tolist()
+        susp = suspicion_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
         state_suspicious_providers = []
         for idx, s in enumerate(susp):
             self.export_suspicious_claims(s, state, idx)
