@@ -24,7 +24,8 @@ class TestCase(ProposalTest):
         human_readable_suspicious_items: bool = False
         graph_style: str = 'fdp'
         code_of_interest: int = 49115
-        no_to_save: int = 10
+        no_to_save: int = 20
+        exclude_multiple_states: bool = False
 
     FINAL_COLS = ["PIN", "ITEM", "PINSTATE", "SPR", "SPR_RSP", "DOS"]
     INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
@@ -87,10 +88,12 @@ class TestCase(ProposalTest):
             for (section, header) in [(too_much,
                                        'Items in the provider model but not in the reference model\n'),
                                       (too_little,
-                                       "Expected items in the model which do not commonly "\
+                                       "\nExpected items in the model which do not commonly "\
                                            + "appear in the provider model\n"),
-                                      (ok, "Items expected in the reference model which are in the provider model\n")]:
-                f.write(f'\n{header}')
+                                      (ok, "\nItems expected in the reference model that are in the provider model\n")]:
+                f.write(f'{header}')
+                subheader = "Category,Group,Sub-group,Item,Description\n"
+                f.write(f'{subheader}')
                 for node in section:
                     line_list = self.code_converter.get_mbs_code_as_line(node)
                     line = ','.join(line_list)
@@ -232,5 +235,5 @@ class TestCase(ProposalTest):
         estimated_surgeries = mean(episodes_per_provider) * 10
         estimated_savings = (total_top_scores - mean_score * len(top_scores)) * estimated_surgeries
         self.log(f"Identified {len(top_scores)} outliers of {len(providers)}")
-        self.log(f"Estimated {estimated_surgeries} per surgical provider in whole dataset")
-        self.log(f"Estimated savings from reducing outliers to mean: ${estimated_savings}")
+        self.log(f"Estimated {estimated_surgeries:.2f} per surgical provider in whole dataset")
+        self.log(f"Estimated savings from reducing outliers to mean: ${estimated_savings:.2f}")

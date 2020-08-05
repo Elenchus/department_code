@@ -16,6 +16,7 @@ class TestCase(ProposalTest):
         filters: dict = None
         graph_style: str = 'fdp'
         code_of_interest: int = 49115
+        exclude_multiple_states: bool = True
 
     class StateInformation:
         '''Exploratory statistics for each state'''

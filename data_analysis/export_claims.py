@@ -24,7 +24,8 @@ class TestCase(ProposalTest):
     def __init__(self, logger, params, year):
         super().__init__(logger, params, year)
         with open(self.required_params.providers_to_load, 'rb') as f:
-            (self.state_order, self.providers_per_state) = list(pickle.load(f))
+            self.state_order = ["Nation"]
+            self.providers_per_state = list(pickle.load(f))
 
         self.all_providers = [item for sub in self.providers_per_state for item in sub]
 

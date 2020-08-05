@@ -114,10 +114,10 @@ class TestTools:
         '''Save a graph model'''
         header = "Item is commonly claimed during unliateral joint replacements in the state " \
                   + "on the surgery date of service\n"
-        col_header = ','.join([])
         with open(filename, 'w+') as f:
             f.write(header)
-            f.write(col_header)
+            subheader = "Category,Group,Sub-group,Item,Description\n"
+            f.write(f'{subheader}')
             for node in d:
                 line = self.code_converter.get_mbs_code_as_line(node)
                 f.write(f"{line}\n")
@@ -146,7 +146,7 @@ class TestTools:
                 indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
                 data_to_append = patient_data[patient_data["index"].isin(indices)]
                 states = data_to_append['PINSTATE'].unique().tolist()
-                if len(states) > 1:
+                if len(states) > 1 and rp.exclude_multiple_states:
                     self.log(f"Patient {patient} had multiple states on date {dos[0]} and was excluded")
                     state_exclusions += 1
                     continue
@@ -170,7 +170,7 @@ class TestTools:
                                         == check_date, "index"].tolist()
                     temp_df = patient_data[patient_data["index"].isin(indices)]
                     states = data_to_append['PINSTATE'].unique().tolist()
-                    if len(states) > 1:
+                    if len(states) > 1 and rp.exclude_multiple_states:
                         self.log(f"Patient {patient}_{i} had multiple states on date {check_date} and was excluded")
                         state_exclusions += 1
                         continue
