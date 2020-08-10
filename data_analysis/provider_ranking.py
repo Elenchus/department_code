@@ -40,7 +40,7 @@ class TestCase(ProposalTest):
     @overrides
     def process_dataframe(self, data):
         super().process_dataframe(data)
-        data = self.test_tools.process_dataframe(self.required_params, data)
+        data = self.test_tools.process_dataframe(self.required_params, data, surgeons_only=True)
 
         return data
 

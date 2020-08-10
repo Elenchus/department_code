@@ -140,6 +140,7 @@ class TestTools:
         state_exclusions = 0
         splits = 0
         excess_patients = 0
+        multiple_surgeons = 0
         for patient, group in tqdm(groups):
             dos = group.loc[group["ITEM"] == rp.code_of_interest, "DOS"].unique().tolist()
             number_of_surgeries = len(dos)
@@ -147,10 +148,25 @@ class TestTools:
                 if surgeons_only:
                     surgeon_id = group.loc[(group["ITEM"] == rp.code_of_interest) & \
                         (group["DOS"] == dos[0]), "SPR"].unique().tolist()
+                    if len(surgeon_id) > 1:
+                        multiple_surgeons += 1
+                        self.log(f"Patient {patient} had multiple surgeons on date {dos[0]}; excluded")
+                        continue
+
+                    assert len(surgeon_id) == 1
                     indices = group.loc[(group["DOS"] == dos[0]) & \
-                        (group["SPR"] == surgeon_id), "index"].tolist()
+                        (group["SPR"] == surgeon_id[0]), "index"].tolist()
+                    assert len(indices) >= 1
                 else:
+                    surgeon_id = group.loc[group["DOS"] == dos[0], "SPR"].tolist()
+                    if len(surgeon_id) > 1:
+                        multiple_surgeons += 1
+                        self.log(f"Patient {patient} had multiple surgeons on date {dos[0]}; excluded")
+                        continue
+
+                    assert len(surgeon_id) == 1
                     indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
+                    assert len(indices) >= 1
 
                 data_to_append = patient_data[patient_data["index"].isin(indices)]
                 states = data_to_append['PINSTATE'].unique().tolist()
@@ -176,13 +192,29 @@ class TestTools:
                 for i, check_date in enumerate(dos):
                     if surgeons_only:
                         surgeon_id = group.loc[(group["ITEM"] == rp.code_of_interest) & \
-                            (group["DOS"] == dos[0]), "SPR"].unique().tolist()
+                            (group["DOS"] == check_date), "SPR"].unique().tolist()
+                        if len(surgeon_id) > 1:
+                            multiple_surgeons += 1
+                            self.log(f"Patient {patient} had multiple surgeons on date {dos[0]}; excluded")
+                            continue
+
+                        assert len(surgeon_id) == 1
                         indices = group.loc[(group["DOS"] == check_date) & \
-                            (group["SPR"] == surgeon_id), "index"].tolist()
+                            (group["SPR"] == surgeon_id[0]), "index"].tolist()
+                        assert len(indices) >= 1
                     else:
+                        surgeon_id = group.loc[group["DOS"] == check_date, "SPR"].tolist()
+                        if len(surgeon_id) > 1:
+                            multiple_surgeons += 1
+                            self.log(f"Patient {patient} had multiple surgeons on date {dos[0]}; excluded")
+                            continue
+
+                        assert len(surgeon_id) == 1
                         indices = group.loc[group["DOS"] == check_date, "index"].tolist()
+                        assert len(indices) >= 1
+
                     temp_df = patient_data[patient_data["index"].isin(indices)]
-                    states = data_to_append['PINSTATE'].unique().tolist()
+                    states = temp_df['PINSTATE'].unique().tolist()
                     if len(states) > 1 and rp.exclude_multiple_states:
                         self.log(f"Patient {patient}_{i} had multiple states on date {check_date} and was excluded")
                         state_exclusions += 1
@@ -194,11 +226,13 @@ class TestTools:
         self.log(f"{exclusions} patients excluded")
         self.log(f"{splits} patients split")
         self.log(f"{state_exclusions} exclusions after split")
+        self.log(f"{multiple_surgeons} extra episodes excluded for multiple surgeons")
         assert len(final_data["PIN"].unique()) == len(patients_of_interest) \
                                                   - exclusions \
                                                   + splits \
                                                   + excess_patients \
-                                                  - state_exclusions
+                                                  - state_exclusions \
+                                                  - multiple_surgeons
 
         return final_data.drop(["index", "MDV_NUMSERV"], axis=1)
 
