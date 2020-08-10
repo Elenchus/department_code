@@ -120,9 +120,10 @@ class TestTools:
             f.write(f'{subheader}')
             for node in d:
                 line = self.code_converter.get_mbs_code_as_line(node)
+                line = ','.join(line)
                 f.write(f"{line}\n")
 
-    def process_dataframe(self, params, data):
+    def process_dataframe(self, params, data, surgeons_only=False):
         '''process each dataframe before use'''
         rp = params
         patients_of_interest = data.loc[data["ITEM"] ==
@@ -143,7 +144,14 @@ class TestTools:
             dos = group.loc[group["ITEM"] == rp.code_of_interest, "DOS"].unique().tolist()
             number_of_surgeries = len(dos)
             if number_of_surgeries == 1:
-                indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
+                if surgeons_only:
+                    surgeon_id = group.loc[(group["ITEM"] == rp.code_of_interest) & \
+                        (group["DOS"] == dos[0]), "SPR"].unique().tolist()
+                    indices = group.loc[(group["DOS"] == dos[0]) & \
+                        (group["SPR"] == surgeon_id), "index"].tolist()
+                else:
+                    indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
+
                 data_to_append = patient_data[patient_data["index"].isin(indices)]
                 states = data_to_append['PINSTATE'].unique().tolist()
                 if len(states) > 1 and rp.exclude_multiple_states:
@@ -166,8 +174,13 @@ class TestTools:
 
                 splits += 1
                 for i, check_date in enumerate(dos):
-                    indices = group.loc[group["DOS"]
-                                        == check_date, "index"].tolist()
+                    if surgeons_only:
+                        surgeon_id = group.loc[(group["ITEM"] == rp.code_of_interest) & \
+                            (group["DOS"] == dos[0]), "SPR"].unique().tolist()
+                        indices = group.loc[(group["DOS"] == check_date) & \
+                            (group["SPR"] == surgeon_id), "index"].tolist()
+                    else:
+                        indices = group.loc[group["DOS"] == check_date, "index"].tolist()
                     temp_df = patient_data[patient_data["index"].isin(indices)]
                     states = data_to_append['PINSTATE'].unique().tolist()
                     if len(states) > 1 and rp.exclude_multiple_states:
