@@ -162,13 +162,6 @@ class TestTools:
                             (group["SPR"] == surgeon_id[0]), "index"].tolist()
                     assert len(indices) >= 1
                 else:
-                    surgeon_id = group.loc[group["DOS"] == dos[0], "SPR"].tolist()
-                    if len(surgeon_id) > 1:
-                        multiple_surgeons += 1
-                        self.log(f"Patient {patient} had multiple surgeons on date {dos[0]}; excluded")
-                        continue
-
-                    assert len(surgeon_id) == 1
                     indices = group.loc[group["DOS"] == dos[0], "index"].tolist()
                     assert len(indices) >= 1
 
@@ -213,13 +206,6 @@ class TestTools:
 
                         assert len(indices) >= 1
                     else:
-                        surgeon_id = group.loc[group["DOS"] == check_date, "SPR"].tolist()
-                        if len(surgeon_id) > 1:
-                            multiple_surgeons += 1
-                            self.log(f"Patient {patient} had multiple surgeons on date {dos[0]}; excluded")
-                            continue
-
-                        assert len(surgeon_id) == 1
                         indices = group.loc[group["DOS"] == check_date, "index"].tolist()
                         assert len(indices) >= 1
 
