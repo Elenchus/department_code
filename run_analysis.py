@@ -118,9 +118,10 @@ def start_test(test_details, additional_folder_name_part=None):
         raise KeyError("Test format should be a TestFormat enum")
 
 if __name__ == "__main__":
-    # for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
-    for x in [0.33]:
-        for item in [48918, 49318, 49518]:
+    for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
+    # for x in [0.33]:
+        for item in [48918]:
+        # for item in [48918, 49318, 49518]:
             details = TestDetails(
                 notes="",
                 params={
