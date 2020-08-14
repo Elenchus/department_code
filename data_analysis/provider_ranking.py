@@ -25,11 +25,11 @@ class TestCase(ProposalTest):
         graph_style: str = 'fdp'
         code_of_interest: int = 49115
         no_to_save: int = 20
-        exclude_multiple_states: bool = False
+        exclude_multiple_states: bool = True
         surgeons_only: bool = True
         include_referrals_as_surgeon: bool = True
 
-    FINAL_COLS = ["PIN", "ITEM", "RPR", "SPR", "SPR_RSP", "DOS"]
+    FINAL_COLS = ["PIN", "ITEM", "RPR", "SPR", "SPR_RSP", "DOS", "PINSTATE"]
     INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
@@ -114,6 +114,8 @@ class TestCase(ProposalTest):
         rp = self.required_params
         state = "Nation"
         data = self.test_data
+        # state_data = self.test_data.groupby("PINSTATE")
+        # for state, data in state_data:
         all_unique_items = [str(x) for x in data["ITEM"].unique().tolist()]
         mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN")
         d = self.test_tools.create_state_model(rp, state, mba_funcs, all_unique_items)
@@ -184,7 +186,7 @@ class TestCase(ProposalTest):
             group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
             group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
             mba_funcs.create_graph(group_graph, group_graph_name,
-                                   group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
+                                group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
             # self.graphs.create_visnetwork(
             #     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
@@ -208,13 +210,14 @@ class TestCase(ProposalTest):
                             new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
             mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
-                                   edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
+                                edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
             # self.graphs.create_visnetwork(
             #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
             suspicious_filename = self.logger.get_file_path(f"suspicious_provider_{idx}_in_state_{state}.csv")
             self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
 
         suspicious_provider_list.append(state_suspicious_providers)
+        # indent to here for state loop
 
         sus_item_keys = list(sus_items.keys())
         sus_item_vals = [sus_items[x] for x in sus_item_keys]
