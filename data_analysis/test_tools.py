@@ -123,7 +123,7 @@ class TestTools:
                 line = ','.join(line)
                 f.write(f"{line}\n")
 
-    def process_dataframe(self, params, data, surgeons_only=False):
+    def process_dataframe(self, params, data, surgeons_only=False, include_referrals_as_surgeon=False):
         '''process each dataframe before use'''
         rp = params
         patients_of_interest = data.loc[data["ITEM"] ==
@@ -154,8 +154,12 @@ class TestTools:
                         continue
 
                     assert len(surgeon_id) == 1
-                    indices = group.loc[(group["DOS"] == dos[0]) & \
-                        (group["SPR"] == surgeon_id[0]), "index"].tolist()
+                    if include_referrals_as_surgeon:
+                        indices = group.loc[(group["DOS"] == dos[0]) & \
+                            ((group["SPR"] == surgeon_id[0]) | (group["RPR"] == surgeon_id[0])), "index"].tolist()
+                    else:
+                        indices = group.loc[(group["DOS"] == dos[0]) & \
+                            (group["SPR"] == surgeon_id[0]), "index"].tolist()
                     assert len(indices) >= 1
                 else:
                     surgeon_id = group.loc[group["DOS"] == dos[0], "SPR"].tolist()
@@ -169,11 +173,12 @@ class TestTools:
                     assert len(indices) >= 1
 
                 data_to_append = patient_data[patient_data["index"].isin(indices)]
-                states = data_to_append['PINSTATE'].unique().tolist()
-                if len(states) > 1 and rp.exclude_multiple_states:
-                    self.log(f"Patient {patient} had multiple states on date {dos[0]} and was excluded")
-                    state_exclusions += 1
-                    continue
+                if rp.exclude_multiple_states:
+                    states = data_to_append['PINSTATE'].unique().tolist()
+                    if len(states) > 1:
+                        self.log(f"Patient {patient} had multiple states on date {dos[0]} and was excluded")
+                        state_exclusions += 1
+                        continue
 
                 final_data = final_data.append(
                     data_to_append, ignore_index=True)
@@ -199,8 +204,13 @@ class TestTools:
                             continue
 
                         assert len(surgeon_id) == 1
-                        indices = group.loc[(group["DOS"] == check_date) & \
-                            (group["SPR"] == surgeon_id[0]), "index"].tolist()
+                        if include_referrals_as_surgeon:
+                            indices = group.loc[(group["DOS"] == check_date) & \
+                                ((group["SPR"] == surgeon_id[0]) | (group["RPR"] == surgeon_id[0])), "index"].tolist()
+                        else:
+                            indices = group.loc[(group["DOS"] == check_date) & \
+                                (group["SPR"] == surgeon_id[0]), "index"].tolist()
+
                         assert len(indices) >= 1
                     else:
                         surgeon_id = group.loc[group["DOS"] == check_date, "SPR"].tolist()
@@ -214,15 +224,17 @@ class TestTools:
                         assert len(indices) >= 1
 
                     temp_df = patient_data[patient_data["index"].isin(indices)]
-                    states = temp_df['PINSTATE'].unique().tolist()
-                    if len(states) > 1 and rp.exclude_multiple_states:
-                        self.log(f"Patient {patient}_{i} had multiple states on date {check_date} and was excluded")
-                        state_exclusions += 1
-                        continue
+                    if rp.exclude_multiple_states:
+                        states = temp_df['PINSTATE'].unique().tolist()
+                        if len(states) > 1:
+                            self.log(f"Patient {patient}_{i} had multiple states on date {check_date} and was excluded")
+                            state_exclusions += 1
+                            continue
 
                     temp_df["PIN"] = temp_df["PIN"] + f"_{i}"
                     final_data = final_data.append(temp_df, ignore_index=True)
 
+        self.log(f"{len(groups)} starting patients for code {rp.code_of_interest}")
         self.log(f"{exclusions} patients excluded")
         self.log(f"{splits} patients split")
         self.log(f"{state_exclusions} exclusions after split")

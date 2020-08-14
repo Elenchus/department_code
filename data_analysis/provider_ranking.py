@@ -26,8 +26,10 @@ class TestCase(ProposalTest):
         code_of_interest: int = 49115
         no_to_save: int = 20
         exclude_multiple_states: bool = False
+        surgeons_only: bool = True
+        include_referrals_as_surgeon: bool = True
 
-    FINAL_COLS = ["PIN", "ITEM", "PINSTATE", "SPR", "SPR_RSP", "DOS"]
+    FINAL_COLS = ["PIN", "ITEM", "RPR", "SPR", "SPR_RSP", "DOS"]
     INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
@@ -40,7 +42,9 @@ class TestCase(ProposalTest):
     @overrides
     def process_dataframe(self, data):
         super().process_dataframe(data)
-        data = self.test_tools.process_dataframe(self.required_params, data, surgeons_only=True)
+        rp = self.required_params
+        data = self.test_tools.process_dataframe(self.required_params, data, surgeons_only=rp.surgeons_only,
+                                                 include_referrals_as_surgeon=rp.include_referrals_as_surgeon)
 
         return data
 
