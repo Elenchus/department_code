@@ -44,7 +44,7 @@ class TestCase(ProposalTest):
         data["NSPR"] = data.apply(lambda x: x['SPR'] if np.isnan(x['RPR']) else x["RPR"], axis=1).astype(int)
         pats = data.groupby("PIN")
         provs = []
-        for pat, group in pats:
+        for _, group in pats:
             n_provs = len(group["NSPR"].unique())
             provs.append(n_provs)
 

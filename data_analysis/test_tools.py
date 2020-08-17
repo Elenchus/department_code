@@ -59,10 +59,13 @@ class TestTools:
 
         return indexed_data[~indexed_data["index"].isin(items_to_remove)]
 
-    def create_state_model(self, params, state, mba_funcs, all_unique_items):
+    def create_state_model(self, params, state, mba_funcs, all_unique_items, group=None):
         '''Commands related to creation, graphing and saving of the state models'''
         rp = params
-        documents = mba_funcs.create_documents(mba_funcs.group_data)
+        if group == None:
+            group = mba_funcs.group_data
+
+        documents = mba_funcs.create_documents(group)
         self.log(f"{len(documents)} transactions in {self.code_converter.convert_state_num(state)}")
         self.log("Creating model")
         d = mba_funcs.create_model(all_unique_items, documents, rp.min_support)
@@ -83,7 +86,12 @@ class TestTools:
         state_name = self.code_converter.convert_state_num(state)
         title = f'Connections between ITEM when grouped by PIN and in state {state_name}'
 
-        if rp.colour_only:
+        try:
+            colour = rp.colour_only
+        except AttributeError:
+            colour = True
+
+        if colour:
             formatted_d, attrs, legend = self.models.mba.colour_mbs_codes(d)
         else:
             formatted_d, attrs, legend = mba_funcs.convert_graph_and_attrs(d)
@@ -166,7 +174,12 @@ class TestTools:
                     assert len(indices) >= 1
 
                 data_to_append = patient_data[patient_data["index"].isin(indices)]
-                if rp.exclude_multiple_states:
+                try:
+                    exclude = rp.exclude_multiple_states
+                except AttributeError:
+                    exclude = False
+
+                if exclude:
                     states = data_to_append['PINSTATE'].unique().tolist()
                     if len(states) > 1:
                         self.log(f"Patient {patient} had multiple states on date {dos[0]} and was excluded")

@@ -186,7 +186,7 @@ class TestCase(ProposalTest):
             group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
             group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
             mba_funcs.create_graph(group_graph, group_graph_name,
-                                group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
+                                   group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
             # self.graphs.create_visnetwork(
             #     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
@@ -210,7 +210,7 @@ class TestCase(ProposalTest):
                             new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
             mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
-                                edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
+                                   edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
             # self.graphs.create_visnetwork(
             #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
             suspicious_filename = self.logger.get_file_path(f"suspicious_provider_{idx}_in_state_{state}.csv")

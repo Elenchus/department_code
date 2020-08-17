@@ -1,4 +1,5 @@
 '''abstract class for data analysis'''
+import pickle
 from abc import ABC, abstractmethod
 import pandas as pd
 from utilities.graph_utils import GraphUtils
@@ -91,6 +92,14 @@ class ProposalTest(ABC):
             print(text)
         else:
             self.logger.log(text)
+
+    def pickle_data(self, data, filename):
+        '''Wrapper for pickle'''
+        if self.logger is not None:
+            filename = self.logger.get_file_path(filename)
+
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
 
     @abstractmethod
     def process_dataframe(self, data):

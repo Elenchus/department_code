@@ -283,18 +283,7 @@ class GraphUtils():
         # vispng = f"{vispath}.png"
         # imgkit.from_file(vishtml, vispng)
 
-    @staticmethod
-    def flatten_graph_dict(dictionary):
-        ''' Returns a set of all keys and values in a graph dictionary'''
-        temp = set()
-        for k, v in dictionary.items():
-            temp.add(k)
-            for key in v.keys():
-                temp.add(key)
-
-        return temp
-
-    def graph_component_finder(self, graph):
+    def find_graph_components(self, graph):
         '''find separate graph components'''
         am = self.convert_graph_to_adjacency_matrix(graph)
         keys = am.index.tolist()
@@ -328,6 +317,17 @@ class GraphUtils():
             components.append(component)
 
         return components
+
+    @staticmethod
+    def flatten_graph_dict(dictionary):
+        ''' Returns a set of all keys and values in a graph dictionary'''
+        temp = set()
+        for k, v in dictionary.items():
+            temp.add(k)
+            for key in v.keys():
+                temp.add(key)
+
+        return temp
 
     def graph_edit_distance(self, expected, test, attrs=None, edge_distance_costs=False):
         '''get the graph edit distance between two graphs using MBS item fees if available'''
