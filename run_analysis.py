@@ -124,20 +124,20 @@ if __name__ == "__main__":
     for item in [48918, 49318, 49518]:
         details = TestDetails(
             notes="",
-            # params={
-            #         'filters': {
-            #             'conviction': {
-            #                 'value': 1,
-            #                 'operator': operator.gt
-            #                 }
-            #             },
-            #         'min_support': 0.05,
-            #         'code_of_interest': item},
-            params={'code_of_interest': item,
-                    'output_name': f"{item}_rpr_subset.csv"},
-            # test_data=f"{item}_rpr_subset.csv",
-            test_data=mbs,
-            test_file_name=f'data_extraction',
+            params={
+                    'filters': {
+                        'conviction': {
+                            'value': 1,
+                            'operator': operator.gt
+                            }
+                        },
+                    'min_support': 0.05,
+                    'code_of_interest': item},
+            # params={'code_of_interest': item,
+            #         'output_name': f"{item}_rpr_subset.csv"},
+            test_data=f"{item}_rpr_subset.csv",
+            # test_data=mbs,
+            test_file_name=f'rpr_ranking',
             test_format=TestFormat.CombineYears,
             test_location="data_analysis",
             years=[str(x) for x in range(2010, 2015)]
