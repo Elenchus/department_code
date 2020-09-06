@@ -13,10 +13,9 @@ class TestCase(ProposalTest):
         '''required params'''
         codes_of_interest: list = field(default_factory=lambda: [49318])
         code_type: str = 'hip'
-        output_name: str = '49318_provider_subset_with_states_long'
+        output_name: str = '49318_rpr_subset'
         before_days: int = 1
         after_days: int = 1
-        year_start: dt = None
 
     FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', "MDV_NUMSERV"]
     INITIAL_COLS = FINAL_COLS
