@@ -63,11 +63,12 @@ class ProposalTest(ABC):
 
     def __init__(self, logger, params, year):
         self.logger = logger
-        self.code_converter = CodeConverter(year)
+        self.code_converter = CodeConverter(year[-1])
         self.graphs = GraphUtils(logger)
         self.models = ModelUtils(logger, self.graphs, self.code_converter)
         self.processed_data = pd.DataFrame()
-        self.test_year = year
+        self.start_year = year[0]
+        self.end_year = year[-1]
 
         if params is None:
             if not isinstance(self.required_params, dict): # deprecate this later

@@ -39,7 +39,7 @@ def run_combined_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
         test_file = import_module(f"{test_details.test_location}.{test_details.test_file_name}")
         test_case_class = getattr(test_file, "TestCase")
-        test_case = test_case_class(logger, test_details.params, test_details.years[-1])
+        test_case = test_case_class(logger, test_details.params, test_details.years)
         test_details.params = test_case.required_params
 
         logger.log(test_details.notes)
@@ -64,7 +64,7 @@ def run_iterative_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
         test_file = __import__(f"{test_details.test_location}.{test_details.test_file_name}",
                                fromlist=['TestCase'])
-        test_case = test_file.TestCase(logger, test_details.params, test_details.years[-1])
+        test_case = test_file.TestCase(logger, test_details.params, test_details.years)
         test_details.params = test_case.required_params
 
         logger.log(test_details.notes)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
             #             },
             #         'min_support': x,
                     # 'code_of_interest': item},
-            params={'codes_of_interest': [item],
+            params={'code_of_interest': item,
                 'output_name': f'{item}_rpr_subset'},
             test_data=mbs,
             test_file_name=f'data_extraction',

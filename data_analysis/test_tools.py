@@ -62,7 +62,7 @@ class TestTools:
     def create_state_model(self, params, state, mba_funcs, all_unique_items, group=None):
         '''Commands related to creation, graphing and saving of the state models'''
         rp = params
-        if group == None:
+        if group is None:
             group = mba_funcs.group_data
 
         documents = mba_funcs.create_documents(group)
