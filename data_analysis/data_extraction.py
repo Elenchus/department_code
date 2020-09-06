@@ -18,7 +18,7 @@ class TestCase(ProposalTest):
         before_days: int = 1
         after_days: int = 1
 
-    FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', "MDV_NUMSERV"]
+    FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', 'RPR', "MDV_NUMSERV"]
     INITIAL_COLS = FINAL_COLS
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
@@ -93,7 +93,7 @@ class TestCase(ProposalTest):
     def run_test(self):
         super().run_test()
         rp = self.required_params
-        name = f"{rp.code_type}_{rp.output_name}.csv"
+        name = f"{rp.output_name}.csv"
         output_file = self.logger.output_path / name
 
         self.log("Extracting claims")

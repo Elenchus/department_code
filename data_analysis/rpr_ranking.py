@@ -57,9 +57,8 @@ class TestCase(ProposalTest):
 
     @overrides
     def load_data(self, data_file):
-        super().load_data(data_file)
+        data = super().load_data(data_file)
         self.models.mba.update_filters(self.required_params.filters)
-        data = self.test_tools.load_data(data_file)
         data = self.process_dataframe(data)
         data["NSPR"] = data.apply(lambda x: x['SPR'] if np.isnan(x['RPR']) else x["RPR"], axis=1).astype(int)
         data.drop(["SPR", "RPR"], axis=1, inplace=True)

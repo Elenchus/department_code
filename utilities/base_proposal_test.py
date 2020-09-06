@@ -1,6 +1,8 @@
 '''abstract class for data analysis'''
+from os.path import isfile
 import pickle
 from abc import ABC, abstractmethod
+from pathlib import Path
 import pandas as pd
 from utilities.graph_utils import GraphUtils
 from utilities.model_utils import ModelUtils
@@ -102,6 +104,11 @@ class ProposalTest(ABC):
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
+    @staticmethod
+    def get_project_root() -> Path:
+        """Returns project root folder."""
+        return Path(__file__).parent.parent
+
     @abstractmethod
     def process_dataframe(self, data):
         '''Get required data from the source'''
@@ -124,7 +131,22 @@ class ProposalTest(ABC):
     def load_data(self, data_file):
         '''Load data from a file instead of processing and modifying from source'''
         self.log(f"Loading data from {data_file}")
+        file_extension = data_file[-4:]
+        data_folder = self.get_project_root() / "data"
+        data_file = data_folder / data_file
 
+        if not isfile(data_file):
+            raise AttributeError(f"Cannot find file {data_file}")
+
+        if file_extension == ".csv":
+            data = pd.read_csv(data_file)
+        elif file_extension == ".pkl":
+            with open(data_file, 'rb') as f:
+                data = pickle.load(f)
+        else:
+            raise AttributeError(f"Data file {data_file} extension should be .csv or .pkl")
+
+        return data
     def finalise_test(self):
         '''To be used when completing an iterative test case'''
         self.log("Finalising all iterations")

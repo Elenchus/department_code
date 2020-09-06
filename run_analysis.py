@@ -131,10 +131,11 @@ if __name__ == "__main__":
             #                 'operator': operator.gt
             #                 }
             #             },
-            #         'min_support': x,
-                    # 'code_of_interest': item},
+            #         'min_support': 0.05,
+            #         'code_of_interest': item},
             params={'code_of_interest': item,
-                'output_name': f'{item}_rpr_subset'},
+                    'output_name': f"{item}_rpr_subset.csv"},
+            # test_data=f"{item}_rpr_subset.csv",
             test_data=mbs,
             test_file_name=f'data_extraction',
             test_format=TestFormat.CombineYears,

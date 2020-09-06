@@ -270,16 +270,3 @@ class TestTools:
             pickle.dump(data, f)
 
         return data
-
-    def load_data(self, data_file):
-        '''load data from file'''
-        file_extension = data_file[-4:-1]
-        if file_extension == ".csv":
-            data = pd.read_csv(data_file)
-        elif file_extension == ".pkl":
-            with open(data_file, 'rb') as f:
-                data = pickle.load(f)
-        else:
-            raise AttributeError(f"Data file {data_file} extension should be .csv or .pkl")
-
-        return data
