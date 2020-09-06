@@ -1,7 +1,8 @@
-'''Main analysis file'''
+'''Ranking decision makers'''
 import pickle
 from dataclasses import dataclass
 from statistics import mean
+import numpy as np
 import pandas as pd
 from overrides import overrides
 from scipy import stats
@@ -11,26 +12,25 @@ from data_analysis.test_tools import TestTools
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
-    '''Regional MBA'''
+    '''Data analysis base class'''
     @dataclass
     class RequiredParams:
         '''test parameters'''
-        colour_only: bool = True
+        code_of_interest: int = 49318
+        exclude_multiple_states: bool = False
         min_support: float = 0.33
         provider_min_support_count: int = 3
         provider_min_support: float = 0.33
         filters: dict = None
         ignore_providers_with_less_than_x_patients: int = 3
-        human_readable_suspicious_items: bool = False
-        graph_style: str = 'fdp'
-        code_of_interest: int = 49115
-        no_to_save: int = 20
-        exclude_multiple_states: bool = True
-        surgeons_only: bool = True
-        include_referrals_as_surgeon: bool = True
+        no_to_save: int = 5
+        save_each_component: bool = True
 
-    FINAL_COLS = ["PIN", "ITEM", "RPR", "SPR", "SPR_RSP", "DOS", "PINSTATE"]
-    INITIAL_COLS = FINAL_COLS + ["MDV_NUMSERV"]
+    nspr = ["NSPR"]
+    core_cols = ["PIN", "ITEM", "DOS", "SPR_RSP"]
+    other_cols = ["MDV_NUMSERV", "SPR", "RPR"]
+    FINAL_COLS = core_cols + nspr
+    INITIAL_COLS = core_cols + other_cols
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
     test_data = None
@@ -42,9 +42,10 @@ class TestCase(ProposalTest):
     @overrides
     def process_dataframe(self, data):
         super().process_dataframe(data)
-        rp = self.required_params
-        data = self.test_tools.process_dataframe(self.required_params, data, surgeons_only=rp.surgeons_only,
-                                                 include_referrals_as_surgeon=rp.include_referrals_as_surgeon)
+        data = self.test_tools.process_dataframe(self.required_params, data, surgeons_only=False,
+                                                 include_referrals_as_surgeon=False)
+        data["NSPR"] = data.apply(lambda x: x['SPR'] if np.isnan(x['RPR']) else x["RPR"], axis=1).astype(int)
+        data.drop(["SPR", "RPR"], axis=1, inplace=True)
 
         return data
 
@@ -54,18 +55,10 @@ class TestCase(ProposalTest):
         self.test_data = self.test_tools.get_test_data(self.processed_data, self.required_params.code_of_interest)
         self.models.mba.update_filters(self.required_params.filters)
 
-    @overrides
-    def load_data(self, data_file):
-        super().load_data(data_file)
-        self.models.mba.update_filters(self.required_params.filters)
-        data = self.test_tools.load_data(data_file)
-        self.processed_data = data
-        self.test_data = data
-
     def export_suspicious_claims(self, spr, state, rank):
         '''export patient data for validation'''
         data = self.processed_data
-        patient_ids = data.loc[data["SPR"] == spr, "PIN"].unique().tolist()
+        patient_ids = data.loc[data["NSPR"] == spr, "PIN"].unique().tolist()
         patient_claims = data[data["PIN"].isin(patient_ids)]
         path = self.logger.get_file_path(f"suspicious_claims_rank_{rank}_state_{state}.csv")
         patient_claims.to_csv(path)
@@ -106,19 +99,17 @@ class TestCase(ProposalTest):
     @overrides
     def run_test(self):
         super().run_test()
+        data = self.test_data
+        rp = self.required_params
         all_suspicion_scores = []
         suspicious_provider_list = []
         suspicious_transaction_list = []
         sus_items = {}
-
-        rp = self.required_params
         state = "Nation"
-        data = self.test_data
-        # state_data = self.test_data.groupby("PINSTATE")
-        # for state, data in state_data:
+
         all_unique_items = [str(x) for x in data["ITEM"].unique().tolist()]
-        mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN")
-        d = self.test_tools.create_state_model(rp, state, mba_funcs, all_unique_items)
+        mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN", "NSPR")
+        d = self.test_tools.create_state_model(rp, state, mba_funcs, all_unique_items, mba_funcs.subgroup_data)
 
         self.log("Finding suspicious providers")
         fee_record = None
@@ -131,22 +122,20 @@ class TestCase(ProposalTest):
         suspicion_scores = []
         edit_graphs = {}
         edit_attrs = {}
-        providers = data.loc[data["ITEM"] == rp.code_of_interest, "SPR"].unique().tolist()
+        providers = data.loc[data["ITEM"] == rp.code_of_interest, "NSPR"].unique().tolist()
         episodes_per_provider = []
-        for provider in tqdm(providers):
+        provider_groups = data.groupby("NSPR")
+        for provider, group in tqdm(provider_groups):
             provider_docs = []
-            patients = data.loc[data['SPR'] ==
-                                provider, 'PIN'].unique().tolist()
+            patients = group['PIN'].unique().tolist()
             if len(patients) < rp.ignore_providers_with_less_than_x_patients:
                 continue
 
-            patient_data = data.loc[data['PIN'].isin(patients)]
-
-            patient_data_groups = patient_data.groupby('PIN')
-            episodes_per_provider.append(len(patient_data_groups))
-            provider_items = patient_data['ITEM'].unique().tolist()
-            for _, patient_data_group in patient_data_groups:
-                doc = patient_data_group['ITEM'].unique().tolist()
+            surgery_groups = group.groupby('DOS')
+            episodes_per_provider.append(len(surgery_groups))
+            provider_items = group['ITEM'].unique().tolist()
+            for _, surgery in surgery_groups:
+                doc = surgery['ITEM'].unique().tolist()
                 provider_docs.append(doc)
 
             provider_model = self.models.mba.pairwise_market_basket(
@@ -170,13 +159,26 @@ class TestCase(ProposalTest):
         suspicion_matrix = pd.DataFrame.from_dict(
             suspicious_transactions, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
-        susp = suspicion_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
+        if rp.save_each_component:
+            susp = suspicion_matrix.sort_values('count', axis=0, ascending=False).index
+        else:
+            susp = suspicion_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
+
         state_suspicious_providers = []
+        components = self.graphs.graph_component_finder(d)
+        suspicious_component_id = [0] * (len(components) + 1)
         for idx, s in enumerate(susp):
+            unique_items = [str(x) for x in self.graphs.flatten_graph_dict(all_graphs[s])]
+            transaction_graph, _ = self.models.mba.compare_transaction_to_model(unique_items, d)
+            closest_component = mba_funcs.identify_closest_component(components, transaction_graph)
+            suspicious_component_id[closest_component] += 1
+            if suspicious_component_id[closest_component] > rp.no_to_save:
+                continue
+
             self.export_suspicious_claims(s, state, idx)
             state_suspicious_providers.append(s)
             self.log(f"Rank {idx} provider {s} has the following RSPs")
-            rsps = data.loc[data['SPR'] == s, 'SPR_RSP'].unique().tolist()
+            rsps = data.loc[data['NSPR'] == s, 'SPR_RSP'].unique().tolist()
             for rsp in rsps:
                 self.log(self.code_converter.convert_rsp_num(rsp))
 
@@ -186,7 +188,7 @@ class TestCase(ProposalTest):
             group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
             group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
             mba_funcs.create_graph(group_graph, group_graph_name,
-                                   group_graph_title, attrs=group_attrs, graph_style=rp.graph_style)
+                                   group_graph_title, attrs=group_attrs, graph_style='fdp')
             # self.graphs.create_visnetwork(
             #     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
@@ -194,13 +196,9 @@ class TestCase(ProposalTest):
                                 + f'edit history of basket ITEM for patients treated by SPR {s} with score ' \
                                 + f'{suspicious_transactions[s]:.2f}'
             edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
-            if rp.human_readable_suspicious_items:
-                converted_edit_graph, new_edit_attrs, _ = self.models.mba.convert_mbs_codes(
-                    edit_graphs[s])
-            else:
-                converted_edit_graph = edit_graphs[s]
-                _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(
-                    converted_edit_graph)
+            converted_edit_graph = edit_graphs[s]
+            _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(
+                converted_edit_graph)
 
             for key in new_edit_attrs:
                 code = key.split('\n')[-1]
@@ -210,10 +208,11 @@ class TestCase(ProposalTest):
                             new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
             mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
-                                   edit_graph_title, attrs=new_edit_attrs, graph_style=rp.graph_style)
+                                   edit_graph_title, attrs=new_edit_attrs, graph_style='fdp')
             # self.graphs.create_visnetwork(
             #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
-            suspicious_filename = self.logger.get_file_path(f"suspicious_provider_{idx}_in_state_{state}.csv")
+            suspicious_filename = self.logger.get_file_path(
+                f"component_{closest_component}_suspicious_provider_{idx}_in_state_{state}.csv")
             self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
 
         suspicious_provider_list.append(state_suspicious_providers)
