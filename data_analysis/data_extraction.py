@@ -18,7 +18,7 @@ class TestCase(ProposalTest):
         after_days: int = 1
         year_start: dt = None
 
-    FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP']
+    FINAL_COLS = ['PIN', 'ITEM', 'DOS', 'SPR', 'SPR_RSP', "MDV_NUMSERV"]
     INITIAL_COLS = FINAL_COLS
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
@@ -56,6 +56,8 @@ class TestCase(ProposalTest):
 
             current_claims = claims.loc[mask]
             current_claims['PIN'] = current_claims['PIN'] + f"_{idx}"
+            current_claims["ODOS"] = current_claims['DOS']
+            current_claims["DOS"] = x
             if all_claims is None:
                 all_claims = current_claims
             else:
