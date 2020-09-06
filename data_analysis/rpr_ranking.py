@@ -55,6 +55,16 @@ class TestCase(ProposalTest):
         self.test_data = self.test_tools.get_test_data(self.processed_data, self.required_params.code_of_interest)
         self.models.mba.update_filters(self.required_params.filters)
 
+    @overrides
+    def load_data(self, data_file):
+        super().load_data(data_file)
+        self.models.mba.update_filters(self.required_params.filters)
+        data = self.test_tools.load_data(data_file)
+        data["NSPR"] = data.apply(lambda x: x['SPR'] if np.isnan(x['RPR']) else x["RPR"], axis=1).astype(int)
+        data.drop(["SPR", "RPR"], axis=1, inplace=True)
+        self.processed_data = data
+        self.test_data = data
+
     def export_suspicious_claims(self, spr, state, rank):
         '''export patient data for validation'''
         data = self.processed_data

@@ -6,14 +6,11 @@ import pandas as pd
 from tqdm import tqdm
 from utilities.base_proposal_test import ProposalTest
 
-# hip_replacement_codes_of_interest:list = ['49309','49312', '49315',' 49318','49319', '49321', '49324', '49327', '49330', '49333', '49336', '49339', '49342', '49345','49346', '49360', '49363', '49366']
-# knee_arthroscopy_codes_of_interest = ['49557', '49558', '49559', '49560', '49561', '49562', '49563', '49564', '49566']
-# cut_down_hip_replacement = ['49315']
-# cut_down_hip_replacement = ['21214']
-
 class TestCase(ProposalTest):
+    '''extract data for provider ranking tests'''
     @dataclass
     class RequiredParams:
+        '''required params'''
         codes_of_interest: list = field(default_factory=lambda: [49318])
         code_type: str = 'hip'
         output_name: str = '49318_provider_subset_with_states_long'
@@ -28,12 +25,14 @@ class TestCase(ProposalTest):
     test_data = None
 
     def append_to_file(self, file, data):
+        '''append data to file'''
         with open(file, 'a') as f:
             data.to_csv(f, header=f.tell() == 0)
 
     def extract_relevant_claims(self, claims, code_list):
+        '''get claims'''
         dates_of_interest = claims.loc[claims['ITEM'].isin(code_list), 'DOS'].values.tolist()
-        if len(dates_of_interest) == 0:
+        if not dates_of_interest:
             return None
 
         claims['DOS'] = pd.to_datetime(claims['DOS'])
@@ -45,14 +44,15 @@ class TestCase(ProposalTest):
             or x + timedelta(days=self.required_params.after_days) > dt.strptime(f"3112{self.test_year}", "%d%m%Y"):
                 continue
 
-            if len(used_dates) > 0:
-                if x - timedelta(days=self.required_params.before_days) <= used_dates[-1] + timedelta(days=self.required_params.after_days):
+            if used_dates:
+                if x - timedelta(days=self.required_params.before_days) <= used_dates[-1] \
+                    + timedelta(days=self.required_params.after_days):
                     continue
 
             used_dates.append(x)
 
-            mask = [(claims['DOS'] >= x - timedelta(days = self.required_params.before_days)) &
-                    (claims['DOS'] <= x + timedelta(days = self.required_params.after_days))][0]
+            mask = [(claims['DOS'] >= x - timedelta(days=self.required_params.before_days)) &
+                    (claims['DOS'] <= x + timedelta(days=self.required_params.after_days))][0]
 
             current_claims = claims.loc[mask]
             current_claims['PIN'] = current_claims['PIN'] + f"_{idx}"
