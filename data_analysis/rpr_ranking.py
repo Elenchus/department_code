@@ -71,7 +71,7 @@ class TestCase(ProposalTest):
         path = self.logger.get_file_path(f"suspicious_claims_rank_{rank}_state_{state}.csv")
         patient_claims.to_csv(path)
 
-    def write_suspicions_to_file(self, attrs, filename):
+    def write_suspicions_to_file(self, attrs, filename, rank, closest_component):
         '''Save a suspicious model'''
         too_much = []
         too_little = []
@@ -89,7 +89,9 @@ class TestCase(ProposalTest):
             else:
                 ok.append(node)
 
-        with open(filename, 'w+') as f:
+        with open(filename, 'a') as f:
+            f.write(f"Provider rank: {rank}")
+            f.write(f"Closest component: {closest_component}")
             for (section, header) in [(too_much,
                                        'Items in the provider model but not in the reference model\n'),
                                       (too_little,
@@ -175,8 +177,10 @@ class TestCase(ProposalTest):
         state_suspicious_providers = []
         components = self.graphs.graph_component_finder(d)
         suspicious_component_id = [0] * (len(components) + 1)
+        glob_filename = "all_suspicious_providers.csv"
         for idx, s in enumerate(susp):
             unique_items = [str(x) for x in self.graphs.flatten_graph_dict(all_graphs[s])]
+
             transaction_graph, _ = self.models.mba.compare_transaction_to_model(unique_items, d)
             closest_component = mba_funcs.identify_closest_component(components, transaction_graph)
             suspicious_component_id[closest_component] += 1
@@ -221,7 +225,8 @@ class TestCase(ProposalTest):
             #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
             suspicious_filename = self.logger.get_file_path(
                 f"component_{closest_component}_suspicious_provider_{idx}_in_state_{state}.csv")
-            self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
+            self.write_suspicions_to_file(new_edit_attrs, glob_filename, idx, closest_component)
+            # self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
 
         suspicious_provider_list.append(state_suspicious_providers)
         # indent to here for state loop

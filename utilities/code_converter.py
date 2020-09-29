@@ -61,7 +61,7 @@ class CodeConverter:
         '''Returns the description of an MBS item'''
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
-            return f"Item code not in {self.year} dictionary"
+            return f"Item code {code} not in {self.year} dictionary"
 
         return f"{item['Description']}"
 
@@ -69,7 +69,7 @@ class CodeConverter:
         '''Returns the group description of an MBS item'''
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
-            return f"Item code not in {self.year} dictionary"
+            return [f"Item code {code} not in {self.year} dictionary"]
 
 
         cat = item['Category']
@@ -92,7 +92,7 @@ class CodeConverter:
         '''convert mbs item code number to category definition'''
         item = self.mbs_item_dict.get(str(code), None)
         if item is None:
-            return f"Item code not in {self.year} dictionary"
+            return [f"Item code {code} not in {self.year} dictionary"]
 
         return [item['Category'], item['Group'], item['SubGroup']]
 
