@@ -23,7 +23,7 @@ class TestCase(ProposalTest):
         provider_min_support: float = 0.33
         filters: dict = None
         ignore_providers_with_less_than_x_patients: int = 3
-        no_to_save: int = 5
+        no_to_save: int = 10
         save_each_component: bool = True
 
     nspr = ["NSPR"]
@@ -90,8 +90,8 @@ class TestCase(ProposalTest):
                 ok.append(node)
 
         with open(filename, 'a') as f:
-            f.write(f"Provider rank: {rank}")
-            f.write(f"Closest component: {closest_component}")
+            f.write(f"Provider rank: {rank}\n")
+            f.write(f"Closest component: {closest_component}\n")
             for (section, header) in [(too_much,
                                        'Items in the provider model but not in the reference model\n'),
                                       (too_little,
@@ -105,6 +105,8 @@ class TestCase(ProposalTest):
                     line_list = self.code_converter.get_mbs_code_as_line(node)
                     line = ','.join(line_list)
                     f.write(f"{line}\n")
+
+            f.write('\n\n\n\n')
 
     @overrides
     def run_test(self):
@@ -177,7 +179,7 @@ class TestCase(ProposalTest):
         state_suspicious_providers = []
         components = self.graphs.graph_component_finder(d)
         suspicious_component_id = [0] * (len(components) + 1)
-        glob_filename = "all_suspicious_providers.csv"
+        glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")
         for idx, s in enumerate(susp):
             unique_items = [str(x) for x in self.graphs.flatten_graph_dict(all_graphs[s])]
 

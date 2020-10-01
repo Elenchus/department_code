@@ -120,24 +120,23 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     # for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
     # for x in [0.05]:
-        # for item in [49318]:
-    for item in [48918, 49318, 49518]:
+    for item in [49318]:
+    # for item in [48918, 49318, 49518]:
         details = TestDetails(
             notes="",
-            params={
-                    'filters': {
-                        'conviction': {
-                            'value': 1,
-                            'operator': operator.gt
-                            }
-                        },
-                    'min_support': 0.05,
-                    'code_of_interest': item},
-            # params={'code_of_interest': item,
-            #         'output_name': f"{item}_rpr_subset.csv"},
-            # test_data=f"{item}_rpr_subset.csv",
-            test_data=mbs,
-            test_file_name=f'rpr_ranking',
+            # params={
+            #         'filters': {
+            #             'conviction': {
+            #                 'value': 1,
+            #                 'operator': operator.gt
+            #                 }
+            #             },
+            #         'min_support': 0.05,
+            #         'code_of_interest': item},
+            params=None,
+            test_data=f"{item}_rpr_subset.csv",
+            # test_data=mbs,
+            test_file_name=f'confirm_an',
             test_format=TestFormat.CombineYears,
             test_location="data_analysis",
             years=[str(x) for x in range(2010, 2015)]
