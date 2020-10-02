@@ -429,8 +429,8 @@ class GraphUtils():
 
             nodes_to_add.update(missing_nodes)
             if edge_distance_costs:
-                unexpected_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) \
-                                 + sum([test[key][x].get('weight', 1) for x in should_not_have])# confidence
+                missing_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) 
+                unexpected_score += sum([test[key][x].get('weight', 1) for x in should_not_have])# confidence
 
             for k in should_not_have:
                 edit_history[key][k]['color'] = '#D55E00'
