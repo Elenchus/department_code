@@ -110,8 +110,10 @@ class TestCase(ProposalTest):
         data = self.test_data
         rp = self.required_params
         all_suspicion_scores = []
+        all_missing_scores = []
         suspicious_provider_list = []
         suspicious_transaction_list = []
+        missing_transaction_list = []
         sus_items = {}
         state = "Nation"
 
@@ -127,7 +129,9 @@ class TestCase(ProposalTest):
 
         all_graphs = {}
         suspicious_transactions = {}
+        missing_transactions = {}
         suspicion_scores = []
+        missing_scores = []
         edit_graphs = {}
         edit_attrs = {}
         providers = data.loc[data["ITEM"] == rp.code_of_interest, "NSPR"].unique().tolist()
@@ -154,16 +158,20 @@ class TestCase(ProposalTest):
                 sus_item_count = sus_items.get(prov_item, 0) + 1
                 sus_items[prov_item] = sus_item_count
 
-            ged, edit_d, edit_attr = self.graphs.graph_edit_distance(
+            (plus_ged, minus_ged), edit_d, edit_attr = self.graphs.graph_edit_distance(
                 d, provider_model, fee_record)
-            suspicious_transactions[provider] = ged
-            suspicion_scores.append(ged)
+            suspicious_transactions[provider] = plus_ged
+            missing_transactions[provider] = minus_ged
+            suspicion_scores.append(plus_ged)
+            missing_scores.append(minus_ged)
             edit_attrs[provider] = edit_attr
             edit_graphs[provider] = edit_d
             all_graphs[provider] = provider_model
 
         suspicious_transaction_list.append(suspicious_transactions)
+        missing_transaction_list.append(missing_transactions)
         all_suspicion_scores.append(suspicion_scores)
+        all_suspicion_scores.append(missing_scores)
         suspicion_matrix = pd.DataFrame.from_dict(
             suspicious_transactions, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())

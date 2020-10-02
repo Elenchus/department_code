@@ -59,15 +59,16 @@ class GraphUtilsTest(unittest.TestCase):
             7: {6: {}}
         }
         tests = [
-            ({2: {}}, 0),
-            ({3: {}}, 12),
-            ({3: {7: {}}}, 14),
-            ({7: {3: {}}}, 14),
-            ({7: {}, 3: {}}, 13),
-            ({7: {3: {}}, 8: {7: {}}}, 16),
-            ({7: {3: {}}, 4: {7: {}}}, 14),
-            ({1: {}, 2: {}}, 1)
+            ({2: {}}, 0, 0),
+            ({3: {}}, 0, 12),
+            ({3: {7: {}}}, 1, 13),
+            ({7: {3: {}}}, 1, 13),
+            ({7: {}, 3: {}}, 0, 13),
+            ({7: {3: {}}, 8: {7: {}}}, 3, 13),
+            ({7: {3: {}}, 4: {7: {}}}, 2, 12),
+            ({1: {}, 2: {}}, 0, 1)
         ]
-        for test, val in tests:
-            ged, _, _ = self.graphs.graph_edit_distance(model, test, edge_distance_costs=True)
-            assert ged == val
+        for test, plus_val, minus_val in tests:
+            (plus_ged, minus_ged), _, _ = self.graphs.graph_edit_distance(model, test, edge_distance_costs=True)
+            assert plus_ged == plus_val
+            assert minus_ged == minus_val
