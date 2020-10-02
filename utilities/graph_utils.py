@@ -367,7 +367,10 @@ class GraphUtils():
     def graph_edit_distance(self, expected, test, attrs=None, edge_distance_costs=False, split_missing_and_unexpected=True):
         '''get the graph edit distance between two graphs using MBS item fees if available'''
         if not test: # this is used to ignore providers with no associated claims
-            return 0, {}, {}
+            if split_missing_and_unexpected:
+                return (0, 0), {}, {}
+            else:
+                return 0, {}, {}
 
         expected = self.stringify_graph(expected)
         test = self.stringify_graph(test)
@@ -429,7 +432,7 @@ class GraphUtils():
 
             nodes_to_add.update(missing_nodes)
             if edge_distance_costs:
-                missing_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) 
+                missing_score += sum([expected[key][x].get('weight', 1) for x in missing_edges])
                 unexpected_score += sum([test[key][x].get('weight', 1) for x in should_not_have])# confidence
 
             for k in should_not_have:
