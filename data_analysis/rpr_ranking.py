@@ -63,6 +63,7 @@ class TestCase(ProposalTest):
         self.processed_data = data
         self.get_test_data()
 
+
     def export_suspicious_claims(self, spr, state, rank):
         '''export patient data for validation'''
         data = self.processed_data
