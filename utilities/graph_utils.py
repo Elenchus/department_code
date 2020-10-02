@@ -364,7 +364,7 @@ class GraphUtils():
 
         return components
 
-    def graph_edit_distance(self, expected, test, attrs=None, edge_distance_costs=False):
+    def graph_edit_distance(self, expected, test, attrs=None, edge_distance_costs=False, split_missing_and_unexpected=True):
         '''get the graph edit distance between two graphs using MBS item fees if available'''
         if not test: # this is used to ignore providers with no associated claims
             return 0, {}, {}
@@ -372,7 +372,8 @@ class GraphUtils():
         expected = self.stringify_graph(expected)
         test = self.stringify_graph(test)
 
-        ged_score = 0
+        unexpected_score = 0
+        missing_score = 0
         d = {x: {} for x in self.flatten_graph_dict(test)}
         if attrs is None:
             attrs = {x: {} for x in d}
@@ -384,14 +385,14 @@ class GraphUtils():
         for key in keys:
             if key not in possible_nodes:
                 if key in attrs:
-                    ged_score += attrs[key].get('weight', 1) # fee
+                    unexpected_score += attrs[key].get('weight', 1) # fee
                 else:
-                    ged_score += 1
+                    unexpected_score += 1
 
                 if key in test:
                     edges = test[key]
                     if edge_distance_costs:
-                        ged_score += sum([test[key][x].get('weight', 1) for x in edges])# confidence
+                        unexpected_score += sum([test[key][x].get('weight', 1) for x in edges])# confidence
 
                     for k in edges:
                         edit_history[key][k]['color'] = '#D55E00'
@@ -428,7 +429,7 @@ class GraphUtils():
 
             nodes_to_add.update(missing_nodes)
             if edge_distance_costs:
-                ged_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) \
+                unexpected_score += sum([expected[key][x].get('weight', 1) for x in missing_edges]) \
                                  + sum([test[key][x].get('weight', 1) for x in should_not_have])# confidence
 
             for k in should_not_have:
@@ -445,9 +446,9 @@ class GraphUtils():
             ignore_list = []
             node = nodes_to_add.pop()
             if node in attrs:
-                ged_score += attrs[node].get('weight', 1) # fee
+                missing_score += attrs[node].get('weight', 1) # fee
             else:
-                ged_score += 1
+                missing_score += 1
 
             # edit_attrs[node] = {'shape': 'box'}
             edit_attrs[node] = {'shape': 'invhouse'}
@@ -459,7 +460,7 @@ class GraphUtils():
 
             edges = expected[node]
             if edge_distance_costs:
-                ged_score += sum([expected[node][x].get('weight', 1) for x in edges]) # confidence
+                missing_score += sum([expected[node][x].get('weight', 1) for x in edges]) # confidence
 
             d[node] = edges
             edit_history[node] = edges
@@ -470,7 +471,12 @@ class GraphUtils():
                 if new_node not in d and new_node not in ignore_list:
                     nodes_to_add.add(new_node)
 
-        return ged_score, edit_history, edit_attrs
+        if split_missing_and_unexpected:
+            score = (unexpected_score, missing_score)
+        else:
+            score = unexpected_score + missing_score
+
+        return score, edit_history, edit_attrs
 
     def plot_circos_graph(self, graph, attrs, filename):
         '''create a chord diagram from a dictionary'''
