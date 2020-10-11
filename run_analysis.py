@@ -122,27 +122,28 @@ if __name__ == "__main__":
     # for x in [0.05]:
     for item in [49318]:
     # for item in [48918, 49318, 49518]:
-        details = TestDetails(
-            notes="",
-            params={
-                    'filters': {
-                        'conviction': {
-                            'value': 1,
-                            'operator': operator.gt
-                            }
-                        },
-                    'min_support': 0.05,
-                    'code_of_interest': item},
-            # params=None,
-            test_data=f"{item}_rpr_subset.csv",
-            # test_data=mbs,
-            test_file_name=f'rpr_ranking',
-            test_format=TestFormat.CombineYears,
-            test_location="data_analysis",
-            years=[str(x) for x in range(2010, 2015)]
-        )
+        for support in [0.01 * x for x in range(1, 6)]:
+            details = TestDetails(
+                notes="",
+                params={
+                        'filters': {
+                            'conviction': {
+                                'value': 1,
+                                'operator': operator.gt
+                                }
+                            },
+                        'min_support': support,
+                        'code_of_interest': item},
+                # params=None,
+                # test_data=f"{item}_rpr_subset.csv",
+                test_data=mbs,
+                test_file_name=f'rpr_ranking',
+                test_format=TestFormat.CombineYears,
+                test_location="data_analysis",
+                years=[str(x) for x in range(2010, 2015)]
+            )
 
-        start_test(details)
+            start_test(details)
 
     # export_years = [str(x) for x in [2010, 2011, 2012, 2013, 2014]]
     # for filename, code_of_interest in [('shoulder', 48918), ('hip', 49318), ('knee', 49518)]:

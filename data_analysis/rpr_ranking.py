@@ -18,9 +18,9 @@ class TestCase(ProposalTest):
         '''test parameters'''
         code_of_interest: int = 49318
         exclude_multiple_states: bool = False
-        min_support: float = 0.33
+        min_support: float = 0.05
         provider_min_support_count: int = 3
-        provider_min_support: float = 0.33
+        provider_min_support: float = 0.5
         filters: dict = None
         ignore_providers_with_less_than_x_patients: int = 3
         no_to_save: int = 10
@@ -175,72 +175,80 @@ class TestCase(ProposalTest):
 
         suspicious_transaction_list.append(suspicious_transactions)
         missing_transaction_list.append(missing_transactions)
-        all_suspicion_scores.append(suspicion_scores)
-        all_suspicion_scores.append(missing_scores)
+        all_suspicion_scores = suspicion_scores
+        # all_suspicion_scores.append(suspicion_scores)
+        all_missing_scores = missing_scores
+        # all_missing_scores.append(missing_scores)
         suspicion_matrix = pd.DataFrame.from_dict(
             suspicious_transactions, orient='index', columns=['count'])
+        missing_matrix = pd.DataFrame.from_dict(
+            missing_transactions, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         if rp.save_each_component:
             susp = suspicion_matrix.sort_values('count', axis=0, ascending=False).index
+            missed = missing_matrix.sort_values('count', axis=0, ascending=False).index
         else:
             susp = suspicion_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
+            missed = missing_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
 
         state_suspicious_providers = []
         components = self.graphs.graph_component_finder(d)
-        suspicious_component_id = [0] * (len(components) + 1)
         glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")
-        for idx, s in enumerate(susp):
-            unique_items = [str(x) for x in self.graphs.flatten_graph_dict(all_graphs[s])]
+        for results, trans, result_label in ((susp, suspicious_transactions, "Plus"),
+                                             (missed, missing_transactions, "Minus")):
+            suspicious_component_id = [0] * (len(components) + 1)
+            for idx, s in enumerate(results):
+                unique_items = [str(x) for x in self.graphs.flatten_graph_dict(all_graphs[s])]
 
-            transaction_graph, _ = self.models.mba.compare_transaction_to_model(unique_items, d)
-            closest_component = mba_funcs.identify_closest_component(components, transaction_graph)
-            suspicious_component_id[closest_component] += 1
-            if suspicious_component_id[closest_component] > rp.no_to_save:
-                continue
+                transaction_graph, _ = self.models.mba.compare_transaction_to_model(unique_items, d)
+                closest_component = mba_funcs.identify_closest_component(components, transaction_graph)
+                suspicious_component_id[closest_component] += 1
+                if suspicious_component_id[closest_component] > rp.no_to_save:
+                    continue
 
-            self.export_suspicious_claims(s, state, idx)
-            state_suspicious_providers.append(s)
-            self.log(f"Rank {idx} provider {s} has the following RSPs")
-            rsps = data.loc[data['NSPR'] == s, 'SPR_RSP'].unique().tolist()
-            for rsp in rsps:
-                self.log(self.code_converter.convert_rsp_num(rsp))
+                self.export_suspicious_claims(s, state, idx)
+                state_suspicious_providers.append(s)
+                self.log(f"Rank {idx} provider {s} has the following RSPs")
+                rsps = data.loc[data['NSPR'] == s, 'SPR_RSP'].unique().tolist()
+                for rsp in rsps:
+                    self.log(self.code_converter.convert_rsp_num(rsp))
 
-            group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
-                                + f'normal basket ITEM for patients treated by SPR {s} with score ' \
-                                + f'{suspicious_transactions[s]:.2f}'
-            group_graph_name = f"rank_{idx}_{s}_state_{state}_normal_items.png"
-            group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
-            mba_funcs.create_graph(group_graph, group_graph_name,
-                                   group_graph_title, attrs=group_attrs, graph_style='fdp')
-            # self.graphs.create_visnetwork(
-            #     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
+                group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
+                                    + f'normal basket ITEM for patients treated by SPR {s} with score ' \
+                                    + f'{trans[s]:.2f}'
+                group_graph_name = f"{result_label}_rank_{idx}_{s}_state_{state}_normal_items.png"
+                group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
+                mba_funcs.create_graph(group_graph, group_graph_name,
+                                    group_graph_title, attrs=group_attrs, graph_style='fdp')
+                # self.graphs.create_visnetwork(
+                #     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
-            edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
-                                + f'edit history of basket ITEM for patients treated by SPR {s} with score ' \
-                                + f'{suspicious_transactions[s]:.2f}'
-            edit_graph_name = f"rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
-            converted_edit_graph = edit_graphs[s]
-            _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(
-                converted_edit_graph)
+                edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
+                                    + f'edit history of basket ITEM for patients treated by SPR {s} with score ' \
+                                    + f'{trans[s]:.2f}'
+                edit_graph_name = f"{result_label}_rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
+                converted_edit_graph = edit_graphs[s]
+                _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(
+                    converted_edit_graph)
 
-            for key in new_edit_attrs:
-                code = key.split('\n')[-1]
-                if s in edit_attrs:
-                    if code in edit_attrs[s]:
-                        if 'shape' in edit_attrs[s][code]:
-                            new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
+                for key in new_edit_attrs:
+                    code = key.split('\n')[-1]
+                    if s in edit_attrs:
+                        if code in edit_attrs[s]:
+                            if 'shape' in edit_attrs[s][code]:
+                                new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
-            mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
-                                   edit_graph_title, attrs=new_edit_attrs, graph_style='fdp')
-            # self.graphs.create_visnetwork(
-            #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
-            suspicious_filename = self.logger.get_file_path(
-                f"component_{closest_component}_suspicious_provider_{idx}_in_state_{state}.csv")
-            self.write_suspicions_to_file(new_edit_attrs, glob_filename, idx, closest_component)
-            # self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
+                mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
+                                    edit_graph_title, attrs=new_edit_attrs, graph_style='fdp')
+                # self.graphs.create_visnetwork(
+                #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
+                suspicious_filename = self.logger.get_file_path(
+                    f"{result_label}_component_{closest_component}_suspicious_provider_{idx}_in_state_{state}.csv")
+                self.write_suspicions_to_file(new_edit_attrs, glob_filename, idx, closest_component)
+                # self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
 
-        suspicious_provider_list.append(state_suspicious_providers)
-        # indent to here for state loop
+            suspicious_provider_list.append(state_suspicious_providers)
+            # indent to here for state loop
 
         sus_item_keys = list(sus_items.keys())
         sus_item_vals = [sus_items[x] for x in sus_item_keys]
@@ -249,16 +257,25 @@ class TestCase(ProposalTest):
                                                    [sus_item_vals],
                                                    ['Count'])
 
-        self.graphs.create_boxplot_group(all_suspicion_scores,
-                                         [rp.code_of_interest],
-                                         f"Provider suspicion scores per region for item {rp.code_of_interest}",
-                                         "sus_boxes",
-                                         ["Item code", "Score"])
+        # self.graphs.create_boxplot_group(all_suspicion_scores,
+        #                                  [rp.code_of_interest],
+        #                                  f"Provider suspicion scores per region for item {rp.code_of_interest}",
+        #                                  "sus_boxes",
+        #                                  ["Item code", "Score"])
         with open(self.logger.get_file_path("suspicious_providers.pkl"), 'wb') as f:
             pickle.dump(suspicious_provider_list, f)
 
+        scatter = np.asarray([all_suspicion_scores, all_missing_scores]).transpose()
+        self.graphs.create_scatter_plot(scatter,
+                                        'b',
+                                        "Ratio",
+                                        "Ratio",
+                                        None,
+                                        ["Unexpected score", "Missing claims score"])
+
         # estimate costs - only written for nation, won't work for loop
-        ssdf = pd.DataFrame(all_suspicion_scores[0], columns=["Score"])
+        # ssdf = pd.DataFrame(all_suspicion_scores[0], columns=["Score"])
+        ssdf = pd.DataFrame(all_suspicion_scores, columns=["Score"])
         top_scores = ssdf[stats.zscore(ssdf["Score"]) > 2]
         total_top_scores = top_scores["Score"].sum()
         mean_score = ssdf["Score"].mean()

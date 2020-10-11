@@ -220,15 +220,12 @@ class GraphUtils():
         aplot.title(title, cex=0.8)
         rDevices.dev_off()
 
-    def create_scatter_plot(self, data, labels, title, filename, legend_names=None):
+    def create_scatter_plot(self, data, labels, title, filename, legend_names=None, axis_labels=None):
         '''creates and saves a scatter plot'''
         fig = plt.figure()
         ax = fig.add_subplot(111)
         scatter = ax.scatter(data[:, 0], data[:, 1], c=labels)
-        if legend_names is None:
-            legend = ax.legend(*scatter.legend_elements(), \
-                        loc="upper left", title="Cluster no.", bbox_to_anchor=(1, 0.5))
-        else:
+        if legend_names is not None:
             handles, _ = scatter.legend_elements(num=None)
             legend = ax.legend(handles,
                                legend_names,
@@ -236,11 +233,18 @@ class GraphUtils():
                                title="Legend",
                                bbox_to_anchor=(1, 0.5))
 
+        if axis_labels is not None:
+            ax.set_xlabel(axis_labels[0])
+            ax.set_ylabel(axis_labels[1])
+
         ttl = fig.suptitle(title)
 
         filename = self.logger.output_path / filename
 
-        self.save_plt_fig(fig, filename, [ttl, legend])
+        if legend_names is None:
+            self.save_plt_fig(fig, filename, [ttl])
+        else:
+            self.save_plt_fig(fig, filename, [ttl, legend])
 
     def create_visnetwork(self, graph, name, title, attrs=None):
         '''Create and save a visnetwork graph from a graph dictionary'''
