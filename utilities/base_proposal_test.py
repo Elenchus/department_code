@@ -29,14 +29,15 @@ class RequiredParams:
     def __repr__(self):
         return f"RequiredParams({str(self.__dict__)})"
 
-    def __hash__(self):
+    def hash(self):
+        '''return a hash key based on the keys and values'''
         if self.__dict__ is None:
             key = hashlib.md5('None'.encode('utf-8')).hexdigest()
 
             return int(key, 16)
 
-        json = dumps(self.__dict__)
-        key = hashlib.md5(json.encode('utf-8')).hexdigest()
+        dump = str(self.__dict__)
+        key = hashlib.md5(dump.encode('utf-8')).hexdigest()
 
         return int(key, 16)
 
@@ -86,6 +87,7 @@ class ProposalTest(ABC):
         self.start_year = year[0]
         self.end_year = year[-1]
 
+        self.required_params = self.RequiredParams() # for IDE compatibility
         if params is None:
             rp = self.RequiredParams().__dict__
             self.required_params = RequiredParams({}, rp)
@@ -96,6 +98,9 @@ class ProposalTest(ABC):
         else:
             raise AttributeError(f"params must be of type None or dict, not {type(params)}")
 
+        self.log(f"Parameter hash: {self.required_params.hash()}")
+        self.log(str(self.required_params))
+
     def log(self, text):
         '''Wrapper for quick logging and printing'''
         if self.logger is None:
@@ -103,9 +108,11 @@ class ProposalTest(ABC):
         else:
             self.logger.log(text)
 
-    def pickle_data(self, data, filename):
+    def pickle_data(self, data, filename, save_to_data_folder=False):
         '''Wrapper for pickle'''
-        if self.logger is not None:
+        if save_to_data_folder:
+            filename = self.get_project_root() / f'data/{filename}'
+        elif self.logger is not None:
             filename = self.logger.get_file_path(filename)
 
         with open(filename, 'wb') as f:

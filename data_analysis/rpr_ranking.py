@@ -63,7 +63,6 @@ class TestCase(ProposalTest):
         self.processed_data = data
         self.get_test_data()
 
-
     def export_suspicious_claims(self, spr, state, rank):
         '''export patient data for validation'''
         data = self.processed_data
@@ -191,6 +190,7 @@ class TestCase(ProposalTest):
             susp = suspicion_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
             missed = missing_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
 
+        self.pickle_data(susp, f"susp_{self.required_params.hash()}")
         state_suspicious_providers = []
         components = self.graphs.graph_component_finder(d)
         glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")
@@ -239,7 +239,7 @@ class TestCase(ProposalTest):
                                 new_edit_attrs[key]['shape'] = edit_attrs[s][code]['shape']
 
                 mba_funcs.create_graph(converted_edit_graph, edit_graph_name,
-                                    edit_graph_title, attrs=new_edit_attrs, graph_style='fdp')
+                                       edit_graph_title, attrs=new_edit_attrs, graph_style='fdp')
                 # self.graphs.create_visnetwork(
                 #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
                 suspicious_filename = self.logger.get_file_path(

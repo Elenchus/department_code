@@ -40,10 +40,8 @@ def run_combined_test(test_name, test_details):
         test_file = import_module(f"{test_details.test_location}.{test_details.test_file_name}")
         test_case_class = getattr(test_file, "TestCase")
         test_case = test_case_class(logger, test_details.params, test_details.years)
-        test_details.params = test_case.required_params
 
         logger.log(test_details.notes)
-        logger.log(str(test_details.params))
         if isinstance(test_details.test_data, file_utils.DataSource):
             data = file_utils.combine_10p_data(logger,
                                                test_details.test_data,
@@ -65,10 +63,8 @@ def run_iterative_test(test_name, test_details):
         test_file = __import__(f"{test_details.test_location}.{test_details.test_file_name}",
                                fromlist=['TestCase'])
         test_case = test_file.TestCase(logger, test_details.params, test_details.years)
-        test_details.params = test_case.required_params
 
         logger.log(test_details.notes)
-        logger.log(str(test_details.params))
         for year in test_details.years:
             data = file_utils.combine_10p_data(logger,
                                                test_details.test_data,
@@ -119,32 +115,33 @@ def start_test(test_details, additional_folder_name_part=None):
 
 if __name__ == "__main__":
     # for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
-    # for x in [0.05]:
     for item in [49318]:
     # for item in [48918, 49318, 49518]:
         for support in [0.01 * x for x in range(1, 6)]:
-            details = TestDetails(
-                notes="",
-                # params={
-                #         'filters': {
-                #             'conviction': {
-                #                 'value': 1,
-                #                 'operator': operator.gt
-                #                 }
-                #             },
-                #         'min_support': support,
-                #         'code_of_interest': item},
-                # params=None,
-                params={'x': 2},
-                test_data=f"{item}_rpr_subset.csv",
-                # test_data=mbs,
-                test_file_name=f'test',
-                test_format=TestFormat.CombineYears,
-                test_location="data_analysis",
-                years=[str(x) for x in range(2010, 2015)]
-            )
+            for prov_support in [1/3, 1/2]:
+                for data_loc in [mbs, f"{item}_rpr_subset.csv"]:
+                    details = TestDetails(
+                        notes="",
+                        params={
+                                'filters': {
+                                    'conviction': {
+                                        'value': 1,
+                                        'operator': operator.gt
+                                        }
+                                    },
+                                'min_support': support,
+                                'provider_min_support': prov_support,
+                                'code_of_interest': item},
+                        # params=None,
+                        test_data=data_loc,
+                        # test_data=mbs,
+                        test_file_name=f'rpr_ranking',
+                        test_format=TestFormat.CombineYears,
+                        test_location="data_analysis",
+                        years=[str(x) for x in range(2010, 2015)]
+                    )
 
-            start_test(details)
+                    start_test(details)
 
     # export_years = [str(x) for x in [2010, 2011, 2012, 2013, 2014]]
     # for filename, code_of_interest in [('shoulder', 48918), ('hip', 49318), ('knee', 49518)]:
