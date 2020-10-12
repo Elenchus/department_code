@@ -1,5 +1,6 @@
 '''abstract class for data analysis'''
 from os.path import isfile
+import hashlib
 import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -12,28 +13,33 @@ from utilities.code_converter import CodeConverter
 class RequiredParams:
     '''Combines parameters from run_analysis and the defaults in the test case'''
     def __init__(self, d, rp):
-        for k, v in d.items():
+        for k in d:
             if k not in rp:
                 raise KeyError(f'Invalid key {k} in params. Required keys are {rp.keys()}')
 
+        for k, v in rp.items():
+            if k in d:
+                v = d[k]
+
             setattr(self, k, v)
             self.__dict__[k] = v
-
-        for k, v in rp.items():
-            if not hasattr(self, k):
-                setattr(self, k, v)
-                self.__dict__[k] = v
 
     def __repr__(self):
         return f"RequiredParams({str(self.__dict__)})"
 
     def __hash__(self):
-        d = self.__dict__
-        for key in d:
-            assert isinstance(key, str)
+        # loosely based on the dataclasses hash method
+        if self.__dict__ is None:
+            key = hashlib.md5('None'.encode('utf-8')).hexdigest()
 
-        json = dumps
-        return hash(json)
+            return int(key, 16)
+
+        fields = [f"self.{f}" for f in self.__dict__]
+        sttr = ",".join(fields)
+        _tuple = f"({sttr},)"
+        key = hashlib.md5(_tuple.encode('utf-8')).hexdigest()
+
+        return int(key, 16)
 
 class ProposalTest(ABC):
     '''Run an analysis through the framework'''
@@ -82,19 +88,12 @@ class ProposalTest(ABC):
         self.end_year = year[-1]
 
         if params is None:
-            if not isinstance(self.required_params, dict): # deprecate this later
-                self.required_params = self.RequiredParams()
+            rp = self.RequiredParams().__dict__
+            self.required_params = RequiredParams({}, rp)
         elif isinstance(params, dict):
-            if isinstance(self.required_params, dict): # deprecate this later
-                for k, v in params.items():
-                    if k not in self.required_params:
-                        raise KeyError(f'Invalid key {k} in params. Required keys are {self.required_params.keys()}')
-
-                    self.required_params[k] = v
-            else:
-                rp = self.RequiredParams().__dict__
-                param_class = RequiredParams(params, rp)
-                self.required_params = param_class
+            rp = self.RequiredParams().__dict__
+            param_class = RequiredParams(params, rp)
+            self.required_params = param_class
         else:
             raise AttributeError(f"params must be of type None or dict, not {type(params)}")
 
