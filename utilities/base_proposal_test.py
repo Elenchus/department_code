@@ -3,9 +3,9 @@ from os.path import isfile
 import hashlib
 import pickle
 from abc import ABC, abstractmethod
+from json import dumps
 from pathlib import Path
 import pandas as pd
-from json import dumps
 from utilities.graph_utils import GraphUtils
 from utilities.model_utils import ModelUtils
 from utilities.code_converter import CodeConverter
@@ -14,10 +14,12 @@ class RequiredParams:
     '''Combines parameters from run_analysis and the defaults in the test case'''
     def __init__(self, d, rp):
         for k in d:
+            assert isinstance(k, str)
             if k not in rp:
                 raise KeyError(f'Invalid key {k} in params. Required keys are {rp.keys()}')
 
         for k, v in rp.items():
+            assert isinstance(k, str)
             if k in d:
                 v = d[k]
 
@@ -28,16 +30,13 @@ class RequiredParams:
         return f"RequiredParams({str(self.__dict__)})"
 
     def __hash__(self):
-        # loosely based on the dataclasses hash method
         if self.__dict__ is None:
             key = hashlib.md5('None'.encode('utf-8')).hexdigest()
 
             return int(key, 16)
 
-        fields = [f"self.{f}" for f in self.__dict__]
-        sttr = ",".join(fields)
-        _tuple = f"({sttr},)"
-        key = hashlib.md5(_tuple.encode('utf-8')).hexdigest()
+        json = dumps(self.__dict__)
+        key = hashlib.md5(json.encode('utf-8')).hexdigest()
 
         return int(key, 16)
 
