@@ -194,8 +194,8 @@ class TestCase(ProposalTest):
         state_suspicious_providers = []
         components = self.graphs.graph_component_finder(d)
         glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")
-        for results, trans, result_label in ((susp, suspicious_transactions, "Plus"),
-                                             (missed, missing_transactions, "Minus")):
+        for results, trans, result_label in ((susp, suspicious_transactions, "Plus")):
+                                            #  (missed, missing_transactions, "Minus")):
             suspicious_component_id = [0] * (len(components) + 1)
             for idx, s in enumerate(results):
                 unique_items = [str(x) for x in self.graphs.flatten_graph_dict(all_graphs[s])]

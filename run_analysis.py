@@ -125,19 +125,19 @@ if __name__ == "__main__":
         for support in [0.01 * x for x in range(1, 6)]:
             details = TestDetails(
                 notes="",
-                params={
-                        'filters': {
-                            'conviction': {
-                                'value': 1,
-                                'operator': operator.gt
-                                }
-                            },
-                        'min_support': support,
-                        'code_of_interest': item},
-                # params=None,
-                # test_data=f"{item}_rpr_subset.csv",
-                test_data=mbs,
-                test_file_name=f'rpr_ranking',
+                # params={
+                #         'filters': {
+                #             'conviction': {
+                #                 'value': 1,
+                #                 'operator': operator.gt
+                #                 }
+                #             },
+                #         'min_support': support,
+                #         'code_of_interest': item},
+                params=None,
+                test_data=f"{item}_rpr_subset.csv",
+                # test_data=mbs,
+                test_file_name=f'test',
                 test_format=TestFormat.CombineYears,
                 test_location="data_analysis",
                 years=[str(x) for x in range(2010, 2015)]

@@ -4,6 +4,7 @@ import pickle
 from abc import ABC, abstractmethod
 from pathlib import Path
 import pandas as pd
+from json import dumps
 from utilities.graph_utils import GraphUtils
 from utilities.model_utils import ModelUtils
 from utilities.code_converter import CodeConverter
@@ -25,6 +26,14 @@ class RequiredParams:
 
     def __repr__(self):
         return f"RequiredParams({str(self.__dict__)})"
+
+    def __hash__(self):
+        d = self.__dict__
+        for key in d:
+            assert isinstance(key, str)
+
+        json = dumps
+        return hash(json)
 
 class ProposalTest(ABC):
     '''Run an analysis through the framework'''
