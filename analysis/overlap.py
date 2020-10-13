@@ -52,7 +52,7 @@ class TestCase(ProposalTest):
         self.log(f"{len(all_providers)} providers total")
         common_providers = list(all_providers.intersection(*sets))
         self.log(f"{len(common_providers)} common providers")
-        output_file = "common_providers.csv"
+        output_file = self.logger.get_file_path("common_providers.csv")
         with open(output_file, 'w+') as f:
             for prov in common_providers:
                 f.write(f"{prov}\n")
