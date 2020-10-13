@@ -39,7 +39,7 @@ def run_combined_test(test_name, test_details):
     with Logger(test_name, '/mnt/c/data') as logger:
         test_file = import_module(f"{test_details.test_location}.{test_details.test_file_name}")
         test_case_class = getattr(test_file, "TestCase")
-        test_case = test_case_class(logger, test_details.params, test_details.years)
+        test_case = test_case_class(logger, test_details, test_details.years)
 
         logger.log(test_details.notes)
         if isinstance(test_details.test_data, file_utils.DataSource):
@@ -119,19 +119,20 @@ if __name__ == "__main__":
     # # for item in [48918, 49318, 49518]:
     #     for support in [0.01 * x for x in range(1, 6)]:
     #         for prov_support in [1/3, 1/2]:
-    #             for data_loc in [mbs, f"{item}_rpr_subset.csv"]:
+    #             for data_loc in [mbs]:
+                # for data_loc in [mbs, f"{item}_rpr_subset.csv"]:
     details = TestDetails(
         notes="",
-    #     params={
-    #             'filters': {
-    #                 'conviction': {
-    #                     'value': 1,
-    #                     'operator': operator.gt
-    #                     }
-    #                 },
-    #             'min_support': support,
-    #             'provider_min_support': prov_support,
-    #             'code_of_interest': item},
+        # params={
+        #         'filters': {
+        #             'conviction': {
+        #                 'value': 1,
+        #                 'operator': operator.gt
+        #                 }
+        #             },
+        #         'min_support': support,
+        #         'provider_min_support': prov_support,
+        #         'code_of_interest': item},
         params=None,
         test_data="susp",
         # test_data=mbs,

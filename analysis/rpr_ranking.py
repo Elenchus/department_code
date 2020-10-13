@@ -190,7 +190,7 @@ class TestCase(ProposalTest):
             susp = suspicion_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
             missed = missing_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
 
-        self.pickle_data(susp, f"susp_{self.required_params.hash()}", save_to_data_folder=True)
+        self.pickle_data(susp, f"susp_{rp.source_data}_{self.test_hash}.pkl", save_to_data_folder=True)
         state_suspicious_providers = []
         components = self.graphs.graph_component_finder(d)
         glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")

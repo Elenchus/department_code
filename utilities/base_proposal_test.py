@@ -29,18 +29,6 @@ class RequiredParams:
     def __repr__(self):
         return f"RequiredParams({str(self.__dict__)})"
 
-    def hash(self):
-        '''return a hash key based on the keys and values'''
-        if self.__dict__ is None:
-            key = hashlib.md5('None'.encode('utf-8')).hexdigest()
-
-            return int(key, 16)
-
-        dump = str(self.__dict__)
-        key = hashlib.md5(dump.encode('utf-8')).hexdigest()
-
-        return int(key, 16)
-
 class ProposalTest(ABC):
     '''Run an analysis through the framework'''
     @property
@@ -48,7 +36,8 @@ class ProposalTest(ABC):
     # @abstractmethod
     class RequiredParams:
         '''Parameters required for the analysis'''
-        pass # pylint: disable=W0107
+        # pass # pylint: disable=W0107
+        source_data: str = "MBS"
 
     @property
     @classmethod
@@ -78,7 +67,21 @@ class ProposalTest(ABC):
         '''Stores test data'''
         raise NotImplementedError
 
-    def __init__(self, logger, params, year):
+    def __init__(self, logger, details, year):
+        def _hash(obj):
+            '''return a hash key based on the keys and values'''
+            if obj.__dict__ is None:
+                key = hashlib.md5('None'.encode('utf-8')).hexdigest()
+
+                return int(key, 16)
+
+            dump = str(obj.__dict__)
+            key = hashlib.md5(dump.encode('utf-8')).hexdigest()
+
+            return int(key, 16)
+
+        self.test_hash = _hash(details)
+        params = details.params
         self.logger = logger
         self.code_converter = CodeConverter(year[-1])
         self.graphs = GraphUtils(logger)
@@ -87,18 +90,18 @@ class ProposalTest(ABC):
         self.start_year = year[0]
         self.end_year = year[-1]
 
-        self.required_params = self.RequiredParams() # for IDE compatibility
+        self.required_params = self.RequiredParams()
+        rp = self.RequiredParams().__dict__
+        rp["source_data"] = str(details.test_data)
         if params is None:
-            rp = self.RequiredParams().__dict__
             self.required_params = RequiredParams({}, rp)
         elif isinstance(params, dict):
-            rp = self.RequiredParams().__dict__
             param_class = RequiredParams(params, rp)
             self.required_params = param_class
         else:
             raise AttributeError(f"params must be of type None or dict, not {type(params)}")
 
-        self.log(f"Parameter hash: {self.required_params.hash()}")
+        self.log(f"Test details hash: {self.test_hash}")
         self.log(str(self.required_params))
 
     def log(self, text):

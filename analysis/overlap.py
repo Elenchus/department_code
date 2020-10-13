@@ -1,10 +1,10 @@
 # pylint: disable=W0107 ## flags class pass as not required
 '''Template for data analyses'''
 from dataclasses import dataclass
+from glob import glob
 import pickle
 import pandas as pd
 from overrides import overrides
-from glob import glob
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
@@ -41,6 +41,7 @@ class TestCase(ProposalTest):
                 df = pickle.load(g)
                 ars.append(df[:self.required_params.top_x])
 
+        assert ars
         self.test_data = ars
 
     @overrides
