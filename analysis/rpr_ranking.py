@@ -7,8 +7,8 @@ import pandas as pd
 from overrides import overrides
 from scipy import stats
 from tqdm import tqdm
-from data_analysis.basic_mba import BasicMba
-from data_analysis.test_tools import TestTools
+from analysis.basic_mba import BasicMba
+from analysis.test_tools import TestTools
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):
@@ -190,11 +190,11 @@ class TestCase(ProposalTest):
             susp = suspicion_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
             missed = missing_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
 
-        self.pickle_data(susp, f"susp_{self.required_params.hash()}")
+        self.pickle_data(susp, f"susp_{self.required_params.hash()}", save_to_data_folder=True)
         state_suspicious_providers = []
         components = self.graphs.graph_component_finder(d)
         glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")
-        for results, trans, result_label in ((susp, suspicious_transactions, "Plus")):
+        for results, trans, result_label in [(susp, suspicious_transactions, "Plus")]:
                                             #  (missed, missing_transactions, "Minus")):
             suspicious_component_id = [0] * (len(components) + 1)
             for idx, s in enumerate(results):

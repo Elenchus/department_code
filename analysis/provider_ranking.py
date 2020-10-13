@@ -6,8 +6,8 @@ import pandas as pd
 from overrides import overrides
 from scipy import stats
 from tqdm import tqdm
-from data_analysis.basic_mba import BasicMba
-from data_analysis.test_tools import TestTools
+from analysis.basic_mba import BasicMba
+from analysis.test_tools import TestTools
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):

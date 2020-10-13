@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from overrides import overrides
-from data_analysis.test_tools import TestTools
+from analysis.test_tools import TestTools
 from utilities.base_proposal_test import ProposalTest
 
 class TestCase(ProposalTest):

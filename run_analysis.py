@@ -115,33 +115,33 @@ def start_test(test_details, additional_folder_name_part=None):
 
 if __name__ == "__main__":
     # for x in [0.2, 0.33, 0.4, 0.6, 0.8]:
-    for item in [49318]:
-    # for item in [48918, 49318, 49518]:
-        for support in [0.01 * x for x in range(1, 6)]:
-            for prov_support in [1/3, 1/2]:
-                for data_loc in [mbs, f"{item}_rpr_subset.csv"]:
-                    details = TestDetails(
-                        notes="",
-                        params={
-                                'filters': {
-                                    'conviction': {
-                                        'value': 1,
-                                        'operator': operator.gt
-                                        }
-                                    },
-                                'min_support': support,
-                                'provider_min_support': prov_support,
-                                'code_of_interest': item},
-                        # params=None,
-                        test_data=data_loc,
-                        # test_data=mbs,
-                        test_file_name=f'rpr_ranking',
-                        test_format=TestFormat.CombineYears,
-                        test_location="data_analysis",
-                        years=[str(x) for x in range(2010, 2015)]
-                    )
+    # for item in [49318]:
+    # # for item in [48918, 49318, 49518]:
+    #     for support in [0.01 * x for x in range(1, 6)]:
+    #         for prov_support in [1/3, 1/2]:
+    #             for data_loc in [mbs, f"{item}_rpr_subset.csv"]:
+    details = TestDetails(
+        notes="",
+    #     params={
+    #             'filters': {
+    #                 'conviction': {
+    #                     'value': 1,
+    #                     'operator': operator.gt
+    #                     }
+    #                 },
+    #             'min_support': support,
+    #             'provider_min_support': prov_support,
+    #             'code_of_interest': item},
+        params=None,
+        test_data="susp",
+        # test_data=mbs,
+        test_file_name=f'overlap',
+        test_format=TestFormat.CombineYears,
+        test_location="analysis",
+        years=[str(x) for x in range(2010, 2015)]
+    )
 
-                    start_test(details)
+    start_test(details)
 
     # export_years = [str(x) for x in [2010, 2011, 2012, 2013, 2014]]
     # for filename, code_of_interest in [('shoulder', 48918), ('hip', 49318), ('knee', 49518)]:
@@ -155,7 +155,7 @@ if __name__ == "__main__":
     #         test_data=mbs,
     #         test_file_name=f'export_claims',
     #         test_format=TestFormat.CombineYears,
-    #         test_location="data_analysis",
+    #         test_location="analysis",
     #         years=export_years
     #     )
 
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     #     test_data=mbs,
     #     test_file_name=f'rpr_ranking',
     #     test_format=TestFormat.CombineYears,
-    #     test_location="data_analysis",
+    #     test_location="analysis",
     #     years=[str(x) for x in range(2010, 2015)]
     # )
 

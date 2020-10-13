@@ -5,7 +5,7 @@ from datetime import timedelta
 import pandas as pd
 from tqdm import tqdm
 from utilities.base_proposal_test import ProposalTest
-from data_analysis.test_tools import TestTools
+from analysis.test_tools import TestTools
 
 class TestCase(ProposalTest):
     '''extract data for provider ranking tests'''
