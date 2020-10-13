@@ -184,15 +184,25 @@ class TestCase(ProposalTest):
             missing_transactions, orient='index', columns=['count'])
         self.log(suspicion_matrix.describe())
         if rp.save_each_component:
-            susp = suspicion_matrix.sort_values('count', axis=0, ascending=False).index
-            missed = missing_matrix.sort_values('count', axis=0, ascending=False).index
+            susp = suspicion_matrix.sort_values('count', axis=0, ascending=False).index.tolist()
+            missed = missing_matrix.sort_values('count', axis=0, ascending=False).index.tolist()
         else:
             susp = suspicion_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
             missed = missing_matrix.nlargest(rp.no_to_save, 'count').index.tolist()
 
-        self.pickle_data(susp, f"susp_{rp.source_data}_{self.test_hash}.pkl", save_to_data_folder=True)
         state_suspicious_providers = []
         components = self.graphs.graph_component_finder(d)
+        component_label_converter = {}
+        component_labels = []
+
+        for idx, component in enumerate(components):
+            if rp.code_of_interest in component or str(rp.code_of_interest) in component:
+                component_label_converter[idx] = "Surgeon"
+            elif 21214 in component or "21214" in component:
+                component_label_converter[idx] = "Anaesthetist"
+            else:
+                component_label_converter[idx] = "Other"
+
         glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")
         for results, trans, result_label in [(susp, suspicious_transactions, "Plus")]:
                                             #  (missed, missing_transactions, "Minus")):
@@ -202,6 +212,7 @@ class TestCase(ProposalTest):
 
                 transaction_graph, _ = self.models.mba.compare_transaction_to_model(unique_items, d)
                 closest_component = mba_funcs.identify_closest_component(components, transaction_graph)
+                component_labels.append(closest_component)
                 suspicious_component_id[closest_component] += 1
                 if suspicious_component_id[closest_component] > rp.no_to_save:
                     continue
@@ -250,6 +261,8 @@ class TestCase(ProposalTest):
             suspicious_provider_list.append(state_suspicious_providers)
             # indent to here for state loop
 
+        overlap_data = pd.DataFrame([susp, component_labels], columns=["Providers", "Components"])
+        self.pickle_data(overlap_data, f"susp_{rp.source_data}_{self.test_hash}.pkl", save_to_data_folder=True)
         sus_item_keys = list(sus_items.keys())
         sus_item_vals = [sus_items[x] for x in sus_item_keys]
         self.code_converter.write_mbs_codes_to_csv(sus_item_keys,
