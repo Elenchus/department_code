@@ -134,7 +134,7 @@ if __name__ == "__main__":
         #         'provider_min_support': prov_support,
         #         'code_of_interest': item},
         params=None,
-        test_data="susp",
+        test_data="susp_493",
         # test_data=mbs,
         test_file_name=f'overlap',
         test_format=TestFormat.CombineYears,

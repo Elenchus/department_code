@@ -12,7 +12,7 @@ class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
         '''Parameters required for the analysis'''
-        top_x: int = 20
+        top_x: int = 10
 
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
@@ -35,6 +35,7 @@ class TestCase(ProposalTest):
         self.processed_data = pd.DataFrame()
         data_folder = self.get_project_root() / "data"
         files = glob(f"{data_folder}/{data_file}*.pkl")
+        self.log(f"{len(files)} files examined")
         ars = []
         for f in files:
             with open(f, 'rb') as g:
@@ -52,7 +53,8 @@ class TestCase(ProposalTest):
         self.log(f"{len(all_providers)} providers total")
         common_providers = list(all_providers.intersection(*sets))
         self.log(f"{len(common_providers)} common providers")
-        output_file = self.logger.get_file_path("common_providers.csv")
-        with open(output_file, 'w+') as f:
-            for prov in common_providers:
-                f.write(f"{prov}\n")
+        for l in ("all_providers", "common_providers"):
+            output_file = self.logger.get_file_path(f"{l}.csv")
+            with open(output_file, 'w+') as f:
+                for prov in eval(l):
+                    f.write(f"{prov}\n")
