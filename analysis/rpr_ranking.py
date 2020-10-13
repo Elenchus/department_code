@@ -203,6 +203,8 @@ class TestCase(ProposalTest):
             else:
                 component_label_converter[idx] = "Other"
 
+        component_label_converter[len(component_label_converter)] = "None"
+
         glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")
         for results, trans, result_label in [(susp, suspicious_transactions, "Plus")]:
                                             #  (missed, missing_transactions, "Minus")):
@@ -212,7 +214,7 @@ class TestCase(ProposalTest):
 
                 transaction_graph, _ = self.models.mba.compare_transaction_to_model(unique_items, d)
                 closest_component = mba_funcs.identify_closest_component(components, transaction_graph)
-                component_labels.append(closest_component)
+                component_labels.append(component_label_converter[closest_component])
                 suspicious_component_id[closest_component] += 1
                 if suspicious_component_id[closest_component] > rp.no_to_save:
                     continue

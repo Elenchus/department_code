@@ -12,7 +12,7 @@ class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
         '''Parameters required for the analysis'''
-        top_x: int = 10
+        top_x: int = 20
 
     FINAL_COLS = []
     INITIAL_COLS = FINAL_COLS
