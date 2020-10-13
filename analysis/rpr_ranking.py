@@ -261,7 +261,8 @@ class TestCase(ProposalTest):
             suspicious_provider_list.append(state_suspicious_providers)
             # indent to here for state loop
 
-        overlap_data = pd.DataFrame([susp, component_labels], columns=["Providers", "Components"])
+        overlap_data = pd.DataFrame([susp, component_labels]).transpose()
+        overlap_data.columns=["Providers", "Components"]
         self.pickle_data(overlap_data, f"susp_{rp.source_data}_{self.test_hash}.pkl", save_to_data_folder=True)
         sus_item_keys = list(sus_items.keys())
         sus_item_vals = [sus_items[x] for x in sus_item_keys]
