@@ -23,8 +23,8 @@ class TestCase(ProposalTest):
         provider_min_support: float = 0.5
         filters: dict = None
         ignore_providers_with_less_than_x_patients: int = 3
-        no_to_save: int = 10
-        save_each_component: bool = True
+        no_to_save: int = 50
+        save_each_component: bool = False
 
     nspr = ["NSPR"]
     core_cols = ["PIN", "ITEM", "DOS", "SPR_RSP"]
@@ -194,6 +194,8 @@ class TestCase(ProposalTest):
         components = self.graphs.graph_component_finder(d)
         component_label_converter = {}
         component_labels = []
+        ranks = []
+        final_susp = []
 
         for idx, component in enumerate(components):
             if rp.code_of_interest in component or str(rp.code_of_interest) in component:
@@ -203,9 +205,13 @@ class TestCase(ProposalTest):
             else:
                 component_label_converter[idx] = "Other"
 
-        component_label_converter[len(component_label_converter)] = "None"
+        component_label_converter[len(component_label_converter)] = None
+
+        self.log("Components:")
+        self.log(component_label_converter)
 
         glob_filename = self.logger.get_file_path("all_suspicious_providers.csv")
+        skipped_none = 0
         for results, trans, result_label in [(susp, suspicious_transactions, "Plus")]:
                                             #  (missed, missing_transactions, "Minus")):
             suspicious_component_id = [0] * (len(components) + 1)
@@ -214,32 +220,40 @@ class TestCase(ProposalTest):
 
                 transaction_graph, _ = self.models.mba.compare_transaction_to_model(unique_items, d)
                 closest_component = mba_funcs.identify_closest_component(components, transaction_graph)
-                component_labels.append(component_label_converter[closest_component])
+                closest_component_label = component_label_converter[closest_component]
                 suspicious_component_id[closest_component] += 1
+                if closest_component_label is None:
+                    skipped_none += 1
+                    continue
+
                 if suspicious_component_id[closest_component] > rp.no_to_save:
                     continue
 
-                self.export_suspicious_claims(s, state, idx)
+                component_labels.append(closest_component_label)
+                ranks.append(idx - skipped_none)
+                final_susp.append(s)
+
+                self.export_suspicious_claims(s, state, idx - skipped_none)
                 state_suspicious_providers.append(s)
-                self.log(f"Rank {idx} provider {s} has the following RSPs")
+                self.log(f"Rank {idx - skipped_none} {closest_component_label} provider {s} has the following RSPs")
                 rsps = data.loc[data['NSPR'] == s, 'SPR_RSP'].unique().tolist()
                 for rsp in rsps:
                     self.log(self.code_converter.convert_rsp_num(rsp))
 
-                group_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
+                group_graph_title = f'Rank {idx - skipped_none} {closest_component_label} in {self.code_converter.convert_state_num(state)}: ' \
                                     + f'normal basket ITEM for patients treated by SPR {s} with score ' \
                                     + f'{trans[s]:.2f}'
-                group_graph_name = f"{result_label}_rank_{idx}_{s}_state_{state}_normal_items.png"
+                group_graph_name = f"{result_label}_rank_{idx - skipped_none}_{s}_state_{state}_normal_items.png"
                 group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
                 mba_funcs.create_graph(group_graph, group_graph_name,
-                                    group_graph_title, attrs=group_attrs, graph_style='fdp')
+                                       group_graph_title, attrs=group_attrs, graph_style='fdp')
                 # self.graphs.create_visnetwork(
                 #     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
-                edit_graph_title = f'Rank {idx} in {self.code_converter.convert_state_num(state)}: ' \
+                edit_graph_title = f'Rank {idx - skipped_none} {closest_component_label} in {self.code_converter.convert_state_num(state)}: ' \
                                     + f'edit history of basket ITEM for patients treated by SPR {s} with score ' \
                                     + f'{trans[s]:.2f}'
-                edit_graph_name = f"{result_label}_rank_{idx}_{s}_state_{state}_edit_history_for_basket.png"
+                edit_graph_name = f"{result_label}_rank_{idx - skipped_none}_{s}_state_{state}_edit_history_for_basket.png"
                 converted_edit_graph = edit_graphs[s]
                 _, new_edit_attrs, _ = self.models.mba.colour_mbs_codes(
                     converted_edit_graph)
@@ -256,16 +270,26 @@ class TestCase(ProposalTest):
                 # self.graphs.create_visnetwork(
                 #     converted_edit_graph, edit_graph_name, edit_graph_title, attrs=new_edit_attrs)
                 suspicious_filename = self.logger.get_file_path(
-                    f"{result_label}_component_{closest_component}_suspicious_provider_{idx}_in_state_{state}.csv")
+                    f"{result_label}_component_{closest_component}_suspicious_provider_{idx - skipped_none}_in_state_{state}.csv")
                 self.write_suspicions_to_file(new_edit_attrs, glob_filename, idx, closest_component)
                 # self.write_suspicions_to_file(new_edit_attrs, suspicious_filename)
 
             suspicious_provider_list.append(state_suspicious_providers)
             # indent to here for state loop
 
-        overlap_data = pd.DataFrame([susp, component_labels]).transpose()
-        overlap_data.columns=["Providers", "Components"]
-        self.pickle_data(overlap_data, f"susp_{rp.source_data}_{self.test_hash}.pkl", save_to_data_folder=True)
+        national_costs = 0
+        for code in self.graphs.flatten_graph_dict(d):
+            item_cost, _ = self.code_converter.get_mbs_item_fee(code)
+            national_costs += item_cost
+
+        overlap_data = pd.DataFrame([final_susp, component_labels, ranks]).transpose()
+        overlap_data.columns = ["Providers", "Components", "Ranks"]
+        overlap_data["Score"] = None
+        overlap_data["NationalScore"] = national_costs
+        for s in susp:
+            overlap_data.loc[overlap_data["Providers"] == s, "Score"] = suspicious_transactions[s]
+
+        self.pickle_data(overlap_data, f"susp_{rp.code_of_interest}_{rp.source_data}_{rp.min_support}_{rp.provider_min_support}_{self.test_hash}.pkl", save_to_data_folder=True)
         sus_item_keys = list(sus_items.keys())
         sus_item_vals = [sus_items[x] for x in sus_item_keys]
         self.code_converter.write_mbs_codes_to_csv(sus_item_keys,
