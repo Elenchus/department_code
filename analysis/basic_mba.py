@@ -76,7 +76,8 @@ class BasicMba:
             directed = True
 
         self.log(f"Graphing {title}")
-        self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs, graph_style=graph_style)
+        self.graphs.create_visnetwork(d, filename, title=title, attrs=attrs)
+        # self.graphs.visual_graph(d, filename, title=title, directed=directed, node_attrs=attrs, graph_style=graph_style)
 
     def create_groups(self):
         '''Create groups and subgroups from data'''

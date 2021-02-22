@@ -351,8 +351,8 @@ class GraphUtils():
                     for k in edges:
                         edit_history[key][k]['color'] = '#D55E00'
 
-                # edit_attrs[key] = {'shape': 'database'}
-                edit_attrs[key] = {'shape': 'house'}
+                edit_attrs[key] = {'shape': 'database'}
+                # edit_attrs[key] = {'shape': 'house'}
                 d.pop(key)
             else:
                 edit_attrs[key] = {'shape': 'circle'}
@@ -404,8 +404,8 @@ class GraphUtils():
             else:
                 missing_score += 1
 
-            # edit_attrs[node] = {'shape': 'box'}
-            edit_attrs[node] = {'shape': 'invhouse'}
+            edit_attrs[node] = {'shape': 'box'}
+            # edit_attrs[node] = {'shape': 'invhouse'}
 
             if node not in expected:
                 ignore_list.append(node)

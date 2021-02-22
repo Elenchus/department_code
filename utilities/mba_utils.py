@@ -180,9 +180,11 @@ class MbaUtils:
             if item == "No other items":
                 group_no = 'I'
             else:
-                group_no = self.code_converter.convert_mbs_code_to_group_numbers(item)[0]
+                group_no = self.code_converter.convert_mbs_code_to_group_numbers(item)
                 if len(group_no) == 1:
                     group_no = 'I'
+                else:
+                    group_no = group_no[0]
 
             color = get_color[group_no]
             attrs[item] = {'color': color}
@@ -229,8 +231,12 @@ class MbaUtils:
                 if new_k == "No other items" or new_k == "No other items\nNo other items":
                     group_no = 'I'
                 else:
-                    group_no = self.code_converter.convert_mbs_code_to_group_numbers(k)[0]
-
+                    group_no = self.code_converter.convert_mbs_code_to_group_numbers(new_k)
+                    if len(group_no) == 1:
+                        group_no = 'I'
+                    else:
+                        group_no = group_no[0]
+                        
                 color = get_color[group_no]
                 colors[new_k] = {'color': color}
                 color_map.add(group_no)
