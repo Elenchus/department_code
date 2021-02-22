@@ -2,18 +2,12 @@
 import pickle
 from copy import deepcopy
 from datetime import datetime
-import holoviews as hv
-# import imgkit
 import numpy as np
-import networkx as nx
 import pandas as pd
-import pygraphviz as pgv
 from matplotlib import pyplot as plt
-from nxviz.plots import CircosPlot
 from rpy2.robjects import pandas2ri
 from rpy2.robjects.packages import importr
 
-hv.extension('matplotlib')
 pandas2ri.activate()
 
 class GraphUtils():
@@ -72,38 +66,6 @@ class GraphUtils():
                 a_m.at[ante, con] += 1
 
         return a_m
-
-    @staticmethod
-    def convert_pgv_to_hv(graph):
-        '''convert a pygraphviz format dictionary to holoviz format'''
-        source = []
-        target = []
-        node_map = {}
-        x = 0
-        for s in graph:
-            for t in graph[s]:
-                if s not in node_map:
-                    node_map[s] = x
-                    x += 1
-
-                if t not in node_map:
-                    node_map[t] = x
-                    x += 1
-
-                s_n = node_map[s]
-                t_n = node_map[t]
-                source.append(s_n)
-                target.append(t_n)
-
-        node_name = []
-        node_index = []
-        for k, v in node_map.items():
-            node_name.append(k)
-            node_index.append(v)
-
-        # node_list = [x for _, x in sorted(zip(node_index, node_name))]
-
-        return source, target
 
     @staticmethod
     def convert_pgv_to_simple(graph):
@@ -176,21 +138,6 @@ class GraphUtils():
         ttl = fig.suptitle(title)
         self.save_plt_fig(fig, filename, (lgd, ttl, ))
 
-    @staticmethod
-    def create_hv_chord(source, target):
-        '''Creates a holoviz chord diagram object from source and target values'''
-        chord = hv.Chord(((source, target),))
-
-        return chord
-
-    @staticmethod
-    def create_hv_graph(source, target):
-        '''create a holoviz graph'''
-        graph = hv.Graph(((source, target),))
-        graph.opts(xaxis=None, yaxis=None, directed=True, arrowhead_length=0.1)
-        graph = hv.element.graphs.layout_nodes(graph, layout=nx.drawing.layout.shell_layout)
-
-        return graph
 
     def create_rchord(self, graph, name, title):
         '''create a chord diagram from a graph dictionary'''
@@ -485,28 +432,6 @@ class GraphUtils():
 
         return score, edit_history, edit_attrs
 
-    def plot_circos_graph(self, graph, attrs, filename):
-        '''create a chord diagram from a dictionary'''
-        G = self.convert_pgv_to_simple(graph)
-        formatted = nx.DiGraph(G)
-        if attrs is not None:
-            for node in attrs:
-                formatted.node[node]["color"] = attrs[node]['color']
-
-        c = CircosPlot(formatted, node_labels=True, node_color="color")
-
-        c.draw()
-        plt.savefig(filename)
-
-    def save_hv_fig(self, fig, filename):
-        '''Save a holoviz graph to file'''
-        current = datetime.now().strftime("%Y%m%dT%H%M%S")
-        output_path = f"{filename}_{current}.png"
-        if self.logger is not None:
-            output_path = self.logger.output_path / output_path
-
-        hv.save(fig, output_path)
-
     def save_plt_fig(self, fig, filename, bbox_extra_artists=None):
         '''Save a plot figure to file with timestamp'''
         current = datetime.now().strftime("%Y%m%dT%H%M%S")
@@ -532,111 +457,3 @@ class GraphUtils():
                 str_graph[str(key)][str(k)] = graph[key][k]
 
         return str_graph
-
-    def visual_graph(self,
-                     data_dict,
-                     output_file,
-                     title=None,
-                     directed=True,
-                     node_attrs=None,
-                     graph_style='fdp'):
-        '''Create and save a pygraphviz graph from a graph dictionary'''
-        max_len = 0
-        full_list = self.flatten_graph_dict(data_dict)
-        for s in full_list:
-            if len(s) > max_len:
-                max_len = len(s)
-
-        if max_len < 10:
-            width = 2
-        else:
-            width = 5
-
-        graph = pgv.AGraph(data=data_dict, directed=directed)
-        if title is not None:
-            graph.graph_attr['fontsize'] = 30
-            graph.graph_attr['label'] = title
-            graph.graph_attr['labelloc'] = 't'
-
-        graph.node_attr['style'] = 'filled'
-        graph.node_attr['shape'] = 'circle'
-        graph.node_attr['fixedsize'] = 'true'
-        graph.node_attr['fontsize'] = 25
-        graph.node_attr['height'] = width
-        graph.node_attr['width'] = width
-        graph.node_attr['fontcolor'] = '#000000'
-        graph.edge_attr['penwidth'] = 7
-        if directed:
-            graph.edge_attr['style'] = 'tapered'
-        else:
-            graph.edge_attr['style'] = 'solid'
-
-        for k, v in data_dict.items():
-            for node, d in v.items():
-                if d is not None:
-                    edge = graph.get_edge(k, node)
-                    for att, val in d.items():
-                        edge.attr[att] = val
-
-        if node_attrs is not None:
-            for k, v in node_attrs.items():
-                node = graph.get_node(k)
-                for attr, val in v.items():
-                    node.attr[attr] = val
-
-
-        graph.draw(str(output_file), prog=graph_style)
-
-    def graph_legend(self, data_dict, output_file, title=None):
-        '''Creates and saves a legend for a pygraphviz graph'''
-        max_len = 0
-        full_list = self.flatten_graph_dict(data_dict)
-        for s in full_list:
-            if len(s) > max_len:
-                max_len = len(s)
-
-        if max_len < 10:
-            width = 2
-        else:
-            width = 5
-
-        graph = pgv.AGraph(data={})
-        if title is not None:
-            graph.graph_attr['fontsize'] = 15
-            graph.graph_attr['label'] = title
-            graph.graph_attr['labelloc'] = 't'
-
-        graph.node_attr['style'] = 'filled'
-        graph.node_attr['shape'] = 'circle'
-        graph.node_attr['fixedsize'] = 'true'
-        graph.node_attr['height'] = width
-        graph.node_attr['width'] = width
-        graph.node_attr['fontcolor'] = '#000000'
-        graph.edge_attr['penwidth'] = 7
-        graph.edge_attr['style'] = 'invis'
-
-        nbunch = list(data_dict.keys())
-        for i, node in enumerate(nbunch):
-            graph.add_node(node)
-            n = graph.get_node(node)
-            n.attr['shape'] = 'rectangle'
-            n.attr['rank'] = 'max'
-            n.attr['fontsize'] = 15
-            for attr, val in data_dict[node].items():
-                n.attr[attr] = val
-
-            if i < len(nbunch) - 1:
-                graph.add_edge(node, nbunch[i+1])# , style='invis')
-
-        graph.add_subgraph(nbunch=nbunch, name='Legend')
-        legend = graph.get_subgraph('Legend')
-        legend.rank = 'max'
-        legend.label = 'Legend'
-        legend.style = 'filled'
-        legend.shape = 'rectangle'
-        legend.labelloc = 't'
-        legend.fontcolor = '#000000'
-        legend.color = 'grey'
-        legend.pack = True
-
-        graph.draw(str(output_file), prog='dot')

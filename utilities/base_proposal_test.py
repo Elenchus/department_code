@@ -67,7 +67,7 @@ class ProposalTest(ABC):
         '''Stores test data'''
         raise NotImplementedError
 
-    def __init__(self, logger, details, year):
+    def __init__(self, logger, details):
         def _hash(obj):
             '''return a hash key based on the keys and values'''
             if obj.__dict__ is None:
@@ -83,16 +83,15 @@ class ProposalTest(ABC):
         self.test_hash = _hash(details)
         params = details.params
         self.logger = logger
-        self.code_converter = CodeConverter(year[-1])
+        self.code_converter = CodeConverter()
         self.graphs = GraphUtils(logger)
         self.models = ModelUtils(logger, self.graphs, self.code_converter)
         self.processed_data = pd.DataFrame()
-        self.start_year = year[0]
-        self.end_year = year[-1]
 
         self.required_params = self.RequiredParams()
         rp = self.RequiredParams().__dict__
-        rp["source_data"] = str(details.test_data)
+        rp["source_data"] = "deid_ortho"
+        # rp["source_data"] = str(details.test_data)
         if params is None:
             self.required_params = RequiredParams({}, rp)
         elif isinstance(params, dict):

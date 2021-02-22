@@ -16,7 +16,7 @@ class TestCase(ProposalTest):
     @dataclass
     class RequiredParams:
         '''test parameters'''
-        code_of_interest: int = 49318
+        code_of_interest: str = '49318'
         exclude_multiple_states: bool = False
         min_support: float = 0.05
         provider_min_support_count: int = 3
@@ -26,17 +26,17 @@ class TestCase(ProposalTest):
         no_to_save: int = 50
         save_each_component: bool = False
 
-    nspr = ["NSPR"]
-    core_cols = ["PIN", "ITEM", "DOS", "SPR_RSP"]
-    other_cols = ["MDV_NUMSERV", "SPR", "RPR"]
-    FINAL_COLS = core_cols + nspr
+    nprovider_id = ["Nprovider_id"]
+    core_cols = ["patient_id", "computed_service_code", "service_date"]
+    other_cols = ["item_count", "provider_id", "reqref_prov"]
+    FINAL_COLS = core_cols + nprovider_id
     INITIAL_COLS = core_cols + other_cols
     required_params: RequiredParams = None
     processed_data: pd.DataFrame = None
     test_data = None
 
-    def __init__(self, logger, params, year):
-        super().__init__(logger, params, year)
+    def __init__(self, logger, params):
+        super().__init__(logger, params)
         self.test_tools = TestTools(logger, self.graphs, self.models, self.code_converter)
 
     @overrides
@@ -44,8 +44,8 @@ class TestCase(ProposalTest):
         super().process_dataframe(data)
         data = self.test_tools.process_dataframe(self.required_params, data, surgeons_only=False,
                                                  include_referrals_as_surgeon=False)
-        data["NSPR"] = data.apply(lambda x: x['SPR'] if np.isnan(x['RPR']) else x["RPR"], axis=1).astype(int)
-        data.drop(["SPR", "RPR"], axis=1, inplace=True)
+        data["Nprovider_id"] = data.apply(lambda x: x['provider_id'] if np.isnan(x['reqref_prov']) else x["reqref_prov"], axis=1).astype(int)
+        data.drop(["provider_id", "reqref_prov"], axis=1, inplace=True)
 
         return data
 
@@ -54,6 +54,7 @@ class TestCase(ProposalTest):
         super().get_test_data()
         self.test_data = self.test_tools.get_test_data(self.processed_data, self.required_params.code_of_interest)
         self.models.mba.update_filters(self.required_params.filters)
+        self.pickle_data(self.test_data, 'valid_claims.pkl', True)
 
     @overrides
     def load_data(self, data_file):
@@ -63,11 +64,11 @@ class TestCase(ProposalTest):
         self.processed_data = data
         self.get_test_data()
 
-    def export_suspicious_claims(self, spr, state, rank):
+    def export_suspicious_claims(self, provider_id, state, rank):
         '''export patient data for validation'''
         data = self.processed_data
-        patient_ids = data.loc[data["NSPR"] == spr, "PIN"].unique().tolist()
-        patient_claims = data[data["PIN"].isin(patient_ids)]
+        patient_ids = data.loc[data["Nprovider_id"] == provider_id, "patient_id"].unique().tolist()
+        patient_claims = data[data["patient_id"].isin(patient_ids)]
         path = self.logger.get_file_path(f"suspicious_claims_rank_{rank}_state_{state}.csv")
         patient_claims.to_csv(path)
 
@@ -121,8 +122,8 @@ class TestCase(ProposalTest):
         sus_items = {}
         state = "Nation"
 
-        all_unique_items = [str(x) for x in data["ITEM"].unique().tolist()]
-        mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "ITEM", "PIN", "NSPR")
+        all_unique_items = [str(x) for x in data["computed_service_code"].unique().tolist()]
+        mba_funcs = BasicMba(self.code_converter, data, self.models, self.graphs, "computed_service_code", "patient_id", "Nprovider_id")
         d = self.test_tools.create_state_model(rp, state, mba_funcs, all_unique_items, mba_funcs.subgroup_data)
 
         self.log("Finding suspicious providers")
@@ -138,20 +139,20 @@ class TestCase(ProposalTest):
         missing_scores = []
         edit_graphs = {}
         edit_attrs = {}
-        providers = data.loc[data["ITEM"] == rp.code_of_interest, "NSPR"].unique().tolist()
+        providers = data.loc[data["computed_service_code"] == rp.code_of_interest, "Nprovider_id"].unique().tolist()
         episodes_per_provider = []
-        provider_groups = data.groupby("NSPR")
+        provider_groups = data.groupby("Nprovider_id")
         for provider, group in tqdm(provider_groups):
             provider_docs = []
-            patients = group['PIN'].unique().tolist()
+            patients = group['patient_id'].unique().tolist()
             if len(patients) < rp.ignore_providers_with_less_than_x_patients:
                 continue
 
             surgery_groups = group.groupby('DOS')
             episodes_per_provider.append(len(surgery_groups))
-            provider_items = group['ITEM'].unique().tolist()
+            provider_items = group['computed_service_code'].unique().tolist()
             for _, surgery in surgery_groups:
-                doc = surgery['ITEM'].unique().tolist()
+                doc = surgery['computed_service_code'].unique().tolist()
                 provider_docs.append(doc)
 
             provider_model = self.models.mba.pairwise_market_basket(
@@ -235,13 +236,9 @@ class TestCase(ProposalTest):
 
                 self.export_suspicious_claims(s, state, idx - skipped_none)
                 state_suspicious_providers.append(s)
-                self.log(f"Rank {idx - skipped_none} {closest_component_label} provider {s} has the following RSPs")
-                rsps = data.loc[data['NSPR'] == s, 'SPR_RSP'].unique().tolist()
-                for rsp in rsps:
-                    self.log(self.code_converter.convert_rsp_num(rsp))
 
                 group_graph_title = f'Rank {idx - skipped_none} {closest_component_label} in {self.code_converter.convert_state_num(state)}: ' \
-                                    + f'normal basket ITEM for patients treated by SPR {s} with score ' \
+                                    + f'normal basket computed_service_code for patients treated by provider_id {s} with score ' \
                                     + f'{trans[s]:.2f}'
                 group_graph_name = f"{result_label}_rank_{idx - skipped_none}_{s}_state_{state}_normal_items.png"
                 group_graph, group_attrs, _ = self.models.mba.convert_mbs_codes(all_graphs[s])
@@ -251,7 +248,7 @@ class TestCase(ProposalTest):
                 #     group_graph, group_graph_name, group_graph_title, attrs=group_attrs)
 
                 edit_graph_title = f'Rank {idx - skipped_none} {closest_component_label} in {self.code_converter.convert_state_num(state)}: ' \
-                                    + f'edit history of basket ITEM for patients treated by SPR {s} with score ' \
+                                    + f'edit history of basket computed_service_code for patients treated by provider_id {s} with score ' \
                                     + f'{trans[s]:.2f}'
                 edit_graph_name = f"{result_label}_rank_{idx - skipped_none}_{s}_state_{state}_edit_history_for_basket.png"
                 converted_edit_graph = edit_graphs[s]

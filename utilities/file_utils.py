@@ -23,54 +23,23 @@ PBS_HEADER = ['PTNT_ID', 'SPPLY_DT', 'ITM_CD', 'PBS_RGLTN24_ADJST_QTY', 'BNFT_AM
             'UNDR_CPRSCRPTN_TYP_CD', 'PRSCRPTN_CNT', 'PTNT_CTGRY_DRVD_CD', 'PTNT_STATE']
 
 
-def combine_10p_data(logger, data_type, initial_cols, final_cols, years, callback):
-    '''gets columnar parquet data from given list of years and returns a pd dataframe'''
-    if data_type == DataSource.PBS:
-        filenames = get_pbs_files(years)
-    elif data_type == DataSource.MBS:
-        filenames = get_mbs_files(years)
-    else:
-        raise KeyError("Data type should be a DataSource value")
-
+def combine_10p_data(logger, initial_cols, final_cols, callback):
+    '''gets columnar parquet data and returns a pd dataframe'''
+    filename = "~/department_code/data/deid_ortho.pqt"
     data = pd.DataFrame(columns=final_cols)
-    for filename in filenames:
-        if logger is not None:
-            logger.log(f"Opening {filename}")
+    if logger is not None:
+        logger.log(f"Opening {filename}")
+    
+    all_data = pd.read_parquet(filename, columns=initial_cols)
+    if callback is None:
+        processed_data = all_data
+    else:
+        processed_data = callback(all_data)
 
-        all_data = pd.read_parquet(filename, columns=initial_cols)
-        if callback is None:
-            processed_data = all_data
-        else:
-            processed_data = callback(all_data)
+    assert len(final_cols) == len(processed_data.columns)
+    for i, _ in enumerate(final_cols):
+        assert final_cols[i] == processed_data.columns[i]
 
-        assert len(final_cols) == len(processed_data.columns)
-        for i, _ in enumerate(final_cols):
-            assert final_cols[i] == processed_data.columns[i]
-
-        data = data.append(processed_data)
+    data = data.append(processed_data)
 
     return data
-
-def get_mbs_files(years):
-    '''returns a list of mbs files'''
-    mbs_path = PATH + 'MBS_Patient_10/'
-    all_files = [mbs_path + f for f in os.listdir(mbs_path) if f.lower().endswith('.parquet')]
-    files = []
-    for filename in all_files:
-        for year in years:
-            if year in filename:
-                files.append(filename)
-
-    return files
-
-def get_pbs_files(years):
-    '''returns a list of pbs files'''
-    pbs_path = PATH + 'PBS_Patient_10/'
-    all_files = [pbs_path + f for f in os.listdir(pbs_path) if f.lower().endswith('.parquet')]
-    files = []
-    for filename in all_files:
-        for year in years:
-            if year in filename:
-                files.append(filename)
-
-    return files
