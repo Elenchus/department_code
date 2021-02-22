@@ -157,7 +157,7 @@ class GraphUtils():
         aplot = importr('graphics')
         circlize = importr('circlize')
         rDevices = importr('grDevices')
-        r_am = pandas2ri.py2ri(edges)
+        r_am = pandas2ri.py2rpy(edges)
         filename = self.logger.output_path / f'{name}.png'
         rDevices.png(str(filename), width=800, height=800)
         circlize.chordDiagram(r_am,
@@ -220,8 +220,8 @@ class GraphUtils():
         edges.columns = ['from', 'to', 'color']
 
         vn = importr('visNetwork')
-        r_nodes = pandas2ri.py2ri(nodes)
-        r_edges = pandas2ri.py2ri(edges)
+        r_nodes = pandas2ri.py2rpy(nodes)
+        r_edges = pandas2ri.py2rpy(edges)
 
         net = vn.visNetwork(r_nodes, r_edges, main=title, width="100%", improvedLayout=False)
         net = vn.visEdges(net, arrows='to')

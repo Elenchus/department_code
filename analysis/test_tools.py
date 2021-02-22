@@ -105,7 +105,7 @@ class TestTools:
             pickle.dump(attrs, f)
 
         legend_file = self.logger.get_file_path(f"Legend_{state}.png")
-        self.graphs.graph_legend(legend, legend_file, "Legend")
+        # self.graphs.graph_legend(legend, legend_file, "Legend")
 
         # mba_funcs.create_graph(formatted_d, name, title, attrs, graph_style=rp.graph_style)
         # source, target = self.graphs.convert_pgv_to_hv(formatted_d)
@@ -139,10 +139,10 @@ class TestTools:
         assert patients_of_interest
         patient_data = data[data["patient_id"].isin(patients_of_interest)]
         patient_data.reset_index(inplace=True)
-        patient_data = self.check_claim_validity(patient_data)
-        assert all(x == 1 for x in patient_data["item_count"].tolist())
+        # patient_data = self.check_claim_validity(patient_data)
+        # assert all(x >= 1 for x in patient_data["item_count"].tolist())
 
-        patient_data["patient_id"] = patient_data["patient_id"].astype(str)
+        # patient_data["patient_id"] = patient_data["patient_id"].astype(str)
         groups = patient_data.groupby("patient_id")
         final_data = pd.DataFrame(columns=patient_data.columns)
         exclusions = 0

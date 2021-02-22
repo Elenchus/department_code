@@ -44,7 +44,7 @@ class TestCase(ProposalTest):
         super().process_dataframe(data)
         data = self.test_tools.process_dataframe(self.required_params, data, surgeons_only=False,
                                                  include_referrals_as_surgeon=False)
-        data["Nprovider_id"] = data.apply(lambda x: x['provider_id'] if np.isnan(x['reqref_prov']) else x["reqref_prov"], axis=1).astype(int)
+        data["Nprovider_id"] = data.apply(lambda x: x['provider_id'] if x['reqref_prov'] == '67bbbc98c63750bab8425d6e5704c58cfc2a63ea' else x["reqref_prov"], axis=1)
         data.drop(["provider_id", "reqref_prov"], axis=1, inplace=True)
 
         return data
@@ -148,7 +148,7 @@ class TestCase(ProposalTest):
             if len(patients) < rp.ignore_providers_with_less_than_x_patients:
                 continue
 
-            surgery_groups = group.groupby('DOS')
+            surgery_groups = group.groupby('service_date')
             episodes_per_provider.append(len(surgery_groups))
             provider_items = group['computed_service_code'].unique().tolist()
             for _, surgery in surgery_groups:

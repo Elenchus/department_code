@@ -149,7 +149,8 @@ class CodeConverter:
                     try:
                         return float(re.search(r'\$(\d+\.\d+)', derived_fee)[1]), fee_type
                     except TypeError:
-                        raise KeyError(f"{code} does not have an easily accessible fee")
+                        return 500, "No accessible fee"
+                        # raise KeyError(f"{code} does not have an easily accessible fee")
 
             item = self.mbs_item_dict.get(str(number), None)
 

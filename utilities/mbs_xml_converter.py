@@ -46,7 +46,8 @@ def convert_groups_txt():
         pickle.dump(cats, f, pickle.HIGHEST_PROTOCOL)
                 
 if __name__ == '__main__':
-    filename = '201411-XML.xml'
-    year = '2014'
+    filename = 'MBS20210101.xml'
+    year = '2021'
+    print('converting')
     convert_xml(filename, year)
     # convert_groups_txt()

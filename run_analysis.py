@@ -58,10 +58,20 @@ def start_test(test_details, additional_folder_name_part=None):
     run_combined_test(test_name, test_details)
 
 if __name__ == "__main__":
-    for dat in [49318]:
+    for item in ["49318"]:
         details = TestDetails(
             notes="",
-            params=None,
+            # params=None,
+            params={
+                                'filters': {
+                                    'conviction': {
+                                        'value': 1,
+                                        'operator': operator.gt
+                                        }
+                                    },
+                                'min_support': 0.05,
+                                'provider_min_support': 0.5,
+                                'code_of_interest': item},
             test_file_name=f'rpr_ranking',
             test_location="analysis"
         )
