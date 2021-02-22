@@ -181,6 +181,8 @@ class MbaUtils:
                 group_no = 'I'
             else:
                 group_no = self.code_converter.convert_mbs_code_to_group_numbers(item)[0]
+                if len(group_no) == 1:
+                    group_no = 'I'
 
             color = get_color[group_no]
             attrs[item] = {'color': color}

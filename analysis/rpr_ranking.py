@@ -60,9 +60,8 @@ class TestCase(ProposalTest):
     def load_data(self, data_file):
         data = super().load_data(data_file)
         self.models.mba.update_filters(self.required_params.filters)
-        data = self.process_dataframe(data)
         self.processed_data = data
-        self.get_test_data()
+        self.test_data = data
 
     def export_suspicious_claims(self, provider_id, state, rank):
         '''export patient data for validation'''

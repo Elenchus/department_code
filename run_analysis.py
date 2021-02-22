@@ -17,6 +17,7 @@ class RequiredParams:
 @dataclass
 class TestDetails():
     '''Holds details for the analysis to be run'''
+    load_data: bool
     notes: str
     params: dict
     test_file_name: str
@@ -31,7 +32,10 @@ def run_combined_test(test_name, test_details):
 
         logger.log(test_details.notes)
         # if isinstance(test_details.test_data, file_utils.DataSource):
-        if True:
+        if isinstance(test_details.load_data, bool):
+            if test_details.load_data:
+                raise ArgumentError("load_data must be string or False")
+                
             data = file_utils.combine_10p_data(logger,
                                                test_case.INITIAL_COLS,
                                                test_case.FINAL_COLS,
@@ -39,8 +43,8 @@ def run_combined_test(test_name, test_details):
             test_case.processed_data = data
             test_case.get_test_data()
         else:
-            logger.log(f"Data file: {test_details.test_data}")
-            data = test_case.load_data(test_details.test_data)
+            logger.log(f"Data file: {test_details.load_data}")
+            data = test_case.load_data(test_details.load_data)
 
         test_case.run_test()
 
@@ -60,6 +64,7 @@ def start_test(test_details, additional_folder_name_part=None):
 if __name__ == "__main__":
     for item in ["49318"]:
         details = TestDetails(
+            load_data='valid_claims.pkl',
             notes="",
             # params=None,
             params={

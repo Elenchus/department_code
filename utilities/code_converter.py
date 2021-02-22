@@ -6,11 +6,8 @@ import pandas as pd
 
 class CodeConverter:
     '''Converter for PBS items and MBS RSP codes'''
-    def __init__(self):
-        year = '2019'
-
+    def __init__(self, year=2021):
         self.year = year
-
         mbs_group_filename = 'utilities/mbs_groups.pkl'
         mbs_item_filename = f'utilities/MBS_{year}.pkl'
         rsp_filename = 'utilities/SPR_RSP.csv'
